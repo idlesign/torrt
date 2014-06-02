@@ -1,0 +1,22 @@
+torrt installation
+==================
+
+
+Python ``setuptools`` package is required to install torrt.
+
+
+Use the following command line to install torrt from sources directory (containing setup.py):
+
+    easy_install .
+
+or
+
+    python setup.py install
+
+
+Alternatively you can install an up-to-date version of torrt from PyPI:
+
+    easy_install torrt
+
+
+Note: `easy_install` is bundled with ``setuptools``.
