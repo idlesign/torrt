@@ -15,15 +15,15 @@ and instructs your torrent client to download new files.
 
 Automatic updates are available for:
 
-    * RuTracker (ex torrents.ru) - http://rutracker.org/
-    * RUTOR - http://rutor.org/
-    * AniDUB - http://tr.anidub.com/
-    * NNM-Club - http://nnm-club.me/
+* RuTracker (ex torrents.ru) - http://rutracker.org/
+* RUTOR - http://rutor.org/
+* AniDUB - http://tr.anidub.com/
+* NNM-Club - http://nnm-club.me/
 
 **torrt** is able to cooperate with the following torrent clients:
 
-    * Transmission (using built-in JSON RPC)
-    * Deluge (using `deluge-webapi` plugin - https://github.com/idlesign/deluge-webapi)
+* Transmission (using built-in JSON RPC)
+* Deluge (using `deluge-webapi` plugin - https://github.com/idlesign/deluge-webapi)
 
 **torrt** can function both as a console application and Python module.
 
