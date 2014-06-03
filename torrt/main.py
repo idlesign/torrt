@@ -12,7 +12,6 @@ from torrt.toolbox import add_torrent_from_url, remove_torrent, \
 LOGGER = logging.getLogger(__name__)
 
 # todo cipher passwords
-# todo docs
 # todo notifications
 
 def process_commands():

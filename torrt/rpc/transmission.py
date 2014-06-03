@@ -16,7 +16,7 @@ class TransmissionRPC(BaseRPC):
     csrf_header = 'X-Transmission-Session-Id'
     session_id = None
     alias = 'transmission'
-    fields_map = {
+    torrent_fields_map = {
         'hashString': 'hash',
         'downloadDir': 'download_to',
     }

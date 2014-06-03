@@ -18,6 +18,40 @@ import sys, os
 sys.path.insert(0, os.path.abspath('../../'))
 from torrt import VERSION
 
+
+# -- Mocking ------------------------------------------------------------------
+
+# This is used to mock certain modules.
+# It helps to build docs in environments where those modules are not available.
+# E.g. it could be useful for http://readthedocs.org/
+MODULES_TO_MOCK = ['libtorrent', 'bs4']
+
+
+class ModuleMock(object):
+
+    __all__ = []
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return ModuleMock()
+
+    @classmethod
+    def __getattr__(cls, name):
+        if name in ('__file__', '__path__'):
+            return '/dev/null'
+        elif name[0] == name[0].upper():
+            MockType = type(name, (), {})
+            MockType.__module__ = __name__
+            return MockType
+        else:
+            return ModuleMock()
+
+for mod_name in MODULES_TO_MOCK:
+    sys.modules[mod_name] = ModuleMock()
+
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.

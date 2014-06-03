@@ -18,7 +18,10 @@ RE_LINK = re.compile(r'(?P<url>https?://[^\s]+)')
 
 
 def import_classes():
-    """Dynamically imports RPC classes and tracker handlers from directories."""
+    """Dynamically imports RPC classes and tracker handlers from their directories.
+
+    :return:
+    """
     LOGGER.debug('Importing RPC classes ...')
     import_from_path('rpc')
 
@@ -30,6 +33,8 @@ def import_from_path(path):
     """Dynamically imports modules from package.
     It is an .egg-friendly alternative to os.listdir() walking.
 
+    :param path: str - path under torrt
+    :return:
     """
     for mloader, pname, ispkg in iter_modules([os.path.join(os.path.dirname(__file__), path)]):
         __import__('torrt.%s.%s' % (path, pname))
@@ -38,11 +43,9 @@ def import_from_path(path):
 def parse_torrent(torrent):
     """Returns a dictionary with basic information from torrent contents.
 
-    Dict keys:
-        hash - Torrent hash.
-        files - A list of files within the torrent.
-        torrent - Torrent file contents from input.
-
+    :param torrent:
+    :return: torrent info dict - keys: hash; name; files; torrent (torrent file contents just from input).
+    :rtype: dict
     """
     torrent_info = lt.torrent_info(lt.bdecode(torrent))
     files_from_torrent = [a_file.path.decode('utf-8') for a_file in torrent_info.files()]
@@ -51,22 +54,45 @@ def parse_torrent(torrent):
 
 
 def parse_torrent_file(filepath):
-    """Reads a torrent file from filesystem and returns information about it."""
+    """Reads a torrent file from filesystem and returns information about it.
+
+    :param filepath: str
+    :return: file contents
+    :rtype: str
+    """
     with open(filepath, 'rb') as f:
         contents = f.read()
     return parse_torrent(contents)
 
 
 def get_url_from_string(string):
-    """Returns URL from a string, e.g. torrent comment."""
+    """Returns URL from a string, e.g. torrent comment.
+
+    :param string:
+    :return: url
+    :rtype: str
+    """
     return RE_LINK.search(string).group('url')
 
 
 def get_iso_from_timestamp(ts):
+    """Get ISO formatted string from timestamp.
+
+    :param ts: int - timestamp
+    :return: string
+    :rtype: str
+    """
     return datetime.fromtimestamp(ts).isoformat(' ')
 
 
 def update_dict(old_dict, new_dict):
+    """Updates old dictionary with data from a new one with respect to existing values.
+
+    :param old_dict:
+    :param new_dict:
+    :return: updated dict
+    :rtype: dict
+    """
     for key, val in new_dict.iteritems():
         if isinstance(val, Mapping):
             old_dict[key] = update_dict(old_dict.get(key, {}), val)
@@ -76,6 +102,14 @@ def update_dict(old_dict, new_dict):
 
 
 def structure_torrent_data(target_dict, hash, data):
+    """Updated target dict with torrent data structured suitably
+    for config storage.
+
+    :param target_dict: dict - dictionary to update
+    :param hash: str - torrent identifying hash
+    :param data: dict - torrent data recieved from RPC (see parse_torrent())
+    :return:
+    """
     data = dict(data)
 
     if 'hash' not in data:
@@ -91,6 +125,12 @@ def structure_torrent_data(target_dict, hash, data):
 
 
 def get_torrent_from_url(url):
+    """Downloads torrent from a given URL and returns it as string.
+
+    :param url: str or None
+    :return: torrent contents
+    :rtype: str
+    """
     LOGGER.info('Downloading torrent file from `%s` ...' % url)
 
     tracker = TrackerObjectsRegistry.get_for_string(url)
@@ -107,6 +147,11 @@ def get_torrent_from_url(url):
 
 
 def iter_rpc():
+    """Generator to iterate through available and enable RPC objects.
+
+    :return: tuple - rpc_alias, rpc_object
+    :rtype: tuple
+    """
     rpc_objects = RPCObjectsRegistry.get()
     if not rpc_objects:
         LOGGER.error('No RPC objects registered, unable to proceed')
@@ -121,6 +166,13 @@ def iter_rpc():
 
 
 class WithSettings(object):
+    """Introduces settings support for class objects.
+
+    NB: * Settings names are taken from inheriting classes __init__() methods.
+        * __init__() method MUST use keyword arguments only.
+        * Inheriting classes MUST save settings under object properties with the same name as in __init__().
+
+    """
 
     config_entry_name = None
     settings = {}
@@ -128,19 +180,19 @@ class WithSettings(object):
 
     @classmethod
     def spawn_with_settings(cls, settings):
+        """Spawns and returns object initialized with given settings.
+
+        :param settings:
+        :return: object
+        """
         LOGGER.debug('Spawning `%s` object with the given settings ...' % cls.__name__)
         return cls(**settings)
 
-    def get_settings(self, name=None):
-        """Returns RPC specific settings dictionary.
-        Use `name` param to get a definite settings value.
-
-        """
-        if name is None:
-            return self.settings
-        return self.settings.get(name)
-
     def save_settings(self):
+        """Saves object settings into torrt configuration file.
+
+        :return:
+        """
         settings = {}
 
         try:
@@ -155,12 +207,17 @@ class WithSettings(object):
 
 
 class TorrtConfig(object):
+    """Gives methods to work with torrt configuration file."""
 
     USER_DATA_PATH = os.path.join(os.path.expanduser('~'), '.torrt')
     USER_SETTINGS_FILE = os.path.join(USER_DATA_PATH, 'config.json')
 
     @classmethod
     def bootstrap(cls):
+        """Initializes configuration file if needed,
+
+        :return:
+        """
         if not os.path.exists(cls.USER_DATA_PATH):
             os.makedirs(cls.USER_DATA_PATH)
 
@@ -178,41 +235,75 @@ class TorrtConfig(object):
         os.chmod(cls.USER_SETTINGS_FILE, 0600)
 
     @classmethod
-    def update(cls, settings):
-        cls.save(update_dict(cls.load(), settings))
+    def update(cls, settings_dict):
+        """Updates configuration file with given settings.
+
+        :param settings_dict: dict
+        :return:
+        """
+        cls.save(update_dict(cls.load(), settings_dict))
 
     @classmethod
     def load(cls):
+        """Returns current settings dictionary.
+
+        :return: settings dict
+        :rtype: dict
+        """
         LOGGER.debug('Loading configuration file %s ...' % cls.USER_SETTINGS_FILE)
         cls.bootstrap()
         with open(cls.USER_SETTINGS_FILE) as f:
             return json.load(f)
 
     @classmethod
-    def save(cls, cfg_dict):
+    def save(cls, settings_dict):
+        """Saves a given dict as torrt configuration.
+
+        :param settings_dict: dict
+        :return:
+        """
         LOGGER.debug('Saving configuration file %s ...' % cls.USER_SETTINGS_FILE)
         with open(cls.USER_SETTINGS_FILE, 'w') as f:
-            json.dump(cfg_dict, f, indent=4)
+            json.dump(settings_dict, f, indent=4)
 
 
-class Registry(object):
+class ObjectsRegistry(object):
 
     __slots__ = ['_items']
 
     def __init__(self):
         self._items = {}
 
-    def add(self, item):
-        name = getattr(item, 'alias')
-        LOGGER.debug('Registering `%s` from %s ...' % (name, item))
-        self._items[name] = item
+    def add(self, obj):
+        """Add an object to registry.
 
-    def get(self, item_alias=None):
-        if item_alias is None:
+        NB: object MUST have `alias` attribute.
+
+        :param obj: object
+        :return:
+        """
+        name = getattr(obj, 'alias')
+        LOGGER.debug('Registering `%s` from %s ...' % (name, obj))
+        self._items[name] = obj
+
+    def get(self, obj_alias=None):
+        """Returns registered objects or a definite object by its alias.
+
+        :param obj_alias: str or None
+        :return: dict or object
+        :rtype: dict or object
+        """
+        if obj_alias is None:
             return self._items
-        return self._items.get(item_alias)
+        return self._items.get(obj_alias)
 
     def get_for_string(self, string):
+        """Returns registered object whose alias is found in a given string.
+
+        :param string: str
+        :return: object or None
+        :rtype: object or None
+        """
         for name in self._items.keys():
             if name in string:
                 return self._items[name]
@@ -220,9 +311,12 @@ class Registry(object):
 
 
 class TorrtException(Exception):
-    """"""
+    """Base torrt exception.
+    Other torrt exceptions should inherit from this.
 
-RPCClassesRegistry = Registry()
-RPCObjectsRegistry = Registry()
-TrackerClassesRegistry = Registry()
-TrackerObjectsRegistry = Registry()
+    """
+
+RPCClassesRegistry = ObjectsRegistry()
+RPCObjectsRegistry = ObjectsRegistry()
+TrackerClassesRegistry = ObjectsRegistry()
+TrackerObjectsRegistry = ObjectsRegistry()

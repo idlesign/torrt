@@ -18,7 +18,7 @@ class DelugeRPC(BaseRPC):
 
     alias = 'deluge'
     headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
-    fields_map = {
+    torrent_fields_map = {
         'save_path': 'download_to',
     }
 

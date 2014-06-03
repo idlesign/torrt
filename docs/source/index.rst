@@ -46,4 +46,5 @@ Table of Contents
 
     quickstart
     commands
+    toolbox
 

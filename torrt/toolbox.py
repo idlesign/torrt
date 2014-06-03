@@ -2,13 +2,20 @@ import logging
 from time import time
 
 from torrt.base_rpc import TorrtRPCException
-from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, TorrtConfig, TorrtException, get_url_from_string, get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc
+from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, TorrtConfig, TorrtException, \
+    get_url_from_string, get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc
 
 
 LOGGER = logging.getLogger(__name__)
 
 
 def configure_logging(log_level=logging.INFO, show_logger_names=False):
+    """Performs basic logging configuration.
+
+    :param log_level: logging level, e.g. logging.DEBUG
+    :param show_logger_names: bool - flag to show logger names in output
+    :return:
+    """
     format_str = '%(levelname)s: %(message)s'
     if show_logger_names:
         format_str = '%(name)s\t\t ' + format_str
@@ -18,6 +25,13 @@ def configure_logging(log_level=logging.INFO, show_logger_names=False):
 
 
 def configure_rpc(rpc_alias, settings_dict):
+    """Configures RPC using given settings.
+    Saves successful configuration.
+
+    :param rpc_alias: RPC alias
+    :param settings_dict: settings dictionary to configure RPC with
+    :return:
+    """
     LOGGER.info('Configuring `%s` RPC ...' % rpc_alias)
 
     rpc_class = RPCClassesRegistry.get(rpc_alias)
@@ -35,6 +49,13 @@ def configure_rpc(rpc_alias, settings_dict):
 
 
 def configure_tracker(tracker_alias, settings_dict):
+    """Configures tracker using given settings.
+    Saves successful configuration.
+
+    :param tracker_alias: tracker alias
+    :param settings_dict: settings dictionary to configure tracker with
+    :return:
+    """
     LOGGER.info('Configuring `%s` tracker ...' % tracker_alias)
 
     tracker_class = TrackerClassesRegistry.get(tracker_alias)
@@ -51,6 +72,11 @@ def configure_tracker(tracker_alias, settings_dict):
 
 
 def init_object_registries():
+    """Initializes RPC and tracker objects registries with settings
+    from configuration file.
+
+    :return:
+    """
     LOGGER.debug('Initializing objects registries from configuration file ...')
     cfg = TorrtConfig.load()
 
@@ -68,6 +94,12 @@ def init_object_registries():
 
 
 def get_registerd_torrents():
+    """Returns hash-indexed dictionary with information on torrents
+    registered for updates.
+
+    :return: torrents dict
+    :rtype: dict
+    """
     return TorrtConfig.load()['torrents']
 
 
@@ -75,6 +107,7 @@ def bootstrap():
     """Bootstraps torrt environment,
     Populates RPC and Trackers registries with objects instantiated with settings from config.
 
+    :return:
     """
     LOGGER.debug('Bootstrapping torrt environment ...')
     import_classes()
@@ -82,6 +115,13 @@ def bootstrap():
 
 
 def register_torrent(hash, torrent_data=None):
+    """Registers torrent within torrt. Used to register torrents that already exists
+    in torrent clients.
+
+    :param hash: str - torrent identifying hash
+    :param torrent_data: dict
+    :return:
+    """
     LOGGER.info('Registering `%s` torrent ...' % hash)
     if torrent_data is None:
         torrent_data = {}
@@ -91,6 +131,12 @@ def register_torrent(hash, torrent_data=None):
 
 
 def unregister_torrent(hash):
+    """Unregisters torrent from torrt. That doesn't remove torrent
+    from torrent clients.
+
+    :param hash: str - torrent identifying hash
+    :return:
+    """
     LOGGER.info('Unregistering `%s` torrent ...' % hash)
     try:
         cfg = TorrtConfig.load()
@@ -101,6 +147,12 @@ def unregister_torrent(hash):
 
 
 def add_torrent_from_url(url, download_to=None):
+    """Adds torrent from a given URL to torrt and torrent clients,
+
+    :param url: str - torrent URL
+    :param download_to: str or None - path to download files from torrent into (in terms of torrent client filesystem)
+    :return:
+    """
     LOGGER.info('Adding torrent from `%s` ...' % url)
 
     torrent_data = get_torrent_from_url(url)
@@ -114,6 +166,12 @@ def add_torrent_from_url(url, download_to=None):
 
 
 def remove_torrent(hash, with_data=False):
+    """Removes torrent by its hash from torrt and torrent clients,
+
+    :param hash: str - torrent identifying hash
+    :param with_data: bool - flag to also remove files from torrent
+    :return:
+    """
     LOGGER.info('Removing torrent `%s` (with data = %s) ...' % (hash, with_data))
 
     for rpc_alias, rpc_object in iter_rpc():
@@ -124,10 +182,21 @@ def remove_torrent(hash, with_data=False):
 
 
 def set_walk_interval(interval_hours):
+    """Sets torrent updates checks interval (in hours).
+
+    :param interval_hours: int - hours interval
+    :return:
+    """
     TorrtConfig.update({'walk_interval_hours': int(interval_hours)})
 
 
 def toggle_rpc(alias, enabled=True):
+    """Enables or disables a given RPC.
+
+    :param alias: str - PRC alias
+    :param enabled: bool - flag to enable or disable
+    :return:
+    """
     rpc = RPCClassesRegistry.get(alias)
     if rpc is not None:
         TorrtConfig.update({'rpc': {alias: {'enabled': enabled}}})
@@ -137,7 +206,12 @@ def toggle_rpc(alias, enabled=True):
 
 
 def walk(forced=False, silent=False):
+    """Performs updates check for the registered torrents.
 
+    :param forced: bool - flag to not to count walk interval setting
+    :param silent: bool - flag to suppress possible exceptions
+    :return:
+    """
     LOGGER.info('Torrent walk is triggered')
     now = int(time())
     cfg = TorrtConfig.load()
@@ -173,7 +247,13 @@ def walk(forced=False, silent=False):
 
 
 def update_torrents(hashes, remove_outdated=True):
-    """"""
+    """Performs torrent updates.
+
+    :param hashes: list - torrent identifying hashes
+    :param remove_outdated: bool - flag to remove outdated torrents from torrent clients
+    :return: hash-indexed dictionary with information on updated torrents
+    :rtype: dict
+    """
     updated_by_hashes = {}
 
     for rpc_alias, rpc_object in iter_rpc():

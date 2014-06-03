@@ -18,14 +18,28 @@ class BaseTracker(WithSettings):
     config_entry_name = 'trackers'
 
     def register(self):
+        """Adds this object into TrackerObjectsRegistry.
+
+        :return:
+        """
         TrackerObjectsRegistry.add(self)
 
     @classmethod
     def get_response(cls, url, form_data=None, allow_redirects=True, referer=None, cookies=None, query_string=None, as_soup=False):
-        """Returns an HTTP resource data from given URL.
+        """Returns an HTTP resource object from given URL.
+
         If a dictionary is passed in `form_data` POST HTTP method
         would be used to pass data to resource (even if that dictionary is empty).
 
+        :param url: str - URL to get data from
+        :param form_data: dict - data for POST
+        :param allow_redirects: bool - whether to follow server redirects
+        :param referer: str or None - data to put into Referer header
+        :param cookies: dict or None - cookies to use
+        :param query_string: str or None - query string (GET parameters) to add to URL
+        :param as_soup: bool - whether to return BeautifulSoup object instead of Requests response
+        :return: object
+        :rtype: Response or BeautifulSoup
         """
         if query_string is not None:
             delim = '?'
@@ -64,11 +78,25 @@ class BaseTracker(WithSettings):
 
     @classmethod
     def make_page_soup(cls, html):
+        """Returns BeautifulSoup object from a html.
+
+        :param html: str
+        :return: object
+        :rtype: BeautifulSoup
+        """
         return BeautifulSoup(html)
 
     @classmethod
     def find_links(cls, url, page_soup, definite=None):
-        """Returns a list with hyperlinks found in supplied html."""
+        """Returns a list with hyperlinks found in supplied page_soup
+        or a definite link.
+
+        :param url: str - page URL
+        :param page_soup: BeautifulSoup - page soup
+        :param definite: str - regular expression to match link
+        :return: list or str
+        :rtype: list or str
+        """
         if definite is not None:
             link = page_soup.find(href=re.compile(definite))
             if link:
@@ -83,19 +111,33 @@ class BaseTracker(WithSettings):
             return links
 
     @classmethod
-    def expand_link(cls, page_url, link):
+    def expand_link(cls, base_url, link):
+        """Expands a given relative link using base URL if required.
+
+        :param base_url: str
+        :param link: str - absolute or relative link
+        :return: str
+        :rtype: str
+        """
         if not link.startswith('http'):
-            link = urljoin(page_url, link)
+            link = urljoin(base_url, link)
         return link
 
     def test_configuration(self):
+        """This should implement a configuration test, e.g. make test login and report success.
+
+        :return: bool
+        """
         return True
 
     def get_torrent(self, url):
         """This method should be implemented in torrent tracker handler class
         and must return .torrent file contents.
 
-        ."""
+        :param url: str - URL to download torrent file from
+        :return: str - torrent file contents
+        :rtype: str
+        """
         raise NotImplementedError('`%s` class should implement `get_torrent_file()` method' % self.__class__.__name__)
 
 
@@ -103,11 +145,22 @@ class GenericTracker(BaseTracker):
     """Generic torrent tracker handler class implementing most common tracker handling methods."""
 
     def get_id_from_link(self, url):
-        """Returns forum thread identifier from full thread URL."""
+        """Returns forum thread identifier from full thread URL.
+
+        :param url: str
+        :return: str
+        :rtype: str
+        """
         return url.split('=')[1]
 
     def get_torrent(self, url):
-        """This is the main method which returns torrent file contents."""
+        """This is the main method which returns torrent file contents
+        of file located at URL.
+
+        :param url: str - URL to find and get torrent from
+        :return: str or Nonr - torrent file contents
+        :rtype: str or None
+        """
         torrent_data = None
         download_link = self.get_download_link(url)
         if download_link is None:
@@ -122,11 +175,22 @@ class GenericTracker(BaseTracker):
         return torrent_data
 
     def get_download_link(self, url):
-        """Tries to find .torrent file download link at forum thread page and return that one."""
+        """Tries to find .torrent file download link on page and return it.
+
+        :param url: str - URL to find a download link at.
+        :return: str or None
+        :rtype: str or None
+        """
         raise NotImplementedError('`%s` class should implement `get_download_link()` method' % self.__class__.__name__)
 
     def download_torrent(self, url, referer=None):
-        """Returns .torrent file contents from the given URL."""
+        """Returns .torrent file contents from the given URL.
+
+        :param url: str - torrent file URL
+        :param referer: str or None - Referer header value
+        :return: str or None
+        :rtype: str or None
+        """
         raise NotImplementedError('`%s` class should implement `download_torrent()` method' % self.__class__.__name__)
 
 
@@ -136,11 +200,9 @@ class GenericPublicTracker(GenericTracker):
     login_required = False
 
     def get_id_from_link(self, url):
-        """Returns forum thread identifier from full thread URL."""
         return url.split('/')[-1]
 
     def download_torrent(self, url, referer=None):
-        """Returns .torrent file contents from the given URL."""
         LOGGER.debug('Downloading torrent file from %s ...' % url)
         # That was a check that user himself visited torrent's page ;)
         response = self.get_response(url, referer=referer)
@@ -151,7 +213,7 @@ class GenericPublicTracker(GenericTracker):
 
 class GenericPrivateTracker(GenericPublicTracker):
     """Generic torrent tracker handler class implementing most common handling methods
-    for private trackers (that require registration).
+    for private trackers (that require user registration).
 
     """
 
@@ -175,14 +237,25 @@ class GenericPrivateTracker(GenericPublicTracker):
         self.query_string = query_string
 
     def get_login_form_data(self, login, password):
-        """Should return a dictionary with data to be pushed to authorization form."""
+        """Should return a dictionary with data to be pushed to authorization form.
+
+        :param login:
+        :param password:
+        :return: dict
+        :rtype: dict
+        """
         return {'username': login, 'password': password}
 
     def test_configuration(self):
         return self.login()
 
     def login(self):
-        """Implements tracker login procedure."""
+        """Implements tracker login procedure.
+        Returns success bool.
+
+        :return: bool
+        :rtype: bool
+        """
         LOGGER.info('Trying to login at %s ...' % self.login_url)
 
         if self.logged_in:
@@ -224,11 +297,12 @@ class GenericPrivateTracker(GenericPublicTracker):
         """Used to perform some required actions right before .torrent download.
         E.g.: to set a sentinel cookie that allows the download.
 
+        :param url: str - torrent file URL
+        :return:
         """
-        return True
+        return None
 
     def download_torrent(self, url, referer=None):
-        """Returns .torrent file contents from the given URL."""
         LOGGER.debug('Downloading torrent file from %s ...' % url)
         self.before_download(url)
         query_string = None
@@ -241,5 +315,5 @@ class GenericPrivateTracker(GenericPublicTracker):
 
 
 class TorrtTrackerException(TorrtException):
-    """"""
+    """Base torrt tracker exception. All other tracker related exception should inherit from that."""
 
