@@ -32,7 +32,7 @@ Requirements
 ------------
 
 1. Python 2.7+
-2. libtorrent Python bindings (python-libtorrent package on Debian-based)
+2. `libtorrent` Python bindings (`python-libtorrent` package on Debian-based)
 3. Requests module
 4. Beautiful Soup 4+ module
 5. Deluge `deluge-webapi` plugin (to work with Deluge)
