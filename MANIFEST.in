@@ -4,13 +4,14 @@ include INSTALL
 include LICENSE
 include README.rst
 
+recursive-include torrt/rpc *
+recursive-include torrt/trackers *
+
 include docs/Makefile
 recursive-include docs .rst
 recursive-include docs .py
 
 recursive-include bin *
-recursive-include rpc *
-recursive-include trackers *
 recursive-include tests *
 
 recursive-exclude * __pycache__
