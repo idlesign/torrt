@@ -19,7 +19,10 @@ RE_LINK = re.compile(r'(?P<url>https?://[^\s]+)')
 
 def import_classes():
     """Dynamically imports RPC classes and tracker handlers from directories."""
+    LOGGER.debug('Importing RPC classes ...')
     import_from_path('rpc')
+
+    LOGGER.debug('Importing Tracker classes ...')
     import_from_path('trackers')
 
 
