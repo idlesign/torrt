@@ -67,6 +67,10 @@ def init_object_registries():
             obj.register()
 
 
+def get_registerd_torrents():
+    return TorrtConfig.load()['torrents']
+
+
 def bootstrap():
     """Bootstraps torrt environment,
     Populates RPC and Trackers registries with objects instantiated with settings from config.

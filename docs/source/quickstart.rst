@@ -9,6 +9,8 @@ In this examples we'll use console commands.
 
     > torrt configure_rpc transmission host=192.168.1.5 user=idle password=pSW0rt
 
+  To get known RPCs aliases use `list_rpc` command.
+
 
 2. Second step is to tell **torrt** how to authorize into private torrent trackers.
 
@@ -16,10 +18,14 @@ In this examples we'll use console commands.
 
    > torrt configure_tracker rutracker.org username=idle password=pSW0rt
 
+  To get known tracker aliases use `list_trackers` command.
+
 
 3. Now let's subscribe to torrent updates, say from http://rutracker.org/forum/viewtopic.php?t=4430338::
 
     > torrt add_torrent http://rutracker.org/forum/viewtopic.php?t=4430338
+
+  To get torrents registered for updates use `list_torrents` command.
 
 4. Updates checks for torrents registered within **torrt** can be done with `walk` command::
 

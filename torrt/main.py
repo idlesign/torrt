@@ -4,16 +4,16 @@ import logging
 from torrt import VERSION
 from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry
 from torrt.toolbox import add_torrent_from_url, remove_torrent, \
-    register_torrent, unregister_torrent, \
+    register_torrent, unregister_torrent, get_registerd_torrents, \
     walk, set_walk_interval, toggle_rpc, configure_logging, bootstrap, \
     configure_rpc, configure_tracker
 
 
+LOGGER = logging.getLogger(__name__)
+
 # todo cipher passwords
 # todo docs
 # todo notifications
-
-# todo rpc tracker lists
 
 def process_commands():
 
@@ -28,6 +28,10 @@ def process_commands():
     arg_parser.add_argument('--verbose', help='Switch to show debug messages', dest='verbose', action='store_true')
 
     subp_main = arg_parser.add_subparsers(title='Supported commands', dest='command')
+
+    subp_main.add_parser('list_rpc', help='Shows known RPCs aliases')
+    subp_main.add_parser('list_trackers', help='Shows known trackers aliases')
+    subp_main.add_parser('list_torrents', help='Shows torrents registered for updates')
 
     parser_configure_tracker = subp_main.add_parser('configure_tracker', help='Sets torrent tracker settings (login credentials, etc.)', description='E.g.: configure_tracker rutracker.org username=idle password=pSW0rt')
     parser_configure_tracker.add_argument('tracker_alias', help='Tracker alias (usually domain) to apply settings to')
@@ -78,6 +82,19 @@ def process_commands():
 
     elif args['command'] == 'disable_rpc':
         toggle_rpc(args['alias'], False)
+
+    elif args['command'] == 'list_trackers':
+
+        for tracker_alias, tracker in TrackerClassesRegistry.get().items():
+            LOGGER.info(tracker_alias)
+
+    elif args['command'] == 'list_rpc':
+        for rpc_alias, rpc in RPCClassesRegistry.get().items():
+            LOGGER.info(rpc_alias)
+
+    elif args['command'] == 'list_torrents':
+        for torrent_hash, torrent_data in get_registerd_torrents().items():
+            LOGGER.info('%s\t%s' % (torrent_hash, torrent_data['name']))
 
     elif args['command'] == 'walk':
         walk(forced=args['forced'], silent=True)
