@@ -8,6 +8,7 @@ from pkgutil import iter_modules
 from inspect import getargspec
 
 import libtorrent as lt
+from bs4 import BeautifulSoup
 
 
 LOGGER = logging.getLogger(__name__)
@@ -63,6 +64,16 @@ def parse_torrent_file(filepath):
     with open(filepath, 'rb') as f:
         contents = f.read()
     return parse_torrent(contents)
+
+
+def make_soup(html):
+    """Returns BeautifulSoup object from a html.
+
+    :param html: str
+    :return: object
+    :rtype: BeautifulSoup
+    """
+    return BeautifulSoup(html)
 
 
 def get_url_from_string(string):

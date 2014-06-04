@@ -3,9 +3,8 @@ import logging
 from urlparse import urlparse, urljoin, parse_qs
 
 import requests
-from bs4 import BeautifulSoup
 
-from torrt.utils import parse_torrent, WithSettings, TrackerObjectsRegistry, TorrtException
+from torrt.utils import parse_torrent, make_soup, WithSettings, TrackerObjectsRegistry, TorrtException
 
 
 LOGGER = logging.getLogger(__name__)
@@ -84,7 +83,7 @@ class BaseTracker(WithSettings):
         :return: object
         :rtype: BeautifulSoup
         """
-        return BeautifulSoup(html)
+        return make_soup(html)
 
     @classmethod
     def find_links(cls, url, page_soup, definite=None):

@@ -27,6 +27,7 @@ Automatic updates are available for:
 
 * Transmission (using built-in JSON RPC)
 * Deluge (using `deluge-webapi` plugin - https://github.com/idlesign/deluge-webapi)
+* uTorrent (using built-in RPC)
 
 **torrt** can function both as a console application and Python module.
 
