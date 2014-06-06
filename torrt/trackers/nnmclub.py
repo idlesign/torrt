@@ -20,30 +20,16 @@ class NNMClubTracker(GenericPrivateTracker):
 
     def get_download_link(self, url):
         """Tries to find .torrent file download link at forum thread page and return that one."""
-        page_soup = self.get_response(url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True)
-        page_links = self.find_links(url, page_soup)
-        download_link = None
+        page_soup = self.get_response(url, referer=url, cookies=self.cookies, query_string=self.get_auth_query_string(), as_soup=True)
+        download_link = self.find_links(url, page_soup, definite='download\.php')
 
-        register_links = 0
-
-        for page_link in page_links:
-
-            if 'profile.php?mode=register' in page_link:
-                register_links += 1
-
-                if register_links > 1:
-                    download_link = None
-                    LOGGER.info('Login is required to download torrent file')
-                    if self.login():
-                        download_link = self.get_download_link(url)
-                        break
-
-            elif 'download.php' in page_link:
-                download_link = page_link
-                break
+        if download_link is None:
+            LOGGER.info('Login is required to download torrent file')
+            if self.login():
+                download_link = self.get_download_link(url)
 
         return download_link
 
 
-# With that one we tell torrt to handle links to `nnm-club.me` domain with NnmclubHandler class.
+# With that one we tell torrt to handle links to `nnm-club.me` domain with NNMClubTracker class.
 TrackerClassesRegistry.add(NNMClubTracker)

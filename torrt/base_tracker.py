@@ -99,7 +99,7 @@ class BaseTracker(WithSettings):
         if definite is not None:
             link = page_soup.find(href=re.compile(definite))
             if link:
-                return link.get('href')
+                return cls.expand_link(url, link.get('href'))
             return link
         else:
             links = []
@@ -301,13 +301,22 @@ class GenericPrivateTracker(GenericPublicTracker):
         """
         return None
 
-    def download_torrent(self, url, referer=None):
-        LOGGER.debug('Downloading torrent file from %s ...' % url)
-        self.before_download(url)
+    def get_auth_query_string(self):
+        """Returns an auth query string to be passed to get_response()
+        for auth purposes.
+
+        :return: auth string, e.g. sid=1234567890
+        :rtype: str
+        """
         query_string = None
         if self.auth_qs_param_name:
             query_string = '%s=%s' % (self.auth_qs_param_name, self.query_string)
-        response = self.get_response(url, cookies=self.cookies, query_string=query_string, referer=referer)
+        return query_string
+
+    def download_torrent(self, url, referer=None):
+        LOGGER.debug('Downloading torrent file from %s ...' % url)
+        self.before_download(url)
+        response = self.get_response(url, cookies=self.cookies, query_string=self.get_auth_query_string(), referer=referer)
         if response is None:
             return None
         return response.content
