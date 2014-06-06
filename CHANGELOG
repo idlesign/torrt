@@ -1,6 +1,13 @@
 torrt changelog
 ===============
 
+v0.2.1
+------
++ `list_rpc` console command now shows statuses.
+* Fixed nnm-club tracker auth procedures.
+* Walk mechanics improved.
+
+
 v0.2.0
 ------
 + Implemented uTorrent crippled RPC support.
