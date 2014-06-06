@@ -2,7 +2,7 @@ import argparse
 import logging
 
 from torrt import VERSION
-from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry
+from torrt.utils import RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRegistry
 from torrt.toolbox import add_torrent_from_url, remove_torrent, \
     register_torrent, unregister_torrent, get_registerd_torrents, \
     walk, set_walk_interval, toggle_rpc, configure_logging, bootstrap, \
@@ -88,8 +88,16 @@ def process_commands():
             LOGGER.info(tracker_alias)
 
     elif args['command'] == 'list_rpc':
+        rpc_statuses = {}
+
         for rpc_alias, rpc in RPCClassesRegistry.get().items():
-            LOGGER.info(rpc_alias)
+            rpc_statuses[rpc_alias] = 'unconfigured'
+
+        for rpc_alias, rpc in RPCObjectsRegistry.get().items():
+            rpc_statuses[rpc_alias] = 'enabled' if rpc.enabled else 'disabled'
+
+        for rpc_alias, rpc_status in rpc_statuses.items():
+            LOGGER.info('%s\t status=%s' % (rpc_alias, rpc_status))
 
     elif args['command'] == 'list_torrents':
         for torrent_hash, torrent_data in get_registerd_torrents().items():
