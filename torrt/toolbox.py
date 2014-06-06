@@ -255,6 +255,7 @@ def update_torrents(hashes, remove_outdated=True):
     :rtype: dict
     """
     updated_by_hashes = {}
+    download_cache = {}
 
     for rpc_alias, rpc_object in iter_rpc():
         LOGGER.info('Getting torrents using `%s` RPC ...' % rpc_object.alias)
@@ -267,7 +268,12 @@ def update_torrents(hashes, remove_outdated=True):
             LOGGER.info('Processing `%s` torrent with `%s` RPC ...' % (existing_torrent['name'], rpc_object.alias))
 
             page_url = get_url_from_string(existing_torrent['comment'])
-            new_torrent = get_torrent_from_url(page_url)
+
+            if page_url in download_cache:
+                new_torrent = download_cache[page_url]
+            else:
+                new_torrent = get_torrent_from_url(page_url)
+                download_cache[page_url] = new_torrent
 
             if new_torrent is None:
                 LOGGER.error('Unable to get torrent from `%s`' % page_url)
