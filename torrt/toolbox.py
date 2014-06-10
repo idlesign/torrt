@@ -205,11 +205,12 @@ def toggle_rpc(alias, enabled=True):
         LOGGER.info('RPC `%s` class is not registered' % alias)
 
 
-def walk(forced=False, silent=False):
+def walk(forced=False, silent=False, remove_outdated=True):
     """Performs updates check for the registered torrents.
 
     :param forced: bool - flag to not to count walk interval setting
     :param silent: bool - flag to suppress possible exceptions
+    :param remove_outdated: bool - flag to remove torrents that are superseded by a new ones
     :return:
     """
     LOGGER.info('Torrent walk is triggered')
@@ -221,7 +222,7 @@ def walk(forced=False, silent=False):
 
         updated = {}
         try:
-            updated = update_torrents(cfg['torrents'].keys(), remove_outdated=False)
+            updated = update_torrents(cfg['torrents'].keys(), remove_outdated=remove_outdated)
         except TorrtException as e:
             if not silent:
                 raise
