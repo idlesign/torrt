@@ -1,6 +1,12 @@
 torrt changelog
 ===============
 
+v0.2.2
+------
+* Now less verbose.
+* Now removes outdated torrents from clients when walking from CLI.
+
+
 v0.2.1
 ------
 + `list_rpc` console command now shows statuses.
