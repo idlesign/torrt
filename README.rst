@@ -2,6 +2,8 @@ torrt
 =====
 https://github.com/idlesign/torrt
 
+.. image:: https://badge.fury.io/py/torrt.png
+    :target: http://badge.fury.io/py/torrt
 
 .. image:: https://pypip.in/d/torrt/badge.png
         :target: https://crate.io/packages/torrt
