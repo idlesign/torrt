@@ -142,15 +142,15 @@ def get_torrent_from_url(url):
     :return: torrent contents
     :rtype: str
     """
-    LOGGER.info('Downloading torrent file from `%s` ...' % url)
+    LOGGER.debug('Downloading torrent file from `%s` ...' % url)
 
     tracker = TrackerObjectsRegistry.get_for_string(url)
     if tracker:
         result = tracker.get_torrent(url)
         if result is None:
-            LOGGER.info('Unable to get torrent from `%s`' % url)
+            LOGGER.warning('Unable to get torrent from `%s`' % url)
         else:
-            LOGGER.info('Torrent was downloaded from `%s`' % url)
+            LOGGER.debug('Torrent was downloaded from `%s`' % url)
             return result
     else:
         LOGGER.warning('Tracker handler for `%s` is not registered' % url)
@@ -170,7 +170,7 @@ def iter_rpc():
 
     for rpc_alias, rpc_object in rpc_objects.items():
         if not rpc_object.enabled:
-            LOGGER.info('RPC `%s` is disabled, skipped.' % rpc_object.alias)
+            LOGGER.debug('RPC `%s` is disabled, skipped.' % rpc_object.alias)
             continue
 
         yield rpc_alias, rpc_object

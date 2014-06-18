@@ -36,7 +36,7 @@ class RuTrackerTracker(GenericPrivateTracker):
                 download_link = page_link
                 if 'guest' in download_link:
                     download_link = None
-                    LOGGER.info('Login is required to download torrent file')
+                    LOGGER.debug('Login is required to download torrent file')
                     if self.login():
                         download_link = self.get_download_link(url)
                 break

@@ -255,7 +255,7 @@ class GenericPrivateTracker(GenericPublicTracker):
         :return: bool
         :rtype: bool
         """
-        LOGGER.info('Trying to login at %s ...' % self.login_url)
+        LOGGER.debug('Trying to login at %s ...' % self.login_url)
 
         if self.logged_in:
             raise TorrtTrackerException('Consecutive login attempt detected at `%s`' % self.__class__.__name__)
@@ -286,7 +286,7 @@ class GenericPrivateTracker(GenericPublicTracker):
 
             # Save auth info to config.
             self.save_settings()
-            LOGGER.info('Login is successful')
+            LOGGER.debug('Login is successful')
         else:
             LOGGER.warning('Login with given credentials failed')
 
