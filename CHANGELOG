@@ -1,6 +1,11 @@
 torrt changelog
 ===============
 
+v0.2.3
+------
+* Now removes outdated torrents from torr when walking.
+
+
 v0.2.2
 ------
 * Now less verbose.

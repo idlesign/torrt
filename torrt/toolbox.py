@@ -292,6 +292,7 @@ def update_torrents(hashes, remove_outdated=True):
             except TorrtRPCException as e:
                 LOGGER.error('Unable to replace `%s` torrent: %s' % (existing_torrent['name'], e.message))
             else:
+                unregister_torrent(existing_torrent['hash'])
                 if remove_outdated:
                     rpc_object.method_remove_torrent(existing_torrent['hash'])
 
