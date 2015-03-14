@@ -40,25 +40,29 @@ class BaseRPC(WithSettings):
         :return: dict
         :rtype: dict
         """
-        raise NotImplementedError('`%s` class must implement `method_get_torrents()` method.' % self.__class__.__name__)
+        raise NotImplementedError(
+            '`%s` class must implement `method_get_torrents()` method.' % self.__class__.__name__)
 
     def method_add_torrent(self, torrent, download_to=None):
         """Adds torrent to torrent client using RPC.
 
         :param torrent: str - torrent file contents
-        :param download_to: str or None - path to download files from torrent into (in terms of torrent client filesystem)
+        :param download_to: str or None - path to download files from torrent into
+        (in terms of torrent client filesystem)
         :return:
         """
-        raise NotImplementedError('`%s` class must implement `method_add_torrent()` method.' % self.__class__.__name__)
+        raise NotImplementedError(
+            '`%s` class must implement `method_add_torrent()` method.' % self.__class__.__name__)
 
-    def method_remove_torrent(self, hash, with_data=False):
+    def method_remove_torrent(self, hash_str, with_data=False):
         """Removes torrent from torrent client using RPC.
 
-        :param hash: str - torrent identifying hash
+        :param hash_str: str - torrent identifying hash
         :param with_data: bool - flag to also remove files from torrent
         :return:
         """
-        raise NotImplementedError('`%s` class must implement `method_remove_torrent()` method.' % self.__class__.__name__)
+        raise NotImplementedError(
+            '`%s` class must implement `method_remove_torrent()` method.' % self.__class__.__name__)
 
     def method_get_version(self):
         """Returns torrent client API version.
@@ -66,7 +70,8 @@ class BaseRPC(WithSettings):
         :return: str
         :rtype: str
         """
-        raise NotImplementedError('`%s` class must implement `method_get_version()` method.' % self.__class__.__name__)
+        raise NotImplementedError(
+            '`%s` class must implement `method_get_version()` method.' % self.__class__.__name__)
 
 
 class TorrtRPCException(TorrtException):

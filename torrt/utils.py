@@ -50,7 +50,12 @@ def parse_torrent(torrent):
     """
     torrent_info = lt.torrent_info(lt.bdecode(torrent))
     files_from_torrent = [a_file.path.decode('utf-8') for a_file in torrent_info.files()]
-    info = {'hash': str(torrent_info.info_hash()), 'name': str(torrent_info.name()), 'files': files_from_torrent, 'torrent': torrent}
+    info = {
+        'hash': str(torrent_info.info_hash()),
+        'name': str(torrent_info.name()),
+        'files': files_from_torrent,
+        'torrent': torrent
+    }
     return info
 
 
@@ -112,24 +117,24 @@ def update_dict(old_dict, new_dict):
     return old_dict
 
 
-def structure_torrent_data(target_dict, hash, data):
+def structure_torrent_data(target_dict, hash_str, data):
     """Updated target dict with torrent data structured suitably
     for config storage.
 
     :param target_dict: dict - dictionary to update
-    :param hash: str - torrent identifying hash
+    :param hash_str: str - torrent identifying hash
     :param data: dict - torrent data recieved from RPC (see parse_torrent())
     :return:
     """
     data = dict(data)
 
     if 'hash' not in data:
-        data['hash'] = hash
+        data['hash'] = hash_str
 
     if 'name' not in data:
         data['name'] = None
 
-    target_dict[hash] = {
+    target_dict[hash_str] = {
         'hash': data['hash'],
         'name': data['name']
     }
@@ -142,18 +147,18 @@ def get_torrent_from_url(url):
     :return: torrent contents
     :rtype: str
     """
-    LOGGER.debug('Downloading torrent file from `%s` ...' % url)
+    LOGGER.debug('Downloading torrent file from `%s` ...', url)
 
     tracker = TrackerObjectsRegistry.get_for_string(url)
     if tracker:
         result = tracker.get_torrent(url)
         if result is None:
-            LOGGER.warning('Unable to get torrent from `%s`' % url)
+            LOGGER.warning('Unable to get torrent from `%s`', url)
         else:
-            LOGGER.debug('Torrent was downloaded from `%s`' % url)
+            LOGGER.debug('Torrent was downloaded from `%s`', url)
             return result
     else:
-        LOGGER.warning('Tracker handler for `%s` is not registered' % url)
+        LOGGER.warning('Tracker handler for `%s` is not registered', url)
     return None
 
 
@@ -170,7 +175,7 @@ def iter_rpc():
 
     for rpc_alias, rpc_object in rpc_objects.items():
         if not rpc_object.enabled:
-            LOGGER.debug('RPC `%s` is disabled, skipped.' % rpc_object.alias)
+            LOGGER.debug('RPC `%s` is disabled, skipped.', rpc_object.alias)
             continue
 
         yield rpc_alias, rpc_object
@@ -196,7 +201,7 @@ class WithSettings(object):
         :param settings:
         :return: object
         """
-        LOGGER.debug('Spawning `%s` object with the given settings ...' % cls.__name__)
+        LOGGER.debug('Spawning `%s` object with the given settings ...', cls.__name__)
         return cls(**settings)
 
     def save_settings(self):
@@ -261,7 +266,7 @@ class TorrtConfig(object):
         :return: settings dict
         :rtype: dict
         """
-        LOGGER.debug('Loading configuration file %s ...' % cls.USER_SETTINGS_FILE)
+        LOGGER.debug('Loading configuration file %s ...', cls.USER_SETTINGS_FILE)
         cls.bootstrap()
         with open(cls.USER_SETTINGS_FILE) as f:
             return json.load(f)
@@ -273,7 +278,7 @@ class TorrtConfig(object):
         :param settings_dict: dict
         :return:
         """
-        LOGGER.debug('Saving configuration file %s ...' % cls.USER_SETTINGS_FILE)
+        LOGGER.debug('Saving configuration file %s ...', cls.USER_SETTINGS_FILE)
         with open(cls.USER_SETTINGS_FILE, 'w') as f:
             json.dump(settings_dict, f, indent=4)
 
@@ -294,7 +299,7 @@ class ObjectsRegistry(object):
         :return:
         """
         name = getattr(obj, 'alias')
-        LOGGER.debug('Registering `%s` from %s ...' % (name, obj))
+        LOGGER.debug('Registering `%s` from %s ...', name, obj)
         self._items[name] = obj
 
     def get(self, obj_alias=None):

@@ -8,6 +8,9 @@ https://github.com/idlesign/torrt
 .. image:: https://pypip.in/d/torrt/badge.png
         :target: https://crate.io/packages/torrt
 
+.. image:: https://landscape.io/github/idlesign/torrt/master/landscape.svg?style=plastic
+   :target: https://landscape.io/github/idlesign/torrt/master
+
 
 Description
 -----------

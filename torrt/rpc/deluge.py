@@ -55,7 +55,7 @@ class DelugeRPC(BaseRPC):
         try:
             response = requests.post(self.url, data=json.dumps(data), cookies=self.cookies, headers=self.headers)
         except requests.exceptions.RequestException as e:
-            LOGGER.error('Failed to query RPC `%s`: %s' % (self.url, e.message))
+            LOGGER.error('Failed to query RPC `%s`: %s', self.url, e.message)
             raise DelugeRPCException(e.message)
         return response
 
@@ -63,7 +63,7 @@ class DelugeRPC(BaseRPC):
         if not self.cookies:
             self.method_login()
 
-        LOGGER.debug('RPC method `%s` ...' % data['method'])
+        LOGGER.debug('RPC method `%s` ...', data['method'])
         response = self.query_(data)
         response = response.json()
 
@@ -93,10 +93,14 @@ class DelugeRPC(BaseRPC):
         return result['torrents']
 
     def method_add_torrent(self, torrent, download_to=None):
-        return self.query(self.build_request_payload('webapi.add_torrent', [base64.encodestring(torrent), {'download_location': download_to}]))
+        return self.query(
+            self.build_request_payload(
+                'webapi.add_torrent', [base64.encodestring(torrent), {'download_location': download_to}]
+            )
+        )
 
-    def method_remove_torrent(self, hash, with_data=False):
-        return self.query(self.build_request_payload('webapi.remove_torrent', [hash, with_data]))
+    def method_remove_torrent(self, hash_str, with_data=False):
+        return self.query(self.build_request_payload('webapi.remove_torrent', [hash_str, with_data]))
 
     def method_get_version(self):
         return self.query(self.build_request_payload('webapi.get_api_version'))

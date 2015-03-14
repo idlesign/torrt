@@ -24,7 +24,8 @@ class BaseTracker(WithSettings):
         TrackerObjectsRegistry.add(self)
 
     @classmethod
-    def get_response(cls, url, form_data=None, allow_redirects=True, referer=None, cookies=None, query_string=None, as_soup=False):
+    def get_response(cls, url, form_data=None, allow_redirects=True, referer=None, cookies=None, query_string=None,
+                     as_soup=False):
         """Returns an HTTP resource object from given URL.
 
         If a dictionary is passed in `form_data` POST HTTP method
@@ -46,7 +47,7 @@ class BaseTracker(WithSettings):
                 delim = '&'
             url = '%s%s%s' % (url, delim, query_string)
 
-        LOGGER.debug('Fetching %s ...' % url)
+        LOGGER.debug('Fetching %s ...', url)
 
         headers = {'User-agent': 'Mozilla/5.0 (Ubuntu; X11; Linux i686; rv:8.0) Gecko/20100'}
 
@@ -72,7 +73,7 @@ class BaseTracker(WithSettings):
                 result = cls.make_page_soup(result.text)
             return result
         except requests.exceptions.RequestException as e:
-            LOGGER.error('Failed to get resource from `%s`: %s' % (url, e.message))
+            LOGGER.error('Failed to get resource from `%s`: %s', url, e.message)
             return None
 
     @classmethod
@@ -163,12 +164,12 @@ class GenericTracker(BaseTracker):
         torrent_data = None
         download_link = self.get_download_link(url)
         if download_link is None:
-            LOGGER.error('Cannot find torrent file download link at %s' % url)
+            LOGGER.error('Cannot find torrent file download link at %s', url)
         else:
-            LOGGER.debug('Torrent download link found: %s' % download_link)
+            LOGGER.debug('Torrent download link found: %s', download_link)
             torrent_data = self.download_torrent(download_link, referer=url)
             if torrent_data is None:
-                LOGGER.debug('Torrent download from `%s` has failed' % download_link)
+                LOGGER.debug('Torrent download from `%s` has failed', download_link)
             else:
                 torrent_data = parse_torrent(torrent_data)
         return torrent_data
@@ -202,7 +203,7 @@ class GenericPublicTracker(GenericTracker):
         return url.split('/')[-1]
 
     def download_torrent(self, url, referer=None):
-        LOGGER.debug('Downloading torrent file from %s ...' % url)
+        LOGGER.debug('Downloading torrent file from %s ...', url)
         # That was a check that user himself visited torrent's page ;)
         response = self.get_response(url, referer=referer)
         if response is None:
@@ -255,7 +256,7 @@ class GenericPrivateTracker(GenericPublicTracker):
         :return: bool
         :rtype: bool
         """
-        LOGGER.debug('Trying to login at %s ...' % self.login_url)
+        LOGGER.debug('Trying to login at %s ...', self.login_url)
 
         if self.logged_in:
             raise TorrtTrackerException('Consecutive login attempt detected at `%s`' % self.__class__.__name__)
@@ -273,7 +274,10 @@ class GenericPrivateTracker(GenericPublicTracker):
         if self.auth_qs_param_name:
             allow_redirects = True  # To be able to get Session ID from query string.
 
-        response = self.get_response(self.login_url, self.get_login_form_data(self.username, self.password), allow_redirects=allow_redirects, cookies=self.cookies)
+        response = self.get_response(
+            self.login_url, self.get_login_form_data(self.username, self.password),
+            allow_redirects=allow_redirects, cookies=self.cookies
+        )
 
         # Login success checks.
         parsed_qs = parse_qs(urlparse(response.url).query)
@@ -314,9 +318,11 @@ class GenericPrivateTracker(GenericPublicTracker):
         return query_string
 
     def download_torrent(self, url, referer=None):
-        LOGGER.debug('Downloading torrent file from %s ...' % url)
+        LOGGER.debug('Downloading torrent file from %s ...', url)
         self.before_download(url)
-        response = self.get_response(url, cookies=self.cookies, query_string=self.get_auth_query_string(), referer=referer)
+        response = self.get_response(
+            url, cookies=self.cookies, query_string=self.get_auth_query_string(), referer=referer
+        )
         if response is None:
             return None
         return response.content

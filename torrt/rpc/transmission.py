@@ -34,14 +34,19 @@ class TransmissionRPC(BaseRPC):
 
     def query_(self, data):
         try:
-            response = requests.post(self.url, auth=(self.user, self.password), data=json.dumps(data), headers={self.csrf_header: self.session_id})
+            response = requests.post(
+                self.url,
+                auth=(self.user, self.password),
+                data=json.dumps(data),
+                headers={self.csrf_header: self.session_id}
+            )
         except requests.exceptions.RequestException as e:
-            LOGGER.error('Failed to query RPC `%s`: %s' % (self.url, e.message))
+            LOGGER.error('Failed to query RPC `%s`: %s', self.url, e.message)
             raise TransmissionRPCException(e.message)
         return response
 
     def query(self, data):
-        LOGGER.debug('RPC method `%s` ...' % data['method'])
+        LOGGER.debug('RPC method `%s` ...', data['method'])
 
         response = self.query_(data)
 
@@ -90,9 +95,9 @@ class TransmissionRPC(BaseRPC):
             args['download-dir'] = download_to
         return self.query(self.build_request_payload('torrent-add', args))  # torrent-added
 
-    def method_remove_torrent(self, hash, with_data=False):
+    def method_remove_torrent(self, hash_str, with_data=False):
         args = {
-            'ids': [hash],
+            'ids': [hash_str],
             'delete-local-data': with_data
         }
         self.query(self.build_request_payload('torrent-remove', args))

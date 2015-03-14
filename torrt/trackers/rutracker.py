@@ -28,7 +28,9 @@ class RuTrackerTracker(GenericPrivateTracker):
 
     def get_download_link(self, url):
         """Tries to find .torrent file download link at forum thread page and return that one."""
-        page_soup = self.get_response(url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True)
+        page_soup = self.get_response(
+            url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
+        )
         page_links = self.find_links(url, page_soup)
         download_link = None
         for page_link in page_links:

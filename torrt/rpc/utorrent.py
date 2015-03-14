@@ -34,13 +34,17 @@ class UTorrentRPC(BaseRPC):
 
     def login(self):
         try:
-            response = requests.get(urljoin(self.url, self.token_page_path), auth=(self.user, self.password), cookies=self.cookies)
+            response = requests.get(
+                urljoin(self.url, self.token_page_path),
+                auth=(self.user, self.password),
+                cookies=self.cookies
+            )
             self.csrf_token = make_soup(response.text).find(id='token').text
             if not self.csrf_token:
                 raise UTorrentRPCException('Unable to fetch CSRF token.')
             self.cookies = response.cookies
         except Exception as e:
-            LOGGER.error('Failed to login using `%s` RPC: %s' % (self.url, e.message))
+            LOGGER.error('Failed to login using `%s` RPC: %s', self.url, e.message)
             raise UTorrentRPCException(e.message)
 
     def build_params(self, action=None, params=None):
@@ -62,7 +66,7 @@ class UTorrentRPC(BaseRPC):
         return '%s?token=%s&%s' % (self.url,  self.csrf_token, join(rest))
 
     def query(self, data, files=None):
-        LOGGER.debug('RPC action `%s` ...' % (data['action'] or 'list'))
+        LOGGER.debug('RPC action `%s` ...', data['action'] or 'list')
 
         if not self.cookies:
             self.login()
@@ -83,7 +87,7 @@ class UTorrentRPC(BaseRPC):
             if response.status_code != 200:
                 raise UTorrentRPCException(response.text.strip())
         except Exception as e:
-            LOGGER.error('Failed to query RPC `%s`: %s' % (url, e.message))
+            LOGGER.error('Failed to query RPC `%s`: %s', url, e.message)
             raise UTorrentRPCException(e.message)
         response = response.json()
 
@@ -108,11 +112,11 @@ class UTorrentRPC(BaseRPC):
         file_data = {'torrent_file': ('from_torrt.torrent', torrent)}
         return self.query(self.build_params(action='add-file'), file_data)
 
-    def method_remove_torrent(self, hash, with_data=False):
+    def method_remove_torrent(self, hash_str, with_data=False):
         action = 'remove'
         if with_data:
             action = 'removedata'
-        self.query(self.build_params(action=action, params={'hash': hash}))
+        self.query(self.build_params(action=action, params={'hash': hash_str}))
         return True
 
     def method_get_version(self):

@@ -32,7 +32,7 @@ def configure_rpc(rpc_alias, settings_dict):
     :param settings_dict: settings dictionary to configure RPC with
     :return:
     """
-    LOGGER.info('Configuring `%s` RPC ...' % rpc_alias)
+    LOGGER.info('Configuring `%s` RPC ...', rpc_alias)
 
     rpc_class = RPCClassesRegistry.get(rpc_alias)
     if rpc_class is not None:
@@ -41,11 +41,11 @@ def configure_rpc(rpc_alias, settings_dict):
         if version:
             rpc_obj.enabled = True
             rpc_obj.save_settings()
-            LOGGER.info('RPC `%s` is configured' % rpc_alias)
+            LOGGER.info('RPC `%s` is configured', rpc_alias)
         else:
-            LOGGER.error('RPC `%s` configuration failed. Check your settings' % rpc_alias)
+            LOGGER.error('RPC `%s` configuration failed. Check your settings', rpc_alias)
     else:
-        LOGGER.error('RPC `%s` is unknown' % rpc_alias)
+        LOGGER.error('RPC `%s` is unknown', rpc_alias)
 
 
 def configure_tracker(tracker_alias, settings_dict):
@@ -56,7 +56,7 @@ def configure_tracker(tracker_alias, settings_dict):
     :param settings_dict: settings dictionary to configure tracker with
     :return:
     """
-    LOGGER.info('Configuring `%s` tracker ...' % tracker_alias)
+    LOGGER.info('Configuring `%s` tracker ...', tracker_alias)
 
     tracker_class = TrackerClassesRegistry.get(tracker_alias)
     if tracker_class is not None:
@@ -64,11 +64,11 @@ def configure_tracker(tracker_alias, settings_dict):
         configured = tracker_obj.test_configuration()
         if configured:
             tracker_obj.save_settings()
-            LOGGER.info('Tracker `%s` is configured' % tracker_alias)
+            LOGGER.info('Tracker `%s` is configured', tracker_alias)
         else:
-            LOGGER.error('Tracker `%s` configuration failed. Check your settings' % tracker_alias)
+            LOGGER.error('Tracker `%s` configuration failed. Check your settings', tracker_alias)
     else:
-        LOGGER.error('Tracker `%s` is unknown' % tracker_alias)
+        LOGGER.error('Tracker `%s` is unknown', tracker_alias)
 
 
 def init_object_registries():
@@ -114,33 +114,33 @@ def bootstrap():
     init_object_registries()
 
 
-def register_torrent(hash, torrent_data=None):
+def register_torrent(hash_str, torrent_data=None):
     """Registers torrent within torrt. Used to register torrents that already exists
     in torrent clients.
 
-    :param hash: str - torrent identifying hash
+    :param hash_str: str - torrent identifying hash
     :param torrent_data: dict
     :return:
     """
-    LOGGER.info('Registering `%s` torrent ...' % hash)
+    LOGGER.info('Registering `%s` torrent ...', hash_str)
     if torrent_data is None:
         torrent_data = {}
     cfg = {'torrents': {}}
-    structure_torrent_data(cfg['torrents'], hash, torrent_data)
+    structure_torrent_data(cfg['torrents'], hash_str, torrent_data)
     TorrtConfig.update(cfg)
 
 
-def unregister_torrent(hash):
+def unregister_torrent(hash_str):
     """Unregisters torrent from torrt. That doesn't remove torrent
     from torrent clients.
 
-    :param hash: str - torrent identifying hash
+    :param hash_str: str - torrent identifying hash
     :return:
     """
-    LOGGER.info('Unregistering `%s` torrent ...' % hash)
+    LOGGER.info('Unregistering `%s` torrent ...', hash_str)
     try:
         cfg = TorrtConfig.load()
-        del cfg['torrents'][hash]
+        del cfg['torrents'][hash_str]
         TorrtConfig.save(cfg)
     except KeyError:
         pass  # Torrent was not known by torrt
@@ -153,32 +153,32 @@ def add_torrent_from_url(url, download_to=None):
     :param download_to: str or None - path to download files from torrent into (in terms of torrent client filesystem)
     :return:
     """
-    LOGGER.info('Adding torrent from `%s` ...' % url)
+    LOGGER.info('Adding torrent from `%s` ...', url)
 
     torrent_data = get_torrent_from_url(url)
     if torrent_data is None:
-        LOGGER.error('Unable to add torrent from `%s`' % url)
+        LOGGER.error('Unable to add torrent from `%s`', url)
     else:
         for rpc_alias, rpc_object in iter_rpc():
             rpc_object.method_add_torrent(torrent_data['torrent'], download_to=download_to)
             register_torrent(torrent_data['hash'], torrent_data)
-            LOGGER.info('Torrent from `%s` is added within `%s`' % (url, rpc_alias))
+            LOGGER.info('Torrent from `%s` is added within `%s`', url, rpc_alias)
 
 
-def remove_torrent(hash, with_data=False):
+def remove_torrent(hash_str, with_data=False):
     """Removes torrent by its hash from torrt and torrent clients,
 
-    :param hash: str - torrent identifying hash
+    :param hash_str: str - torrent identifying hash
     :param with_data: bool - flag to also remove files from torrent
     :return:
     """
-    LOGGER.info('Removing torrent `%s` (with data = %s) ...' % (hash, with_data))
+    LOGGER.info('Removing torrent `%s` (with data = %s) ...', hash_str, with_data)
 
     for rpc_alias, rpc_object in iter_rpc():
-        LOGGER.info('Removing torrent using `%s` RPC ...' % rpc_object.alias)
-        rpc_object.method_remove_torrent(hash, with_data=with_data)
+        LOGGER.info('Removing torrent using `%s` RPC ...', rpc_object.alias)
+        rpc_object.method_remove_torrent(hash_str, with_data=with_data)
 
-    unregister_torrent(hash)
+    unregister_torrent(hash_str)
 
 
 def set_walk_interval(interval_hours):
@@ -200,9 +200,9 @@ def toggle_rpc(alias, enabled=True):
     rpc = RPCClassesRegistry.get(alias)
     if rpc is not None:
         TorrtConfig.update({'rpc': {alias: {'enabled': enabled}}})
-        LOGGER.info('RPC `%s` enabled = %s' % (alias, enabled))
+        LOGGER.info('RPC `%s` enabled = %s', alias, enabled)
     else:
-        LOGGER.info('RPC `%s` class is not registered' % alias)
+        LOGGER.info('RPC `%s` class is not registered', alias)
 
 
 def walk(forced=False, silent=False, remove_outdated=True):
@@ -227,7 +227,7 @@ def walk(forced=False, silent=False, remove_outdated=True):
             if not silent:
                 raise
             else:
-                LOGGER.error('Walk failed. Reason: %s' % e.message)
+                LOGGER.error('Walk failed. Reason: %s', e.message)
 
         new_cfg = {
             'time_last_check': now
@@ -244,7 +244,11 @@ def walk(forced=False, silent=False, remove_outdated=True):
 
         LOGGER.info('Torrent walk is finished')
     else:
-        LOGGER.info('Torrent walk postponed till %s (now %s)' % (get_iso_from_timestamp(next_time), get_iso_from_timestamp(now)))
+        LOGGER.info(
+            'Torrent walk postponed till %s (now %s)',
+            get_iso_from_timestamp(next_time),
+            get_iso_from_timestamp(now)
+        )
 
 
 def update_torrents(hashes, remove_outdated=True):
@@ -259,14 +263,14 @@ def update_torrents(hashes, remove_outdated=True):
     download_cache = {}
 
     for rpc_alias, rpc_object in iter_rpc():
-        LOGGER.info('Getting torrents using `%s` RPC ...' % rpc_object.alias)
+        LOGGER.info('Getting torrents using `%s` RPC ...', rpc_object.alias)
         torrents = rpc_object.method_get_torrents(hashes)
 
         if not torrents:
-            LOGGER.info('No significant torrents found with `%s` RPC' % rpc_object.alias)
+            LOGGER.info('No significant torrents found with `%s` RPC', rpc_object.alias)
 
         for existing_torrent in torrents:
-            LOGGER.info('Processing `%s` torrent with `%s` RPC ...' % (existing_torrent['name'], rpc_object.alias))
+            LOGGER.info('Processing `%s` torrent with `%s` RPC ...', existing_torrent['name'], rpc_object.alias)
 
             page_url = get_url_from_string(existing_torrent['comment'])
 
@@ -277,20 +281,20 @@ def update_torrents(hashes, remove_outdated=True):
                 download_cache[page_url] = new_torrent
 
             if new_torrent is None:
-                LOGGER.error('Unable to get torrent from `%s`' % page_url)
+                LOGGER.error('Unable to get torrent from `%s`', page_url)
                 continue
 
             if existing_torrent['hash'] == new_torrent['hash']:
-                LOGGER.info('Torrent `%s` is up-to-date' % existing_torrent['name'])
+                LOGGER.info('Torrent `%s` is up-to-date', existing_torrent['name'])
                 continue
 
-            LOGGER.info('Torrent `%s` update is available' % existing_torrent['name'])
+            LOGGER.info('Torrent `%s` update is available', existing_torrent['name'])
             try:
                 rpc_object.method_add_torrent(new_torrent['torrent'], existing_torrent['download_to'])
-                LOGGER.info('Torrent `%s` is updated' % existing_torrent['name'])
+                LOGGER.info('Torrent `%s` is updated', existing_torrent['name'])
                 structure_torrent_data(updated_by_hashes, existing_torrent['hash'], new_torrent)
             except TorrtRPCException as e:
-                LOGGER.error('Unable to replace `%s` torrent: %s' % (existing_torrent['name'], e.message))
+                LOGGER.error('Unable to replace `%s` torrent: %s', existing_torrent['name'], e.message)
             else:
                 unregister_torrent(existing_torrent['hash'])
                 if remove_outdated:
