@@ -37,7 +37,7 @@ def import_from_path(path):
     :param path: str - path under torrt
     :return:
     """
-    for mloader, pname, ispkg in iter_modules([os.path.join(os.path.dirname(__file__), path)]):
+    for _, pname, ispkg in iter_modules([os.path.join(os.path.dirname(__file__), path)]):
         __import__('torrt.%s.%s' % (path, pname))
 
 

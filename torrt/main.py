@@ -119,7 +119,7 @@ def process_commands():
 
     elif args['command'] == 'list_trackers':
 
-        for tracker_alias, tracker in TrackerClassesRegistry.get().items():
+        for tracker_alias, _ in TrackerClassesRegistry.get().items():
             LOGGER.info(tracker_alias)
 
     elif args['command'] == 'list_rpc':

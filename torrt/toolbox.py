@@ -174,7 +174,7 @@ def remove_torrent(hash_str, with_data=False):
     """
     LOGGER.info('Removing torrent `%s` (with data = %s) ...', hash_str, with_data)
 
-    for rpc_alias, rpc_object in iter_rpc():
+    for _, rpc_object in iter_rpc():
         LOGGER.info('Removing torrent using `%s` RPC ...', rpc_object.alias)
         rpc_object.method_remove_torrent(hash_str, with_data=with_data)
 
@@ -262,7 +262,7 @@ def update_torrents(hashes, remove_outdated=True):
     updated_by_hashes = {}
     download_cache = {}
 
-    for rpc_alias, rpc_object in iter_rpc():
+    for _, rpc_object in iter_rpc():
         LOGGER.info('Getting torrents using `%s` RPC ...', rpc_object.alias)
         torrents = rpc_object.method_get_torrents(hashes)
 
