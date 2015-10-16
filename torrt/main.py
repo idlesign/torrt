@@ -6,8 +6,7 @@ from torrt.utils import RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRe
 from torrt.toolbox import add_torrent_from_url, remove_torrent, \
     register_torrent, unregister_torrent, get_registerd_torrents, \
     walk, set_walk_interval, toggle_rpc, configure_logging, bootstrap, \
-    configure_rpc, configure_tracker
-
+    configure_rpc, configure_tracker, configure_notifier
 
 LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +53,17 @@ def process_commands():
         'settings',
         help='Settings string, format: setting1=val1 setting2=val2. '
              'Supported settings (any of): url, host, port, user, password',
+        nargs='*')
+
+    parser_configure_notifier = subp_main.add_parser(
+        'configure_notifier', help='Sets Notifiers settings (smtp credentials, etc.)',
+        description='E.g.: configure_notifier email email=your@email.com user=idle password=pSW0rt')
+    parser_configure_notifier.add_argument(
+        'notifier_alias', help='RPC alias to apply settings to')
+    parser_configure_notifier.add_argument(
+        'settings',
+        help='Settings string, format: setting1=val1 setting2=val2. '
+             'Supported settings (any of): email, host, port, use_tls, user, password',
         nargs='*')
 
     parser_walk = subp_main.add_parser(
@@ -161,6 +171,9 @@ def process_commands():
 
     elif args['command'] == 'configure_tracker':
         configure_tracker(args['tracker_alias'], settings_dict_from_list(args['settings']))
+
+    elif args['command'] == 'configure_notifier':
+        configure_notifier(args['notifier_alias'], settings_dict_from_list(args['settings']))
 
 
 if __name__ == '__main__':

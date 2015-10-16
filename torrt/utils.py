@@ -29,6 +29,9 @@ def import_classes():
     LOGGER.debug('Importing Tracker classes ...')
     import_from_path('trackers')
 
+    LOGGER.debug('Importing Notifier classes ...')
+    import_from_path('notifiers')
+
 
 def import_from_path(path):
     """Dynamically imports modules from package.
@@ -243,7 +246,8 @@ class TorrtConfig(object):
                 'walk_interval_hours': 1,
                 'rpc': {},
                 'trackers': {},
-                'torrents': {}
+                'torrents': {},
+                'notifiers': {}
             }
             cls.save(basic_settings)
 
@@ -336,3 +340,5 @@ RPCClassesRegistry = ObjectsRegistry()
 RPCObjectsRegistry = ObjectsRegistry()
 TrackerClassesRegistry = ObjectsRegistry()
 TrackerObjectsRegistry = ObjectsRegistry()
+NotifierClassesRegistry = ObjectsRegistry()
+NotifierObjectsRegistry = ObjectsRegistry()
