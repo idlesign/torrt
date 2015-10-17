@@ -8,11 +8,15 @@ LOGGER = logging.getLogger(__name__)
 
 
 class TelegramNotifier(BaseNotifier):
-
+    """Telegram bot notifier. See instructions how to create bot at https://core.telegram.org/bots/api"""
     alias = 'telegram'
     url = 'https://api.telegram.org/bot'
 
     def __init__(self, token, chat_id):
+        """
+        :param token: str - Telegram's bot token
+        :param chat_id: str - Telegram's chat ot user ID
+        """
 
         self.token = token
         self.chat_id = chat_id

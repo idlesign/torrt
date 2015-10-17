@@ -94,6 +94,22 @@ def configure_notifier(notifier_alias, settings_dict):
         LOGGER.error('Notifier `%s` is unknown', notifier_alias)
 
 
+def remove_notifier(alias):
+    """Removes notifier by alias
+
+    :param alias: str - Notifier alias to remove.
+
+    :return:
+    """
+    LOGGER.info('Removing `%s` notifier ...', alias)
+    try:
+        cfg = TorrtConfig.load()
+        del cfg['notifiers'][alias]
+        TorrtConfig.save(cfg)
+    except KeyError:
+        pass
+
+
 def init_object_registries():
     """Initializes RPC and tracker objects registries with settings
     from configuration file.

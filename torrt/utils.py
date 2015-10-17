@@ -200,9 +200,6 @@ def iter_notifiers():
         yield notifier_alias, notifier_object
 
 
-
-
-
 class WithSettings(object):
     """Introduces settings support for class objects.
 
