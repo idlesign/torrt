@@ -27,7 +27,7 @@ class EmailNotifier(BaseNotifier):
 
     def get_connection(self):
         try:
-            connection = SMTP(self.host, self.port, timeout=1)
+            connection = SMTP(self.host, self.port)
             connection.ehlo()
         except socket.error as e:
             LOGGER.error('Could not connect to SMTP server: %s' % e)
