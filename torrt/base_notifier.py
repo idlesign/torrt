@@ -52,4 +52,3 @@ class BaseNotifier(WithSettings):
 
         msg = self.make_message(updated_data)
         self.send_message(msg)
-        LOGGER.info('Notification message was sent to user by %s notifier' % self.__class__.__name__)

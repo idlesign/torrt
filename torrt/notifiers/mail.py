@@ -54,18 +54,14 @@ class EmailNotifier(BaseNotifier):
         return bool(self.connection)
 
     def make_message(self, torrent_data):
-        text = '''Following torrents was updated:
-
-        %s
-
-        Best regards,
-        torrt.''' % '\n'.join(map(lambda t: t['name'], torrent_data.values()))
+        text = '''Following torrents was updated:\n%s\n\nBest regards,\ntorrt.''' \
+               % '\n'.join(map(lambda t: t['name'], torrent_data.values()))
 
         msg = MIMEText(text)
         msg['Subject'] = 'New torrents was added to download queue.'
         msg['From'] = self.sender
         msg['To'] = self.email
-
+        LOGGER.info('Notification message was sent to user %s' % self.email)
         return msg.as_string()
 
 
