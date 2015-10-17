@@ -4,7 +4,7 @@ from time import time
 from torrt.base_rpc import TorrtRPCException
 from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, TorrtConfig, TorrtException, \
     get_url_from_string, get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc, \
-    NotifierClassesRegistry
+    NotifierClassesRegistry, iter_notifiers
 
 LOGGER = logging.getLogger(__name__)
 
@@ -267,6 +267,8 @@ def walk(forced=False, silent=False, remove_outdated=True):
                 del cfg['torrents'][old_hash]
                 cfg['torrents'][new_data['hash']] = new_data
             new_cfg['torrents'] = cfg['torrents']
+            for _, notifier in iter_notifiers():
+                notifier.send(updated)
 
         # Save updated torrents data into config.
         TorrtConfig.update(new_cfg)

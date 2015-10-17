@@ -184,6 +184,25 @@ def iter_rpc():
         yield rpc_alias, rpc_object
 
 
+def iter_notifiers():
+    """Generator to iterate through available notifier objects.
+
+    :return: tuple - notifier_alias, notifier_object
+    :rtype: tuple
+    """
+    notifier_objects = NotifierObjectsRegistry.get()
+    if not notifier_objects:
+        LOGGER.error('No Notifier objects registered, unable to proceed')
+        raise StopIteration()
+
+    for notifier_alias, notifier_object in notifier_objects.items():
+
+        yield notifier_alias, notifier_object
+
+
+
+
+
 class WithSettings(object):
     """Introduces settings support for class objects.
 

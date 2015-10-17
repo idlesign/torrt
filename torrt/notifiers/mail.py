@@ -1,7 +1,7 @@
 import logging
+import socket
 from email.mime.text import MIMEText
-from smtplib import SMTP
-
+from smtplib import SMTP, SMTPAuthenticationError
 from torrt.base_notifier import BaseNotifier
 from torrt.utils import NotifierClassesRegistry
 
@@ -26,13 +26,25 @@ class EmailNotifier(BaseNotifier):
         self.connection = self.get_connection()
 
     def get_connection(self):
-        connection = SMTP(self.host, self.port)
-        connection.ehlo()
-        if self.use_tls:
-            connection.starttls()
+        try:
+            connection = SMTP(self.host, self.port, timeout=1)
             connection.ehlo()
+        except socket.error as e:
+            LOGGER.error('Could not connect to SMTP server: %s' % e)
+            return
+        if self.use_tls:
+            try:
+                connection.starttls()
+                connection.ehlo()
+            except Exception as e:
+                LOGGER.error(e)
+                return
         if self.user and self.password:
-            connection.login(self.user, self.password)
+            try:
+                connection.login(self.user, self.password)
+            except SMTPAuthenticationError as e:
+                LOGGER.error(e)
+                return
         return connection
 
     def send_message(self, msg):
@@ -42,9 +54,15 @@ class EmailNotifier(BaseNotifier):
         return bool(self.connection)
 
     def make_message(self, torrent_data):
+        text = '''Following torrents was updated:
 
-        msg = MIMEText('New torrent was added to download queue.')
-        msg['Subject'] = 'New torrent'
+        %s
+
+        Best regards,
+        torrt.''' % '\n'.join(map(lambda t: t['name'], torrent_data.values()))
+
+        msg = MIMEText(text)
+        msg['Subject'] = 'New torrents was added to download queue.'
         msg['From'] = self.sender
         msg['To'] = self.email
 
