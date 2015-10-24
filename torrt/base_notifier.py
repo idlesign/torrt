@@ -6,6 +6,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class BaseNotifier(WithSettings):
+    """Base Notifier class. All Notifier classes should inherit from this."""
 
     alias = None
     config_entry_name = 'notifiers'

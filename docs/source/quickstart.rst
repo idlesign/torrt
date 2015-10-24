@@ -27,12 +27,19 @@ In this examples we'll use console commands.
 
   To get torrents registered for updates use `list_torrents` command.
 
-4. Updates checks for torrents registered within **torrt** can be done with `walk` command::
+4. Configure notifications about torrent updates.
+
+  Let's configure notifications through email::
+
+    > torrt configure_notifier email host=smtp.server.com port=25 use_tls=True email=your@email.com user=idle password=pSW0rt
+
+
+5. Updates checks for torrents registered within **torrt** can be done with `walk` command::
 
     > torrt walk
 
 
-5. Use `set_walk_interval` command to set walk interval in hours::
+6. Use `set_walk_interval` command to set walk interval in hours::
 
     > torrt set_walk_interval 24
 

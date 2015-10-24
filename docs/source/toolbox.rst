@@ -41,3 +41,12 @@ Torrent tracker classes should be implemented using this.
 .. automodule:: torrt.base_tracker
    :members:
 
+
+Base Notification class
+-----------------------
+
+Notifier classes should be implemented using this.
+
+.. automodule:: torrt.base_notifier
+   :members:
+
