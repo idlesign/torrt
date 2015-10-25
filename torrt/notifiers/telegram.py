@@ -15,14 +15,14 @@ class TelegramNotifier(BaseNotifier):
     def __init__(self, token, chat_id):
         """
         :param token: str - Telegram's bot token
-        :param chat_id: str - Telegram's chat ot user ID
+        :param chat_id: str - Telegram's chat ID
         """
 
         self.token = token
         self.chat_id = chat_id
 
     def make_message(self, torrent_data):
-        return '''Following torrents was updated:\n%s''' \
+        return '''Following torrents were updated:\n%s''' \
                % '\n'.join(map(lambda t: t['name'], torrent_data.values()))
 
     def test_configuration(self):

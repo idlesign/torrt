@@ -61,11 +61,12 @@ def process_commands():
         'configure_notifier', help='Sets Notifiers settings (smtp credentials, etc.)',
         description='E.g.: configure_notifier email email=your@email.com user=idle password=pSW0rt')
     parser_configure_notifier.add_argument(
-        'notifier_alias', help='RPC alias to apply settings to')
+        'notifier_alias', help='Notifier alias to apply settings to')
     parser_configure_notifier.add_argument(
         'settings',
         help='Settings string, format: setting1=val1 setting2=val2. '
-             'Supported settings (any of): email, host, port, use_tls, user, password',
+             'Supported settings for email notifier (any of): email, host, port, use_tls, user, password.'
+             'Supported settings for telegram notifier: token, chat_id.',
         nargs='*')
 
     parser_walk = subp_main.add_parser(
