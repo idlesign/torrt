@@ -157,10 +157,10 @@ def process_commands():
 
     elif args['command'] == 'list_notifiers':
         notifiers = {}
-        for notifier_alias, notifier in NotifierClassesRegistry.get().items():
+        for notifier_alias in NotifierClassesRegistry.get().keys():
             notifiers[notifier_alias] = 'unconfigured'
 
-        for notifier_alias, notifier in NotifierObjectsRegistry.get().items():
+        for notifier_alias in NotifierObjectsRegistry.get().keys():
             notifiers[notifier_alias] = 'enabled'
 
         for notifier_alias, notifier_status in notifiers.items():
