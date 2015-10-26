@@ -5,14 +5,13 @@ from torrt import VERSION
 from torrt.utils import RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRegistry, NotifierClassesRegistry, \
     NotifierObjectsRegistry
 from torrt.toolbox import add_torrent_from_url, remove_torrent, \
-    register_torrent, unregister_torrent, get_registerd_torrents, \
+    register_torrent, unregister_torrent, get_registered_torrents, \
     walk, set_walk_interval, toggle_rpc, configure_logging, bootstrap, \
     configure_rpc, configure_tracker, configure_notifier, remove_notifier
 
 LOGGER = logging.getLogger(__name__)
 
 # todo cipher passwords
-# todo notifications
 
 
 def process_commands():
@@ -152,7 +151,7 @@ def process_commands():
             LOGGER.info('%s\t status=%s', rpc_alias, rpc_status)
 
     elif args['command'] == 'list_torrents':
-        for torrent_hash, torrent_data in get_registerd_torrents().items():
+        for torrent_hash, torrent_data in get_registered_torrents().items():
             LOGGER.info('%s\t%s', torrent_hash, torrent_data['name'])
 
     elif args['command'] == 'list_notifiers':
