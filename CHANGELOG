@@ -1,6 +1,11 @@
 torrt changelog
 ===============
 
+Unreleased
+----------
++ Implemented Notifications subsystem.
+
+
 v0.2.3
 ------
 * Now removes outdated torrents from torr when walking.
