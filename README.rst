@@ -37,10 +37,10 @@ Automatic updates are available for:
 * Deluge (using `deluge-webapi` plugin - https://github.com/idlesign/deluge-webapi)
 * uTorrent (using built-in RPC)
 
-**torrt** is able to send notifications about downloaded files with:
+**torrt** is able to send update notifications using:
 
-* Mail (using SMTP server)
-* Telegram (using telegram bot API) - https://core.telegram.org/bots/api
+* E-Mail (SMTP)
+* Telegram (via Telegram Bot API) - https://core.telegram.org/bots/api
 
 **torrt** can function both as a console application and Python module.
 
