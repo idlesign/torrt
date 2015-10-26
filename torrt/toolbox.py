@@ -1,4 +1,5 @@
 import logging
+from warnings import warn
 from time import time
 
 from torrt.base_rpc import TorrtRPCException
@@ -131,7 +132,7 @@ def init_object_registries():
             registry_obj and registry_obj.spawn_with_settings(settings).register()
 
 
-def get_registerd_torrents():
+def get_registered_torrents():
     """Returns hash-indexed dictionary with information on torrents
     registered for updates.
 
@@ -139,6 +140,12 @@ def get_registerd_torrents():
     :rtype: dict
     """
     return TorrtConfig.load()['torrents']
+
+
+def get_registerd_torrents():
+    warn('`get_registerd_torrents()` is deprecated and will be removed in 1.0. '
+         'Please use `get_registered_torrents()` instead.', DeprecationWarning, stacklevel=2)
+    return get_registered_torrents()
 
 
 def bootstrap():

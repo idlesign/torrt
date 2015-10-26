@@ -4,6 +4,7 @@ torrt changelog
 Unreleased
 ----------
 + Implemented Notifications subsystem.
+* get_registerd_torrents() is deprecated in favor of get_registered_torrents().
 
 
 v0.2.3
