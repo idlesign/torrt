@@ -119,23 +119,16 @@ def init_object_registries():
     LOGGER.debug('Initializing objects registries from configuration file ...')
     cfg = TorrtConfig.load()
 
-    for alias, rpc_settings in cfg['rpc'].items():
-        rpc = RPCClassesRegistry.get(alias)
-        if rpc is not None:
-            obj = rpc.spawn_with_settings(rpc_settings)
-            obj.register()
+    settings_to_registry_map = {
+        'rpc': RPCClassesRegistry,
+        'trackers': TrackerClassesRegistry,
+        'notifiers': NotifierClassesRegistry,
+    }
 
-    for domain, tracker_settings in cfg['trackers'].items():
-        tracker = TrackerClassesRegistry.get(domain)
-        if tracker is not None:
-            obj = tracker.spawn_with_settings(tracker_settings)
-            obj.register()
-
-    for alias, notifier_settings in cfg['notifiers'].items():
-        notifier = NotifierClassesRegistry.get(alias)
-        if notifier is not None:
-            obj = notifier.spawn_with_settings(notifier_settings)
-            obj.register()
+    for settings_entry, registry_cls in settings_to_registry_map.items():
+        for alias, settings in cfg[settings_entry].items():
+            registry_obj = registry_cls.get(alias)
+            registry_obj and registry_obj.spawn_with_settings(settings).register()
 
 
 def get_registerd_torrents():
