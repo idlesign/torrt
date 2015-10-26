@@ -4,8 +4,8 @@ from urlparse import urlparse, urljoin, parse_qs
 
 import requests
 
-from torrt.utils import parse_torrent, make_soup, WithSettings, TrackerObjectsRegistry, TorrtException
-
+from torrt.utils import parse_torrent, make_soup, WithSettings, TrackerObjectsRegistry
+from torrt.exceptions import TorrtException
 
 LOGGER = logging.getLogger(__name__)
 

@@ -10,6 +10,7 @@ from inspect import getargspec
 import libtorrent as lt
 from bs4 import BeautifulSoup
 
+from torrt.exceptions import TorrtException  # Imported for backward compatibility.
 
 LOGGER = logging.getLogger(__name__)
 
@@ -354,12 +355,6 @@ class ObjectsRegistry(object):
                 return self._items[name]
         return None
 
-
-class TorrtException(Exception):
-    """Base torrt exception.
-    Other torrt exceptions should inherit from this.
-
-    """
 
 RPCClassesRegistry = ObjectsRegistry()
 RPCObjectsRegistry = ObjectsRegistry()

@@ -1,4 +1,5 @@
-from torrt.utils import TorrtException, WithSettings, RPCObjectsRegistry
+from torrt.utils import WithSettings, RPCObjectsRegistry
+from torrt.exceptions import TorrtException
 
 
 class BaseRPC(WithSettings):
