@@ -2,11 +2,14 @@ torrt
 =====
 https://github.com/idlesign/torrt
 
-.. image:: https://badge.fury.io/py/torrt.png
-    :target: http://badge.fury.io/py/torrt
+.. image:: https://img.shields.io/pypi/v/torrt.svg
+    :target: https://pypi.python.org/pypi/torrt
 
-.. image:: https://pypip.in/d/torrt/badge.png
-        :target: https://crate.io/packages/torrt
+.. image:: https://img.shields.io/pypi/dm/torrt.svg
+    :target: https://pypi.python.org/pypi/torrt
+
+.. image:: https://img.shields.io/pypi/l/torrt.svg
+    :target: https://pypi.python.org/pypi/torrt
 
 .. image:: https://landscape.io/github/idlesign/torrt/master/landscape.svg?style=plastic
    :target: https://landscape.io/github/idlesign/torrt/master
