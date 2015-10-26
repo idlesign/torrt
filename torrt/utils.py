@@ -247,6 +247,15 @@ class TorrtConfig(object):
     USER_DATA_PATH = os.path.join(os.path.expanduser('~'), '.torrt')
     USER_SETTINGS_FILE = os.path.join(USER_DATA_PATH, 'config.json')
 
+    _basic_settings = {
+        'time_last_check': 0,
+        'walk_interval_hours': 1,
+        'rpc': {},
+        'trackers': {},
+        'torrents': {},
+        'notifiers': {}
+    }
+
     @classmethod
     def bootstrap(cls):
         """Initializes configuration file if needed,
@@ -257,15 +266,7 @@ class TorrtConfig(object):
             os.makedirs(cls.USER_DATA_PATH)
 
         if not os.path.exists(cls.USER_SETTINGS_FILE):
-            basic_settings = {
-                'time_last_check': 0,
-                'walk_interval_hours': 1,
-                'rpc': {},
-                'trackers': {},
-                'torrents': {},
-                'notifiers': {}
-            }
-            cls.save(basic_settings)
+            cls.save(cls._basic_settings)
 
         # My precious.
         os.chmod(cls.USER_SETTINGS_FILE, 0600)
@@ -289,7 +290,15 @@ class TorrtConfig(object):
         LOGGER.debug('Loading configuration file %s ...', cls.USER_SETTINGS_FILE)
         cls.bootstrap()
         with open(cls.USER_SETTINGS_FILE) as f:
-            return json.load(f)
+            settings = json.load(f)
+
+        # Pick up settings entries added in new version
+        # and put them into old user config.
+        for k, v in cls._basic_settings.items():
+            if k not in settings:
+                settings[k] = v
+
+        return settings
 
     @classmethod
     def save(cls, settings_dict):
