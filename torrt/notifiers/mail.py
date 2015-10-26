@@ -54,7 +54,7 @@ class EmailNotifier(BaseNotifier):
         return bool(self.connection)
 
     def make_message(self, torrent_data):
-        text = '''Following torrents were updated:\n%s\n\nBest regards,\ntorrt.''' \
+        text = '''The following torrents were updated:\n%s\n\nBest regards,\ntorrt.''' \
                % '\n'.join(map(lambda t: t['name'], torrent_data.values()))
 
         msg = MIMEText(text)

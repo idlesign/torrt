@@ -22,7 +22,7 @@ class TelegramNotifier(BaseNotifier):
         self.chat_id = chat_id
 
     def make_message(self, torrent_data):
-        return '''Following torrents were updated:\n%s''' \
+        return '''The following torrents were updated:\n%s''' \
                % '\n'.join(map(lambda t: t['name'], torrent_data.values()))
 
     def test_configuration(self):
