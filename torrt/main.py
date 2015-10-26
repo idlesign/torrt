@@ -2,12 +2,12 @@ import argparse
 import logging
 
 from torrt import VERSION
-from torrt.utils import RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRegistry
+from torrt.utils import RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRegistry, NotifierClassesRegistry, \
+    NotifierObjectsRegistry
 from torrt.toolbox import add_torrent_from_url, remove_torrent, \
     register_torrent, unregister_torrent, get_registerd_torrents, \
     walk, set_walk_interval, toggle_rpc, configure_logging, bootstrap, \
-    configure_rpc, configure_tracker
-
+    configure_rpc, configure_tracker, configure_notifier, remove_notifier
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ def process_commands():
     subp_main.add_parser('list_rpc', help='Shows known RPCs aliases')
     subp_main.add_parser('list_trackers', help='Shows known trackers aliases')
     subp_main.add_parser('list_torrents', help='Shows torrents registered for updates')
+    subp_main.add_parser('list_notifiers', help='Shows configured notifiers')
 
     parser_configure_tracker = subp_main.add_parser(
         'configure_tracker', help='Sets torrent tracker settings (login credentials, etc.)',
@@ -54,6 +55,18 @@ def process_commands():
         'settings',
         help='Settings string, format: setting1=val1 setting2=val2. '
              'Supported settings (any of): url, host, port, user, password',
+        nargs='*')
+
+    parser_configure_notifier = subp_main.add_parser(
+        'configure_notifier', help='Sets Notifiers settings (smtp credentials, etc.)',
+        description='E.g.: configure_notifier email email=your@email.com user=idle password=pSW0rt')
+    parser_configure_notifier.add_argument(
+        'notifier_alias', help='Notifier alias to apply settings to')
+    parser_configure_notifier.add_argument(
+        'settings',
+        help='Settings string, format: setting1=val1 setting2=val2. '
+             'Supported settings for email notifier (any of): email, host, port, use_tls, user, password.'
+             'Supported settings for telegram notifier: token, chat_id.',
         nargs='*')
 
     parser_walk = subp_main.add_parser(
@@ -101,6 +114,10 @@ def process_commands():
     parser_unregister_torrent.add_argument(
         'hash', help='Torrent identifying hash')
 
+    parser_remove_notifier = subp_main.add_parser(
+        'remove_notifier', help='Remove configured notifier by its alias')
+    parser_remove_notifier.add_argument('alias', help='Alias of notifier to remove')
+
     args = arg_parser.parse_args()
     args = vars(args)
 
@@ -138,6 +155,17 @@ def process_commands():
         for torrent_hash, torrent_data in get_registerd_torrents().items():
             LOGGER.info('%s\t%s', torrent_hash, torrent_data['name'])
 
+    elif args['command'] == 'list_notifiers':
+        notifiers = {}
+        for notifier_alias in NotifierClassesRegistry.get().keys():
+            notifiers[notifier_alias] = 'unconfigured'
+
+        for notifier_alias in NotifierObjectsRegistry.get().keys():
+            notifiers[notifier_alias] = 'enabled'
+
+        for notifier_alias, notifier_status in notifiers.items():
+            LOGGER.info('%s\t status=%s', notifier_alias, notifier_status)
+
     elif args['command'] == 'walk':
         walk(forced=args['forced'], silent=True)
 
@@ -161,6 +189,12 @@ def process_commands():
 
     elif args['command'] == 'configure_tracker':
         configure_tracker(args['tracker_alias'], settings_dict_from_list(args['settings']))
+
+    elif args['command'] == 'configure_notifier':
+        configure_notifier(args['notifier_alias'], settings_dict_from_list(args['settings']))
+
+    elif args['command'] == 'remove_notifier':
+        remove_notifier(args['alias'])
 
 
 if __name__ == '__main__':

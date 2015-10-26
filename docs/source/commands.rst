@@ -36,6 +36,14 @@ Torrents
 * **unregister_torrent** - Unregisters torrent from *torrt* by its hash
 
 
+Notifications
+-------------
+
+* **configure_notifier** - Sets notification settings (SMTP server or telegram bot ID)
+
+* **remove_notifier** - Remove notifier from *torrt* by its hash
+
+
 Update procedure
 ----------------
 

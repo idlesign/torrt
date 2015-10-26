@@ -6,6 +6,7 @@ include README.rst
 
 recursive-include torrt/rpc *
 recursive-include torrt/trackers *
+recursive-include torrt/notifiers *
 
 include docs/Makefile
 recursive-include docs .rst

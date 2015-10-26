@@ -29,6 +29,9 @@ def import_classes():
     LOGGER.debug('Importing Tracker classes ...')
     import_from_path('trackers')
 
+    LOGGER.debug('Importing Notifier classes ...')
+    import_from_path('notifiers')
+
 
 def import_from_path(path):
     """Dynamically imports modules from package.
@@ -181,6 +184,22 @@ def iter_rpc():
         yield rpc_alias, rpc_object
 
 
+def iter_notifiers():
+    """Generator to iterate through available notifier objects.
+
+    :return: tuple - notifier_alias, notifier_object
+    :rtype: tuple
+    """
+    notifier_objects = NotifierObjectsRegistry.get()
+    if not notifier_objects:
+        LOGGER.error('No Notifier objects registered, unable to proceed')
+        raise StopIteration()
+
+    for notifier_alias, notifier_object in notifier_objects.items():
+
+        yield notifier_alias, notifier_object
+
+
 class WithSettings(object):
     """Introduces settings support for class objects.
 
@@ -243,7 +262,8 @@ class TorrtConfig(object):
                 'walk_interval_hours': 1,
                 'rpc': {},
                 'trackers': {},
-                'torrents': {}
+                'torrents': {},
+                'notifiers': {}
             }
             cls.save(basic_settings)
 
@@ -336,3 +356,5 @@ RPCClassesRegistry = ObjectsRegistry()
 RPCObjectsRegistry = ObjectsRegistry()
 TrackerClassesRegistry = ObjectsRegistry()
 TrackerObjectsRegistry = ObjectsRegistry()
+NotifierClassesRegistry = ObjectsRegistry()
+NotifierObjectsRegistry = ObjectsRegistry()

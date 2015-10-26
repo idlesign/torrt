@@ -3,8 +3,8 @@ from time import time
 
 from torrt.base_rpc import TorrtRPCException
 from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, TorrtConfig, TorrtException, \
-    get_url_from_string, get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc
-
+    get_url_from_string, get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc, \
+    NotifierClassesRegistry, iter_notifiers
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +71,45 @@ def configure_tracker(tracker_alias, settings_dict):
         LOGGER.error('Tracker `%s` is unknown', tracker_alias)
 
 
+def configure_notifier(notifier_alias, settings_dict):
+    """Configures notifier using given settings.
+    Saves successful configuration.
+
+    :param notifier_alias: notifier alias
+    :param settings_dict: settings dictionary to configure notifier with
+    :return:
+    """
+    LOGGER.info('Configuring `%s` notifier ...', notifier_alias)
+
+    notification_class = NotifierClassesRegistry.get(notifier_alias)
+    if notification_class is not None:
+        notifier = notification_class.spawn_with_settings(settings_dict)
+        configured = notifier.test_configuration()
+        if configured:
+            notifier.save_settings()
+            LOGGER.info('Notifier `%s` is configured', notifier_alias)
+        else:
+            LOGGER.error('Notifier `%s` configuration failed. Check your settings', notifier_alias)
+    else:
+        LOGGER.error('Notifier `%s` is unknown', notifier_alias)
+
+
+def remove_notifier(alias):
+    """Removes notifier by alias
+
+    :param alias: str - Notifier alias to remove.
+
+    :return:
+    """
+    LOGGER.info('Removing `%s` notifier ...', alias)
+    try:
+        cfg = TorrtConfig.load()
+        del cfg['notifiers'][alias]
+        TorrtConfig.save(cfg)
+    except KeyError:
+        pass
+
+
 def init_object_registries():
     """Initializes RPC and tracker objects registries with settings
     from configuration file.
@@ -90,6 +129,12 @@ def init_object_registries():
         tracker = TrackerClassesRegistry.get(domain)
         if tracker is not None:
             obj = tracker.spawn_with_settings(tracker_settings)
+            obj.register()
+
+    for alias, notifier_settings in cfg['notifiers'].items():
+        notifier = NotifierClassesRegistry.get(alias)
+        if notifier is not None:
+            obj = notifier.spawn_with_settings(notifier_settings)
             obj.register()
 
 
@@ -238,6 +283,8 @@ def walk(forced=False, silent=False, remove_outdated=True):
                 del cfg['torrents'][old_hash]
                 cfg['torrents'][new_data['hash']] = new_data
             new_cfg['torrents'] = cfg['torrents']
+            for _, notifier in iter_notifiers():
+                notifier.send(updated)
 
         # Save updated torrents data into config.
         TorrtConfig.update(new_cfg)
