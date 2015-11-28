@@ -42,8 +42,25 @@ class RuTrackerTracker(GenericPrivateTracker):
                     if self.login():
                         download_link = self.get_download_link(url)
                 break
+        # Inject form_token into instance to prevent second request
+        self.form_token = self.get_form_token(page_soup)
         return download_link
 
+    def get_form_token(self, page_soup):
+        token = filter(lambda s: s.startswith('form_token'), page_soup.text.split('\n\t'))[0].split(':')[1][2:-2]
+        return token
+
+    def download_torrent(self, url, referer=None):
+        LOGGER.debug('Downloading torrent file from %s ...', url)
+        self.before_download(url)
+        # rutracker require POST action to download torrent file
+        form_data = {'form_token': self.form_token}
+        response = self.get_response(
+            url, form_data=form_data, cookies=self.cookies, query_string=self.get_auth_query_string(), referer=referer
+        )
+        if response is None:
+            return None
+        return response.content
 
 # With that one we tell torrt to handle links to `rutracker.org` domain with RutrackerHandler class.
 TrackerClassesRegistry.add(RuTrackerTracker)
