@@ -31,30 +31,30 @@ class RuTrackerTracker(GenericPrivateTracker):
         page_soup = self.get_response(
             url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
         )
-        page_links = self.find_links(url, page_soup)
-        download_link = None
-        for page_link in page_links:
-            if 'dl.rutracker.org' in page_link:
-                download_link = page_link
-                if 'guest' in download_link:
-                    download_link = None
-                    LOGGER.debug('Login is required to download torrent file')
-                    if self.login():
-                        download_link = self.get_download_link(url)
-                break
-        # Inject form_token into instance to prevent second request
+        is_anonymous = self.find_links(url, page_soup, 'register') is not None
+        if is_anonymous:
+            self.login()
+            page_soup = self.get_response(
+                url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
+            )
+        download_link = self.find_links(url, page_soup, 'dl\.rutracker\.org')
         self.form_token = self.get_form_token(page_soup)
         return download_link
 
     def get_form_token(self, page_soup):
-        token = filter(lambda s: s.startswith('form_token'), page_soup.text.split('\n\t'))[0].split(':')[1][2:-2]
-        return token
+        try:
+            return filter(lambda s: s.startswith('form_token'), page_soup.text.split('\n\t'))[0].split(':')[1][2:-2]
+        except IndexError:
+            return
 
     def download_torrent(self, url, referer=None):
         LOGGER.debug('Downloading torrent file from %s ...', url)
         self.before_download(url)
         # rutracker require POST action to download torrent file
-        form_data = {'form_token': self.form_token}
+        if self.form_token:
+            form_data = {'form_token': self.form_token}
+        else:
+            form_data = None
         response = self.get_response(
             url, form_data=form_data, cookies=self.cookies, query_string=self.get_auth_query_string(), referer=referer
         )
