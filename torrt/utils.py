@@ -82,7 +82,7 @@ def make_soup(html):
     :return: object
     :rtype: BeautifulSoup
     """
-    return BeautifulSoup(html)
+    return BeautifulSoup(html, 'lxml')
 
 
 def get_url_from_string(string):
