@@ -158,7 +158,7 @@ class GenericTracker(BaseTracker):
         of file located at URL.
 
         :param url: str - URL to find and get torrent from
-        :return: str or Nonr - torrent file contents
+        :return: str or None - torrent file contents
         :rtype: str or None
         """
         torrent_data = None
