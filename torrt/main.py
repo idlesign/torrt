@@ -9,6 +9,7 @@ from torrt.toolbox import add_torrent_from_url, remove_torrent, \
     walk, set_walk_interval, toggle_rpc, configure_logging, bootstrap, \
     configure_rpc, configure_tracker, configure_notifier, remove_notifier
 
+
 LOGGER = logging.getLogger(__name__)
 
 # todo cipher passwords
@@ -23,8 +24,8 @@ def process_commands():
             settings_dict[splitted[0]] = splitted[1]
         return settings_dict
 
-    arg_parser = argparse.ArgumentParser(
-        'torrt', description='Automates torrent updates for you.', version='.'.join(map(str, VERSION)))
+    arg_parser = argparse.ArgumentParser('torrt', description='Automates torrent updates for you.')
+    arg_parser.add_argument('--version', action='version', version='%(prog)s ' + '.'.join(map(str, VERSION)))
     arg_parser.add_argument('--verbose', help='Switch to show debug messages', dest='verbose', action='store_true')
 
     subp_main = arg_parser.add_subparsers(title='Supported commands', dest='command')

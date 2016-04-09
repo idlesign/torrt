@@ -1,8 +1,15 @@
 torrt changelog
 ===============
 
-v0.3.0
+
+Unreleased
 ----------
+* --version command arg made py3 compatible.
+* rutracker.org torrent file download fix.
+
+
+v0.3.0
+------
 + Implemented Notifications subsystem.
 * get_registerd_torrents() is deprecated in favor of get_registered_torrents().
 
