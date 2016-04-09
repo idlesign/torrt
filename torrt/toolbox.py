@@ -3,7 +3,8 @@ from warnings import warn
 from time import time
 
 from torrt.base_rpc import TorrtRPCException
-from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, TorrtConfig, get_url_from_string, get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc, \
+from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, TorrtConfig, get_url_from_string, \
+    get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc, \
     NotifierClassesRegistry, iter_notifiers
 from torrt.exceptions import TorrtException
 
