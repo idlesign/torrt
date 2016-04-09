@@ -344,15 +344,21 @@ class ObjectsRegistry(object):
         return self._items.get(obj_alias)
 
     def get_for_string(self, string):
-        """Returns registered object whose alias is found in a given string.
+        """Returns registered object which can handle a given string.
 
         :param string: str
         :return: object or None
         :rtype: object or None
         """
-        for name in self._items.keys():
-            if name in string:
+        for name, obj in self._items.items():
+            can_handle_method = getattr(obj, 'can_handle', None)
+
+            if can_handle_method and can_handle_method(string):
+                return obj
+
+            elif name in string:
                 return self._items[name]
+
         return None
 
 

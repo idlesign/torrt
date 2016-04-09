@@ -11,7 +11,7 @@ class AniDUBTracker(GenericPrivateTracker):
     """This class implements .torrent files downloads for http://tr.anidub.com tracker."""
 
     alias = 'tr.anidub.com'
-    login_url = 'http://tr.anidub.com/'
+    login_url = 'http://%(domain)s/'
     auth_cookie_name = 'dle_user_id'
 
     def __init__(self, username=None, password=None, cookies=None, query_string=None, quality_prefs=None):
@@ -34,7 +34,8 @@ class AniDUBTracker(GenericPrivateTracker):
 
         if page_soup.select('form input[name="login"]'):
             LOGGER.debug('Login is required to download torrent file.')
-            if self.login():
+            domain =  self.extract_domain(url)
+            if self.login(domain):
                 download_link = self.get_download_link(url)
         else:
 

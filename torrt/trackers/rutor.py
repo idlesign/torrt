@@ -15,6 +15,7 @@ class RutorTracker(GenericPublicTracker):
 
     alias = 'rutor.org'
     test_url = 'http://rutor.org/'
+    mirrors = ['new-rutor.org']
 
     def __init__(self, cookies=None):
         if cookies is None:

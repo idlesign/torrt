@@ -11,8 +11,9 @@ class RuTrackerTracker(GenericPrivateTracker):
     """This class implements .torrent files downloads for http://rutracker.org tracker."""
 
     alias = 'rutracker.org'
-    login_url = 'http://login.rutracker.org/forum/login.php'
+    login_url = 'http://login.%(domain)s/forum/login.php'
     auth_cookie_name = 'bb_data'
+    mirrors = ['rutracker.net']
 
     def get_id_from_link(self, url):
         """Returns forum thread identifier from full thread URL."""
@@ -31,13 +32,16 @@ class RuTrackerTracker(GenericPrivateTracker):
         page_soup = self.get_response(
             url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
         )
+
+        domain = self.extract_domain(url)
+
         is_anonymous = self.find_links(url, page_soup, 'register') is not None
         if is_anonymous:
-            self.login()
+            self.login(domain)
             page_soup = self.get_response(
                 url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
             )
-        download_link = self.find_links(url, page_soup, 'dl\.rutracker\.org')
+        download_link = self.find_links(url, page_soup, 'dl\.' + domain.replace('.', '\.'))
         self.form_token = self.get_form_token(page_soup)
         return download_link
 

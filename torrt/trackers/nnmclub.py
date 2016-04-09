@@ -11,8 +11,9 @@ class NNMClubTracker(GenericPrivateTracker):
     """This class implements .torrent files downloads for http://nnm-club.me tracker."""
 
     alias = 'nnm-club.me'
-    login_url = 'http://nnm-club.me/forum/login.php'
+    login_url = 'http://%(domain)s/forum/login.php'
     auth_qs_param_name = 'sid'
+    mirrors = ['nnmclub.to']
 
     def get_login_form_data(self, login, password):
         """Returns a dictionary with data to be pushed to authorization form."""
@@ -27,7 +28,8 @@ class NNMClubTracker(GenericPrivateTracker):
 
         if download_link is None:
             LOGGER.debug('Login is required to download torrent file')
-            if self.login():
+            domain = self.extract_domain(url)
+            if self.login(domain):
                 download_link = self.get_download_link(url)
 
         return download_link

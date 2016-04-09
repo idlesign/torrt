@@ -1,5 +1,6 @@
 import re
 import logging
+from itertools import chain
 from urlparse import urlparse, urljoin, parse_qs
 
 import requests
@@ -7,14 +8,20 @@ import requests
 from torrt.utils import parse_torrent, make_soup, WithSettings, TrackerObjectsRegistry
 from torrt.exceptions import TorrtException
 
+
 LOGGER = logging.getLogger(__name__)
 
 
 class BaseTracker(WithSettings):
     """Base torrent tracker handler class offering helper methods for its ancestors."""
 
-    alias = None
     config_entry_name = 'trackers'
+
+    alias = None
+    """Tracker alias. Usually main tracker domain. See also `mirrors` attribute."""
+
+    mirrors = []
+    """List of mirror domain names."""
 
     def register(self):
         """Adds this object into TrackerObjectsRegistry.
@@ -22,6 +29,27 @@ class BaseTracker(WithSettings):
         :return:
         """
         TrackerObjectsRegistry.add(self)
+
+    @classmethod
+    def can_handle(cls, string):
+        """Returns boolean whether this tracker can handle torrent from string.
+
+        :param str string: String, describing torrent. E.g. URL from torrent comment.
+        :rtype: bool
+        """
+        for domain in chain([cls.alias], cls.mirrors):
+            if domain in string:
+                return True
+        return False
+
+    @classmethod
+    def extract_domain(cls, url):
+        """Extracts domain from a given URL.
+
+        :param str url:
+        :rtype: str
+        """
+        return urlparse(url).netloc
 
     @classmethod
     def get_response(cls, url, form_data=None, allow_redirects=True, referer=None, cookies=None, query_string=None,
@@ -218,7 +246,13 @@ class GenericPrivateTracker(GenericPublicTracker):
     """
 
     login_required = True
+
     login_url = None
+    """URL where with login form.
+    This can include `%(domain)s` marker in place of a domain name when domain mirrors are used
+    (see `mirrors` attribute of BaseTracker).
+
+    """
 
     # Cookie name to verify that a log in was successful.
     auth_cookie_name = None
@@ -247,16 +281,17 @@ class GenericPrivateTracker(GenericPublicTracker):
         return {'username': login, 'password': password}
 
     def test_configuration(self):
-        return self.login()
+        return self.login(self.alias)
 
-    def login(self):
+    def login(self, domain):
         """Implements tracker login procedure.
         Returns success bool.
 
         :return: bool
         :rtype: bool
         """
-        LOGGER.debug('Trying to login at %s ...', self.login_url)
+        login_url = self.login_url % {'domain': domain}
+        LOGGER.debug('Trying to login at %s ...', login_url)
 
         if self.logged_in:
             raise TorrtTrackerException('Consecutive login attempt detected at `%s`' % self.__class__.__name__)
@@ -275,9 +310,12 @@ class GenericPrivateTracker(GenericPublicTracker):
             allow_redirects = True  # To be able to get Session ID from query string.
 
         response = self.get_response(
-            self.login_url, self.get_login_form_data(self.username, self.password),
+            login_url, self.get_login_form_data(self.username, self.password),
             allow_redirects=allow_redirects, cookies=self.cookies
         )
+
+        if not response:  # e.g. Connection aborted.
+            return False
 
         # Login success checks.
         parsed_qs = parse_qs(urlparse(response.url).query)

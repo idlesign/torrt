@@ -4,6 +4,7 @@ torrt changelog
 
 Unreleased
 ----------
++ Implemented tracker mirrors support.
 * --version command arg made py3 compatible.
 * rutracker.org torrent file download fix.
 
