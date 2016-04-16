@@ -41,7 +41,7 @@ class RuTrackerTracker(GenericPrivateTracker):
             page_soup = self.get_response(
                 url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
             )
-        download_link = self.find_links(url, page_soup, 'dl\.' + domain.replace('.', '\.'))
+        download_link = self.find_links(url, page_soup, 'dl\.php')
         self.form_token = self.get_form_token(page_soup)
         return download_link
 
