@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+v0.4.1
+------
+* Fixed rutracker torrents download.
+
+
 v0.4.0
 ------
 + Implemented tracker mirrors support.
