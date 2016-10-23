@@ -26,7 +26,6 @@ def process_commands():
 
     arg_parser = argparse.ArgumentParser('torrt', description='Automates torrent updates for you.')
     arg_parser.add_argument('--version', action='version', version='%(prog)s ' + '.'.join(map(str, VERSION)))
-    arg_parser.add_argument('--verbose', help='Switch to show debug messages', dest='verbose', action='store_true')
 
     subp_main = arg_parser.add_subparsers(title='Supported commands', dest='command')
 
@@ -117,6 +116,9 @@ def process_commands():
     parser_remove_notifier = subp_main.add_parser(
         'remove_notifier', help='Remove configured notifier by its alias')
     parser_remove_notifier.add_argument('alias', help='Alias of notifier to remove')
+
+    for parser in subp_main.choices.values():
+        parser.add_argument('--verbose', help='Switch to show debug messages', dest='verbose', action='store_true')
 
     args = arg_parser.parse_args()
     args = vars(args)

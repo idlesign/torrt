@@ -7,6 +7,7 @@ Unreleased
 * Torrents without URL in comment won't issue exceptions anymore.
 * Added request timeout, defaults to 10 sec.
 * IMPORTANT: HTML parsing now requires `lxml` module.
+* `--verbose` option now works with all commands.
 
 
 v0.4.1
