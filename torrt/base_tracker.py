@@ -11,6 +11,7 @@ from torrt.exceptions import TorrtException
 
 LOGGER = logging.getLogger(__name__)
 USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'
+REQUEST_TIMEOUT = 10
 
 
 class BaseTracker(WithSettings):
@@ -85,7 +86,8 @@ class BaseTracker(WithSettings):
 
         r_kwargs = {
             'allow_redirects': allow_redirects,
-            'headers': headers
+            'headers': headers,
+            'timeout': REQUEST_TIMEOUT,
         }
 
         if cookies is not None:
