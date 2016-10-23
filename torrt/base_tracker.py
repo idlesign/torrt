@@ -10,8 +10,10 @@ from torrt.exceptions import TorrtException
 
 
 LOGGER = logging.getLogger(__name__)
-USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36'
+
 REQUEST_TIMEOUT = 10
+REQUEST_USER_AGENT = (
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36')
 
 
 class BaseTracker(WithSettings):
@@ -79,7 +81,7 @@ class BaseTracker(WithSettings):
 
         LOGGER.debug('Fetching %s ...', url)
 
-        headers = {'User-agent': USER_AGENT}
+        headers = {'User-agent': REQUEST_USER_AGENT}
 
         if referer is not None:
             headers['Referer'] = referer
