@@ -7,7 +7,7 @@ from collections import Mapping
 from pkgutil import iter_modules
 from inspect import getargspec
 
-import libtorrent as lt
+from torrentool.api import Torrent
 from bs4 import BeautifulSoup
 
 from torrt.exceptions import TorrtException  # Imported for backward compatibility.
@@ -52,11 +52,11 @@ def parse_torrent(torrent):
     :return: torrent info dict - keys: hash; name; files; torrent (torrent file contents just from input).
     :rtype: dict
     """
-    torrent_info = lt.torrent_info(lt.bdecode(torrent))
-    files_from_torrent = [a_file.path.decode('utf-8') for a_file in torrent_info.files()]
+    torrent_info = Torrent.from_string(torrent)
+    files_from_torrent = [a_file[0] for a_file in torrent_info.files]
     info = {
-        'hash': str(torrent_info.info_hash()),
-        'name': str(torrent_info.name()),
+        'hash': str(torrent_info.info_hash),
+        'name': torrent_info.name,
         'files': files_from_torrent,
         'torrent': torrent
     }

@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
+* IMPORTANT: Torrent parsing switched from `libtorrent` to `torrentool`.
+
+
 v0.4.2
 ------
 * Torrents without URL in comment won't issue exceptions anymore.
