@@ -2,6 +2,12 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
+* Torrents without URL in comment won't issue exceptions anymore.
+* IMPORTANT: HTML parsing now requires `lxml` module.
+
+
 v0.4.1
 ------
 * Fixed rutracker torrents download.
