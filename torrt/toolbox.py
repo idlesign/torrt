@@ -321,6 +321,9 @@ def update_torrents(hashes, remove_outdated=True):
             LOGGER.info('Processing `%s` torrent with `%s` RPC ...', existing_torrent['name'], rpc_object.alias)
 
             page_url = get_url_from_string(existing_torrent['comment'])
+            if not page_url:
+                LOGGER.warning('Torrent `%s` has no link in comment. Skipped', existing_torrent['name'])
+                continue
 
             if page_url in download_cache:
                 new_torrent = download_cache[page_url]

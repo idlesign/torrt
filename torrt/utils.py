@@ -92,7 +92,12 @@ def get_url_from_string(string):
     :return: url
     :rtype: str
     """
-    return RE_LINK.search(string).group('url')
+    match = RE_LINK.search(string)
+    try:
+        match = match.group('url')
+    except AttributeError:
+        match = ''
+    return match
 
 
 def get_iso_from_timestamp(ts):
