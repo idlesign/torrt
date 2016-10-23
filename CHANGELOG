@@ -2,8 +2,8 @@ torrt changelog
 ===============
 
 
-Unreleased
-----------
+v0.4.2
+------
 * Torrents without URL in comment won't issue exceptions anymore.
 * Added request timeout, defaults to 10 sec.
 * IMPORTANT: HTML parsing now requires `lxml` module.
