@@ -198,7 +198,7 @@ def iter_notifiers():
     """
     notifier_objects = NotifierObjectsRegistry.get()
     if not notifier_objects:
-        LOGGER.error('No Notifier objects registered, unable to proceed')
+        LOGGER.debug('No Notifier registered. Notification skipped')
         raise StopIteration()
 
     for notifier_alias, notifier_object in notifier_objects.items():
