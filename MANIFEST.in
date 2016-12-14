@@ -9,8 +9,8 @@ recursive-include torrt/trackers *
 recursive-include torrt/notifiers *
 
 include docs/Makefile
-recursive-include docs .rst
-recursive-include docs .py
+recursive-include docs *.rst
+recursive-include docs *.py
 
 recursive-include bin *
 recursive-include tests *
