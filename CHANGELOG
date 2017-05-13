@@ -6,6 +6,7 @@ Unreleased
 ----------
 * IMPORTANT: Torrent parsing switched from `libtorrent` to `torrentool`.
 + CLI: launcher script is now crossplatform.
+* CLI: `torrt walk` output made less verbose and mode structured.
 
 
 v0.4.2

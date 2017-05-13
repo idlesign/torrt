@@ -168,7 +168,7 @@ def register_torrent(hash_str, torrent_data=None):
     :param torrent_data: dict
     :return:
     """
-    LOGGER.info('Registering `%s` torrent ...', hash_str)
+    LOGGER.debug('Registering `%s` torrent ...', hash_str)
     if torrent_data is None:
         torrent_data = {}
     cfg = {'torrents': {}}
@@ -183,7 +183,7 @@ def unregister_torrent(hash_str):
     :param hash_str: str - torrent identifying hash
     :return:
     """
-    LOGGER.info('Unregistering `%s` torrent ...', hash_str)
+    LOGGER.debug('Unregistering `%s` torrent ...', hash_str)
     try:
         cfg = TorrtConfig.load()
         del cfg['torrents'][hash_str]
@@ -199,7 +199,7 @@ def add_torrent_from_url(url, download_to=None):
     :param download_to: str or None - path to download files from torrent into (in terms of torrent client filesystem)
     :return:
     """
-    LOGGER.info('Adding torrent from `%s` ...', url)
+    LOGGER.debug('Adding torrent from `%s` ...', url)
 
     torrent_data = get_torrent_from_url(url)
     if torrent_data is None:
@@ -311,18 +311,18 @@ def update_torrents(hashes, remove_outdated=True):
     download_cache = {}
 
     for _, rpc_object in iter_rpc():
-        LOGGER.info('Getting torrents using `%s` RPC ...', rpc_object.alias)
+        LOGGER.info('Getting torrents from `%s` ...', rpc_object.alias)
         torrents = rpc_object.method_get_torrents(hashes)
 
         if not torrents:
-            LOGGER.info('No significant torrents found with `%s` RPC', rpc_object.alias)
+            LOGGER.info('  No significant torrents found')
 
         for existing_torrent in torrents:
-            LOGGER.info('Processing `%s` torrent with `%s` RPC ...', existing_torrent['name'], rpc_object.alias)
+            LOGGER.info('  Processing `%s`...', existing_torrent['name'])
 
             page_url = get_url_from_string(existing_torrent['comment'])
             if not page_url:
-                LOGGER.warning('Torrent `%s` has no link in comment. Skipped', existing_torrent['name'])
+                LOGGER.warning('    Torrent has no link in comment. Skipped', existing_torrent['name'])
                 continue
 
             if page_url in download_cache:
@@ -332,20 +332,22 @@ def update_torrents(hashes, remove_outdated=True):
                 download_cache[page_url] = new_torrent
 
             if new_torrent is None:
-                LOGGER.error('Unable to get torrent from `%s`', page_url)
+                LOGGER.error('    Unable to get torrent from `%s`', page_url)
                 continue
 
             if existing_torrent['hash'] == new_torrent['hash']:
-                LOGGER.info('Torrent `%s` is up-to-date', existing_torrent['name'])
+                LOGGER.info('    Torrent is up-to-date')
                 continue
 
-            LOGGER.info('Torrent `%s` update is available', existing_torrent['name'])
+            LOGGER.debug('    Torrent update is available')
             try:
                 rpc_object.method_add_torrent(new_torrent['torrent'], existing_torrent['download_to'])
-                LOGGER.info('Torrent `%s` is updated', existing_torrent['name'])
+                LOGGER.info('    Torrent is updated')
                 structure_torrent_data(updated_by_hashes, existing_torrent['hash'], new_torrent)
+
             except TorrtRPCException as e:
-                LOGGER.error('Unable to replace `%s` torrent: %s', existing_torrent['name'], e.message)
+                LOGGER.error('    Unable to replace torrent: %s', e.message)
+
             else:
                 unregister_torrent(existing_torrent['hash'])
                 if remove_outdated:
