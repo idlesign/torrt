@@ -5,6 +5,7 @@ torrt changelog
 Unreleased
 ----------
 * IMPORTANT: Torrent parsing switched from `libtorrent` to `torrentool`.
++ CLI: launcher script is now crossplatform.
 
 
 v0.4.2

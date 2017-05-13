@@ -12,7 +12,6 @@ include docs/Makefile
 recursive-include docs *.rst
 recursive-include docs *.py
 
-recursive-include bin *
 recursive-include tests *
 
 recursive-exclude * __pycache__
