@@ -10,10 +10,10 @@ LOGGER = logging.getLogger(__name__)
 class RuTrackerTracker(GenericPrivateTracker):
     """This class implements .torrent files downloads for http://rutracker.org tracker."""
 
-    alias = 'rutracker.org'
-    login_url = 'http://login.%(domain)s/forum/login.php'
+    alias = 'rutracker.net'
+    login_url = 'http://%(domain)s/forum/login.php'
     auth_cookie_name = 'bb_data'
-    mirrors = ['rutracker.net']
+    mirrors = ['rutracker.org']
 
     def get_id_from_link(self, url):
         """Returns forum thread identifier from full thread URL."""
