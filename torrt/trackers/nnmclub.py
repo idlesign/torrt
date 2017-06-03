@@ -13,7 +13,7 @@ class NNMClubTracker(GenericPrivateTracker):
     alias = 'nnm-club.me'
     login_url = 'http://%(domain)s/forum/login.php'
     auth_qs_param_name = 'sid'
-    mirrors = ['nnmclub.to']
+    mirrors = ['nnm-club.name', 'nnmclub.to']
 
     def get_login_form_data(self, login, password):
         """Returns a dictionary with data to be pushed to authorization form."""
