@@ -10,7 +10,12 @@ from inspect import getargspec
 from torrentool.api import Torrent
 from bs4 import BeautifulSoup
 
-from torrt.exceptions import TorrtException  # Imported for backward compatibility.
+from .exceptions import TorrtException  # Imported for backward compatibility.
+
+
+if False:  # pragma: nocover
+    from .base_tracker import GenericTracker
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -158,7 +163,7 @@ def get_torrent_from_url(url):
     """
     LOGGER.debug('Downloading torrent file from `%s` ...', url)
 
-    tracker = TrackerObjectsRegistry.get_for_string(url)
+    tracker = TrackerObjectsRegistry.get_for_string(url)  # type: GenericTracker
     if tracker:
         result = tracker.get_torrent(url)
         if result is None:

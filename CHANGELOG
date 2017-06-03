@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
++ Implemented mirror domain availability discovery
+
+
 v0.5.0
 ------
 * IMPORTANT: Torrent parsing switched from `libtorrent` to `torrentool`.

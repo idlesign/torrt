@@ -1,5 +1,6 @@
 import re
 import logging
+from functools import partial
 from itertools import chain
 from urlparse import urlparse, urljoin, parse_qs
 
@@ -27,6 +28,49 @@ class BaseTracker(WithSettings):
     mirrors = []
     """List of mirror domain names."""
 
+    def __init__(self):
+        self.mirror_picked = None
+
+    def pick_mirror(self, url):
+        """Probes mirrors (domains) one by one and chooses one whick is available to use.
+
+        :param str url:
+        :rtype: str
+        """
+        mirror_picked = self.mirror_picked
+
+        if mirror_picked is None:
+            LOGGER.debug('Picking a mirror ...')
+
+            original_domain = self.extract_domain(url)
+            mirror_picked = original_domain
+
+            for mirror_domain in self.mirrors:
+                mirror_url = '%s://%s' % (self.extract_scheme(url), mirror_domain)
+
+                LOGGER.debug('Probing mirror: `%s` ...', mirror_url)
+
+                response = requests.get(mirror_url)
+
+                if response.url.startswith(mirror_url):
+                    mirror_picked = mirror_domain
+                    break
+
+            self.mirror_picked = mirror_picked
+
+        return mirror_picked
+
+    def get_mirrored_url(self, url):
+        """Returns a mirrored URL for a given one.
+
+        :param str url:
+        :rtype: str
+        """
+        mirror_picked = self.mirror_picked
+        original_domain = self.extract_domain(url)
+        url_mirror = url.replace(original_domain, mirror_picked)
+        return url_mirror
+
     def register(self):
         """Adds this object into TrackerObjectsRegistry.
 
@@ -47,6 +91,15 @@ class BaseTracker(WithSettings):
         return False
 
     @classmethod
+    def extract_scheme(cls, url):
+        """Extracts scheme from a given URL.
+
+        :param str url:
+        :rtype: str
+        """
+        return urlparse(url).scheme
+
+    @classmethod
     def extract_domain(cls, url):
         """Extracts domain from a given URL.
 
@@ -55,9 +108,8 @@ class BaseTracker(WithSettings):
         """
         return urlparse(url).netloc
 
-    @classmethod
-    def get_response(cls, url, form_data=None, allow_redirects=True, referer=None, cookies=None, query_string=None,
-                     as_soup=False):
+    def get_response(self, url, form_data=None, allow_redirects=True,
+                     referer=None, cookies=None, query_string=None, as_soup=False):
         """Returns an HTTP resource object from given URL.
 
         If a dictionary is passed in `form_data` POST HTTP method
@@ -79,6 +131,10 @@ class BaseTracker(WithSettings):
                 delim = '&'
             url = '%s%s%s' % (url, delim, query_string)
 
+        self.pick_mirror(url)
+
+        url = self.get_mirrored_url(url)
+
         LOGGER.debug('Fetching %s ...', url)
 
         headers = {'User-agent': REQUEST_USER_AGENT}
@@ -96,17 +152,20 @@ class BaseTracker(WithSettings):
             r_kwargs['cookies'] = cookies
 
         if form_data is not None:
-            method = lambda: requests.post(url, data=form_data, **r_kwargs)
+            method = partial(requests.post, data=form_data, **r_kwargs)
         else:
-            method = lambda: requests.get(url, **r_kwargs)
+            method = partial(requests.get, **r_kwargs)
 
         try:
-            result = method()
+            result = method(url)
+
             if as_soup:
-                result = cls.make_page_soup(result.text)
+                result = self.make_page_soup(result.text)
+
             return result
+
         except requests.exceptions.RequestException as e:
-            LOGGER.error('Failed to get resource from `%s`: %s', url, e.message)
+            LOGGER.error('Failed to get resource from `%s`: %s', result.url, e.message)
             return None
 
     @classmethod
@@ -196,15 +255,20 @@ class GenericTracker(BaseTracker):
         """
         torrent_data = None
         download_link = self.get_download_link(url)
+
         if download_link is None:
             LOGGER.error('Cannot find torrent file download link at %s', url)
+
         else:
             LOGGER.debug('Torrent download link found: %s', download_link)
+
             torrent_data = self.download_torrent(download_link, referer=url)
+
             if torrent_data is None:
                 LOGGER.debug('Torrent download from `%s` has failed', download_link)
             else:
                 torrent_data = parse_torrent(torrent_data)
+
         return torrent_data
 
     def get_download_link(self, url):
@@ -265,13 +329,18 @@ class GenericPrivateTracker(GenericPublicTracker):
     auth_qs_param_name = None
 
     def __init__(self, username=None, password=None, cookies=None, query_string=None):
+        super(GenericPrivateTracker, self).__init__()
+
         self.logged_in = False
         # Stores a number of login attempts to prevent recursion.
         self.login_counter = 0
+
         self.username = username
         self.password = password
+
         if cookies is None:
             cookies = {}
+
         self.cookies = cookies
         self.query_string = query_string
 
@@ -362,15 +431,21 @@ class GenericPrivateTracker(GenericPublicTracker):
 
     def download_torrent(self, url, referer=None):
         LOGGER.debug('Downloading torrent file from %s ...', url)
+
         self.before_download(url)
+
         response = self.get_response(
-            url, cookies=self.cookies, query_string=self.get_auth_query_string(), referer=referer
+            url,
+            cookies=self.cookies,
+            query_string=self.get_auth_query_string(),
+            referer=referer
         )
+
         if response is None:
             return None
+
         return response.content
 
 
 class TorrtTrackerException(TorrtException):
     """Base torrt tracker exception. All other tracker related exception should inherit from that."""
-
