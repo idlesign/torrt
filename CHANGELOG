@@ -2,8 +2,8 @@ torrt changelog
 ===============
 
 
-Unreleased
-----------
+v0.6.0
+------
 * rutracker mirror list updated
 * nnm club mirror list updated
 + Implemented mirror domain availability discovery
