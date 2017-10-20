@@ -46,7 +46,7 @@ class DelugeRPC(BaseRPC):
         return False
 
     def method_is_connected(self):
-        result = self.query(self.build_request_payload('web.connected'))
+        result = self.query(self.build_request_payload('auth.check_session'))
         if not result:
             raise DelugeRPCException('Deluge WebUI is not connected to a daemon')
         return result
