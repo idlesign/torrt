@@ -5,9 +5,6 @@ https://github.com/idlesign/torrt
 .. image:: https://img.shields.io/pypi/v/torrt.svg
     :target: https://pypi.python.org/pypi/torrt
 
-.. image:: https://img.shields.io/pypi/dm/torrt.svg
-    :target: https://pypi.python.org/pypi/torrt
-
 .. image:: https://img.shields.io/pypi/l/torrt.svg
     :target: https://pypi.python.org/pypi/torrt
 
