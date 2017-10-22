@@ -11,8 +11,8 @@ class RuTrackerTracker(GenericPrivateTracker):
     """This class implements .torrent files downloads for http://rutracker.org tracker."""
 
     alias = 'rutracker.org'
-    login_url = 'http://%(domain)s/forum/login.php'
-    auth_cookie_name = 'bb_data'
+    login_url = 'https://%(domain)s/forum/login.php'
+    auth_cookie_name = 'bb_session'
     mirrors = ['rutracker.net', 'rutracker.org', 'maintracker.org']
 
     def get_id_from_link(self, url):
