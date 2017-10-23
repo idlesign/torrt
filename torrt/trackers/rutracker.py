@@ -11,8 +11,8 @@ class RuTrackerTracker(GenericPrivateTracker):
     """This class implements .torrent files downloads for http://rutracker.org tracker."""
 
     alias = 'rutracker.org'
-    login_url = 'http://%(domain)s/forum/login.php'
-    auth_cookie_name = 'bb_data'
+    login_url = 'https://%(domain)s/forum/login.php'
+    auth_cookie_name = 'bb_session'
     mirrors = ['rutracker.net', 'rutracker.org', 'maintracker.org']
 
     def get_id_from_link(self, url):
@@ -21,6 +21,11 @@ class RuTrackerTracker(GenericPrivateTracker):
 
     def get_login_form_data(self, username, password):
         """Returns a dictionary with data to be pushed to authorization form."""
+
+        # convert login and password for fix cyrillic problems
+        username = unicode(username, "utf-8").encode('cp1251')
+        password = unicode(password, "utf-8").encode('cp1251')
+
         return {'login_username': username, 'login_password': password, 'login': 'pushed'}
 
     def before_download(self, url):
