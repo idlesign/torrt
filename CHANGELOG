@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
+* Fixed rutracker login issue.
+
+
 v0.7.0
 ------
 + Deluge plugin updated
