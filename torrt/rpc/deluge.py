@@ -1,7 +1,12 @@
 import requests
 import logging
 import json
-import base64
+import six
+
+if six.PY3:
+    from base64 import encodebytes as base64encode
+else:
+    from base64 import encodestring as base64encode
 
 from torrt.base_rpc import BaseRPC, TorrtRPCException
 from torrt.utils import RPCClassesRegistry
@@ -93,9 +98,10 @@ class DelugeRPC(BaseRPC):
         return result['torrents']
 
     def method_add_torrent(self, torrent, download_to=None):
+        torrent_dump = base64encode(torrent).decode('utf-8')
         return self.query(
             self.build_request_payload(
-                'webapi.add_torrent', [base64.encodestring(torrent), {'download_location': download_to}]
+                'webapi.add_torrent', [torrent_dump, {'download_location': download_to}]
             )
         )
 

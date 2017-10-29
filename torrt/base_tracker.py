@@ -1,8 +1,9 @@
 import re
 import logging
+
 from functools import partial
 from itertools import chain
-from urlparse import urlparse, urljoin, parse_qs
+from six.moves.urllib.parse import urlparse, urljoin, parse_qs
 
 import requests
 

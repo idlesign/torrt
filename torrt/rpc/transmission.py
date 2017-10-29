@@ -1,7 +1,12 @@
 import requests
 import logging
 import json
-import base64
+import six
+
+if six.PY3:
+    from base64 import encodebytes as base64encode
+else:
+    from base64 import encodestring as base64encode
 
 from torrt.base_rpc import BaseRPC, TorrtRPCException
 from torrt.utils import RPCClassesRegistry
@@ -89,7 +94,7 @@ class TransmissionRPC(BaseRPC):
 
     def method_add_torrent(self, torrent, download_to=None):
         args = {
-            'metainfo': base64.encodestring(torrent),
+            'metainfo': base64encode(torrent),
         }
         if download_to is not None:
             args['download-dir'] = download_to

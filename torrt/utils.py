@@ -2,6 +2,8 @@ import re
 import os
 import json
 import logging
+import six
+
 from datetime import datetime
 from collections import Mapping
 from pkgutil import iter_modules
@@ -123,7 +125,7 @@ def update_dict(old_dict, new_dict):
     :return: updated dict
     :rtype: dict
     """
-    for key, val in new_dict.iteritems():
+    for key, val in six.iteritems(new_dict):
         if isinstance(val, Mapping):
             old_dict[key] = update_dict(old_dict.get(key, {}), val)
         else:
@@ -221,7 +223,10 @@ def encode_value(value, encode=None):
     if encode is None:
         return value
 
-    return unicode(value, "utf-8").encode(encode)
+    if six.PY2:
+        value = unicode(value, "UTF-8")
+
+    return value.encode(encode)
 
 
 class WithSettings(object):
@@ -293,7 +298,7 @@ class TorrtConfig(object):
             cls.save(cls._basic_settings)
 
         # My precious.
-        os.chmod(cls.USER_SETTINGS_FILE, 0600)
+        os.chmod(cls.USER_SETTINGS_FILE, 0o600)
 
     @classmethod
     def update(cls, settings_dict):

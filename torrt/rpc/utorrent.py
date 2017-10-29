@@ -1,7 +1,7 @@
 import requests
 import logging
-from urlparse import urljoin
 
+from six.moves.urllib.parse import urlparse
 from torrt.base_rpc import BaseRPC, TorrtRPCException
 from torrt.utils import RPCClassesRegistry, make_soup
 
@@ -35,7 +35,7 @@ class UTorrentRPC(BaseRPC):
     def login(self):
         try:
             response = requests.get(
-                urljoin(self.url, self.token_page_path),
+                urlparse.urljoin(self.url, self.token_page_path),
                 auth=(self.user, self.password),
                 cookies=self.cookies
             )
