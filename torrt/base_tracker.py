@@ -6,7 +6,7 @@ from urlparse import urlparse, urljoin, parse_qs
 
 import requests
 
-from torrt.utils import parse_torrent, make_soup, WithSettings, TrackerObjectsRegistry
+from torrt.utils import parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry
 from torrt.exceptions import TorrtException
 
 
@@ -27,6 +27,9 @@ class BaseTracker(WithSettings):
 
     mirrors = []
     """List of mirror domain names."""
+
+    encoding = None
+    """Tracker html page encoding (cp1251 or other)."""
 
     def __init__(self):
         self.mirror_picked = None
@@ -344,6 +347,15 @@ class GenericPrivateTracker(GenericPublicTracker):
         self.cookies = cookies
         self.query_string = query_string
 
+    def get_encode_form_data(self, data):
+        """Encode dictionary from get_login_form_data using Tracker page encoding.
+
+        :param dict data: :rtype: dict
+        """
+        data = {key: encode_value(value, self.encoding) for key, value in data.items()}
+
+        return data
+
     def get_login_form_data(self, login, password):
         """Should return a dictionary with data to be pushed to authorization form.
 
@@ -383,8 +395,11 @@ class GenericPrivateTracker(GenericPublicTracker):
         if self.auth_qs_param_name:
             allow_redirects = True  # To be able to get Session ID from query string.
 
+        form_data = self.get_login_form_data(self.username, self.password)
+        form_data = self.get_encode_form_data(form_data)
+
         response = self.get_response(
-            login_url, self.get_login_form_data(self.username, self.password),
+            login_url, form_data,
             allow_redirects=allow_redirects, cookies=self.cookies
         )
 
