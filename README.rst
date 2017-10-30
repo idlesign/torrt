@@ -27,6 +27,7 @@ Automatic updates are available for:
 * RUTOR - http://rutor.org/
 * AniDUB - http://tr.anidub.com/
 * NNM-Club - http://nnm-club.me/
+* Kinozal - http://kinozal.tv/
 
 **torrt** is able to cooperate with the following torrent clients:
 
