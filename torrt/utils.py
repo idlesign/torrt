@@ -211,6 +211,19 @@ def iter_notifiers():
         yield notifier_alias, notifier_object
 
 
+def encode_value(value, encode=None):
+    """Encode value
+
+    :param value: string
+    :param encode: string - encoding charset
+    :return: string - encoded value
+    """
+    if encode is None:
+        return value
+
+    return unicode(value, "utf-8").encode(encode)
+
+
 class WithSettings(object):
     """Introduces settings support for class objects.
 

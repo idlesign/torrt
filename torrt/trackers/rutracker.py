@@ -14,6 +14,7 @@ class RuTrackerTracker(GenericPrivateTracker):
     login_url = 'https://%(domain)s/forum/login.php'
     auth_cookie_name = 'bb_session'
     mirrors = ['rutracker.net', 'rutracker.org', 'maintracker.org']
+    encoding = 'cp1251'
 
     def get_id_from_link(self, url):
         """Returns forum thread identifier from full thread URL."""
@@ -21,11 +22,6 @@ class RuTrackerTracker(GenericPrivateTracker):
 
     def get_login_form_data(self, username, password):
         """Returns a dictionary with data to be pushed to authorization form."""
-
-        # convert login and password for fix cyrillic problems
-        username = unicode(username, "utf-8").encode('cp1251')
-        password = unicode(password, "utf-8").encode('cp1251')
-
         return {'login_username': username, 'login_password': password, 'login': 'pushed'}
 
     def before_download(self, url):
