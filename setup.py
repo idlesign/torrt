@@ -23,7 +23,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
 
-    install_requires=['requests', 'beautifulsoup4', 'torrentool', 'lxml'],
+    install_requires=['requests', 'beautifulsoup4', 'torrentool', 'lxml', 'six'],
 
     entry_points={
         'console_scripts': ['torrt = torrt.main:process_commands'],
