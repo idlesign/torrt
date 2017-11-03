@@ -336,10 +336,10 @@ def update_torrents(hashes, remove_outdated=True):
                 continue
 
             if existing_torrent['hash'] == new_torrent['hash']:
-                LOGGER.info('    Torrent is up-to-date')
+                LOGGER.info('    No updates')
                 continue
 
-            LOGGER.debug('    Torrent update is available')
+            LOGGER.debug('    Update is available')
             try:
                 rpc_object.method_add_torrent(new_torrent['torrent'], existing_torrent['download_to'])
                 LOGGER.info('    Torrent is updated')
