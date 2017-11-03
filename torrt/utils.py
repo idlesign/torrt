@@ -213,20 +213,21 @@ def iter_notifiers():
         yield notifier_alias, notifier_object
 
 
-def encode_value(value, encode=None):
-    """Encode value
+def encode_value(value, encoding=None):
+    """Encodes a value.
 
-    :param value: string
-    :param encode: string - encoding charset
-    :return: string - encoded value
+    :param str|unicode value:
+    :param str|unicode encoding: Encoding charset.
+    :rtype: bytes
+
     """
-    if encode is None:
+    if encoding is None:
         return value
 
     if six.PY2:
-        value = unicode(value, "UTF-8")
+        value = unicode(value, 'UTF-8')
 
-    return value.encode(encode)
+    return value.encode(encoding)
 
 
 class WithSettings(object):

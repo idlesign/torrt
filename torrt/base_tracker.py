@@ -35,6 +35,16 @@ class BaseTracker(WithSettings):
     def __init__(self):
         self.mirror_picked = None
 
+    def encode_value(self, value):
+        """Encodes a value.
+
+        :param str|unicode value:
+        :param str|unicode encoding: Encoding charset.
+        :rtype: bytes
+
+        """
+        return encode_value(value, self.encoding)
+
     def pick_mirror(self, url):
         """Probes mirrors (domains) one by one and chooses one whick is available to use.
 
@@ -353,9 +363,7 @@ class GenericPrivateTracker(GenericPublicTracker):
 
         :param dict data: :rtype: dict
         """
-        data = {key: encode_value(value, self.encoding) for key, value in data.items()}
-
-        return data
+        return {key: self.encode_value(value) for key, value in data.items()}
 
     def get_login_form_data(self, login, password):
         """Should return a dictionary with data to be pushed to authorization form.
