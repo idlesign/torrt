@@ -2,8 +2,8 @@ torrt changelog
 ===============
 
 
-Unreleased
-----------
+v0.8.0
+------
 + Added kinozal.tv tracker.
 + Basic Python 3 support.
 
