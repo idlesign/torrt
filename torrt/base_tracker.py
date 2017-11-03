@@ -170,6 +170,7 @@ class BaseTracker(WithSettings):
         else:
             method = partial(requests.get, **r_kwargs)
 
+        result = None
         try:
             result = method(url)
 
@@ -179,7 +180,7 @@ class BaseTracker(WithSettings):
             return result
 
         except requests.exceptions.RequestException as e:
-            LOGGER.error('Failed to get resource from `%s`: %s', result.url, e.message)
+            LOGGER.error('Failed to get resource from `%s`: %s', getattr(result, 'url', url), e.message)
             return None
 
     @classmethod
