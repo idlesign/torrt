@@ -2,7 +2,6 @@ import logging
 
 from torrt.base_tracker import GenericPrivateTracker
 from torrt.utils import TrackerClassesRegistry
-from urlparse import urlparse, urljoin, parse_qs
 
 LOGGER = logging.getLogger(__name__)
 
