@@ -26,6 +26,7 @@ Automatic updates are available for:
 * Transmission (using built-in JSON RPC)
 * Deluge (using `deluge-webapi` plugin - https://github.com/idlesign/deluge-webapi)
 * uTorrent (using built-in RPC)
+* qBittorrent (using built-in RPC)
 
 **torrt** is able to send notifications about downloaded files with:
 
