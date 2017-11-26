@@ -13,7 +13,7 @@ class RuTrackerTracker(GenericPrivateTracker):
     alias = 'rutracker.org'
     login_url = 'https://%(domain)s/forum/login.php'
     auth_cookie_name = 'bb_session'
-    mirrors = ['rutracker.net', 'rutracker.org', 'maintracker.org']
+    mirrors = ['rutracker.org', 'rutracker.net', 'maintracker.org']
     encoding = 'cp1251'
 
     def get_id_from_link(self, url):
@@ -22,7 +22,7 @@ class RuTrackerTracker(GenericPrivateTracker):
 
     def get_login_form_data(self, username, password):
         """Returns a dictionary with data to be pushed to authorization form."""
-        return {'login_username': username, 'login_password': password, 'login': 'pushed'}
+        return {'login_username': username, 'login_password': password, 'login': 'pushed', 'redirect': 'index.php'}
 
     def before_download(self, url):
         """Used to perform some required actions right before .torrent download."""
