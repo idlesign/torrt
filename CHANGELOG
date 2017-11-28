@@ -4,7 +4,8 @@ torrt changelog
 
 Unreleased
 ----------
-+ QBittorrent RPC support
+* Fixed another rutracker login issue.
++ QBittorrent RPC support.
 
 
 v0.8.0
