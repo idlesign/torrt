@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
++ QBittorrent RPC support
+
+
 v0.8.0
 ------
 + Added kinozal.tv tracker.
