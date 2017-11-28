@@ -2,8 +2,8 @@ torrt changelog
 ===============
 
 
-Unreleased
-----------
+v0.9.0
+------
 * Fixed another rutracker login issue.
 + QBittorrent RPC support.
 
