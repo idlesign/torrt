@@ -1,19 +1,17 @@
-import re
-import os
 import json
 import logging
-import six
-
-from datetime import datetime
+import os
+import re
+import threading
 from collections import Mapping
-from pkgutil import iter_modules
+from datetime import datetime
 from inspect import getargspec
+from pkgutil import iter_modules
 
-from torrentool.api import Torrent
+import six
 from bs4 import BeautifulSoup
 
-from .exceptions import TorrtException  # Imported for backward compatibility.
-
+from torrentool.api import Torrent
 
 if False:  # pragma: nocover
     from .base_tracker import GenericTracker
@@ -21,9 +19,48 @@ if False:  # pragma: nocover
 
 LOGGER = logging.getLogger(__name__)
 
+_THREAD_LOCAL = threading.local()
 
 # This regex is used to get hyperlink from torrent comment.
 RE_LINK = re.compile(r'(?P<url>https?://[^\s]+)')
+
+
+class GlobalParam(object):
+    """Represents global parameter value holder.
+    Global params can used anywhere in torrt.
+
+    """
+    @staticmethod
+    def set(name, value):
+        setattr(_THREAD_LOCAL, name, value)
+
+    @staticmethod
+    def get(name):
+        return getattr(_THREAD_LOCAL, name, None)
+
+
+def dump_contents(filename, contents):
+    """Dumps contents into a file with a given name.
+
+    :param filename:
+    :param bytes contents:
+
+    """
+    dump_into = GlobalParam.get('dump_into')
+
+    if not dump_into:
+        return
+
+    if hasattr(contents, 'encode_contents'):
+        # soup
+        text = contents.encode_contents()
+
+    else:
+        # requests lib response
+        text = contents.content
+
+    with open(os.path.join(dump_into, filename), 'wb') as f:
+        f.write(text)
 
 
 def import_classes():

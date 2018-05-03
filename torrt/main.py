@@ -1,14 +1,14 @@
 import argparse
 import logging
+from os import path
 
 from torrt import VERSION
-from torrt.utils import RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRegistry, NotifierClassesRegistry, \
-    NotifierObjectsRegistry
 from torrt.toolbox import add_torrent_from_url, remove_torrent, \
     register_torrent, unregister_torrent, get_registered_torrents, \
     walk, set_walk_interval, toggle_rpc, configure_logging, bootstrap, \
     configure_rpc, configure_tracker, configure_notifier, remove_notifier
-
+from torrt.utils import RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRegistry, NotifierClassesRegistry, \
+    NotifierObjectsRegistry, GlobalParam
 
 LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +73,8 @@ def process_commands():
     parser_walk.add_argument(
         '-f', help='Forces walk. Forced walks do not respect walk interval settings', dest='forced',
         action='store_true')
+    parser_walk.add_argument(
+        '--dump', help='Dump web pages scraped by torrt into current or a given directory', dest='dump')
 
     parser_set_interval = subp_main.add_parser(
         'set_walk_interval', help='Sets an interval *in hours* between consecutive torrent updates checks')
@@ -123,11 +125,8 @@ def process_commands():
     args = arg_parser.parse_args()
     args = vars(args)
 
-    loggin_level = logging.INFO
-    if args['verbose']:
-        loggin_level = logging.DEBUG
+    configure_logging(logging.DEBUG if args['verbose'] else logging.INFO)
 
-    configure_logging(loggin_level)
     bootstrap()
 
     if args['command'] == 'enable_rpc':
@@ -169,6 +168,11 @@ def process_commands():
             LOGGER.info('%s\t status=%s', notifier_alias, notifier_status)
 
     elif args['command'] == 'walk':
+        dump_into = args.get('dump')
+
+        if dump_into:
+            GlobalParam.set('dump_into', path.abspath(dump_into))
+
         walk(forced=args['forced'], silent=True)
 
     elif args['command'] == 'set_walk_interval':

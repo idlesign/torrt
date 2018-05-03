@@ -1,15 +1,14 @@
-import re
 import logging
-
+import re
+from datetime import datetime
 from functools import partial
 from itertools import chain
-from six.moves.urllib.parse import urlparse, urljoin, parse_qs
 
 import requests
+from six.moves.urllib.parse import urlparse, urljoin, parse_qs
 
-from torrt.utils import parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry
 from torrt.exceptions import TorrtException
-
+from torrt.utils import parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, dump_contents
 
 LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +63,11 @@ class BaseTracker(WithSettings):
 
                 LOGGER.debug('Probing mirror: `%s` ...', mirror_url)
 
-                response = requests.get(mirror_url)
+                try:
+                    response = requests.get(mirror_url)
+
+                except requests.exceptions.RequestException as e:
+                    continue
 
                 if response.url.startswith(mirror_url):
                     mirror_picked = mirror_domain
@@ -177,6 +180,8 @@ class BaseTracker(WithSettings):
             if as_soup:
                 result = self.make_page_soup(result.text)
 
+            dump_contents('%s_%s.html' % (self.__class__.__name__, datetime.now()), contents=result)
+
             return result
 
         except requests.exceptions.RequestException as e:
@@ -204,17 +209,26 @@ class BaseTracker(WithSettings):
         :return: list or str
         :rtype: list or str
         """
+        if not page_soup:
+            return None if definite else []
+
         if definite is not None:
             link = page_soup.find(href=re.compile(definite))
+
             if link:
                 return cls.expand_link(url, link.get('href'))
+
             return link
+
         else:
             links = []
+
             for link in page_soup.find_all('a'):
-                l = link.get('href')
-                if l:
-                    links.append(cls.expand_link(url, l))
+                href = link.get('href')
+
+                if href:
+                    links.append(cls.expand_link(url, href))
+
             return links
 
     @classmethod
@@ -318,9 +332,7 @@ class GenericPublicTracker(GenericTracker):
         LOGGER.debug('Downloading torrent file from %s ...', url)
         # That was a check that user himself visited torrent's page ;)
         response = self.get_response(url, referer=referer)
-        if response is None:
-            return None
-        return response.content
+        return getattr(response, 'content', None)
 
 
 class GenericPrivateTracker(GenericPublicTracker):
@@ -466,10 +478,7 @@ class GenericPrivateTracker(GenericPublicTracker):
             referer=referer
         )
 
-        if response is None:
-            return None
-
-        return response.content
+        return getattr(response, 'content', None)
 
 
 class TorrtTrackerException(TorrtException):
