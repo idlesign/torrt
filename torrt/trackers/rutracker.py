@@ -47,8 +47,9 @@ class RuTrackerTracker(GenericPrivateTracker):
         return download_link
 
     def get_form_token(self, page_soup):
+        form_token_lines = [line for line in page_soup.text.split('\n\t') if line.startswith('form_token')]
         try:
-            return filter(lambda s: s.startswith('form_token'), page_soup.text.split('\n\t'))[0].split(':')[1][2:-2]
+            return form_token_lines[0].split(':')[1][2:-2]
         except IndexError:
             return
 
