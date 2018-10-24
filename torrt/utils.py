@@ -63,6 +63,22 @@ def dump_contents(filename, contents):
         f.write(text)
 
 
+def base64encode(string_or_bytes):
+    """Return base64 encoded input
+
+    :param string_or_bytes:
+
+    """
+
+    if six.PY3:
+        from base64 import encodebytes
+        string_bytes = string_or_bytes.encode('utf-8') if not isinstance(string_or_bytes, bytes) else string_or_bytes
+        return encodebytes(string_bytes).decode('ascii')
+    else:
+        from base64 import encodestring
+        return encodestring(string_or_bytes)
+
+
 def import_classes():
     """Dynamically imports RPC classes and tracker handlers from their directories.
 
