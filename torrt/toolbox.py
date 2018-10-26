@@ -266,9 +266,11 @@ def walk(forced=False, silent=False, remove_outdated=True):
     if forced or now >= next_time:
         LOGGER.info('Torrent walk is started')
 
+        hashes = list(cfg['torrents'].keys())
+
         updated = {}
         try:
-            updated = update_torrents(cfg['torrents'].keys(), remove_outdated=remove_outdated)
+            updated = update_torrents(hashes, remove_outdated=remove_outdated)
         except TorrtException as e:
             if not silent:
                 raise

@@ -15,6 +15,7 @@ from torrentool.api import Torrent
 
 if False:  # pragma: nocover
     from .base_tracker import GenericTracker
+from .compat import encode_value, base64encode
 
 
 LOGGER = logging.getLogger(__name__)
@@ -248,23 +249,6 @@ def iter_notifiers():
     for notifier_alias, notifier_object in notifier_objects.items():
 
         yield notifier_alias, notifier_object
-
-
-def encode_value(value, encoding=None):
-    """Encodes a value.
-
-    :param str|unicode value:
-    :param str|unicode encoding: Encoding charset.
-    :rtype: bytes
-
-    """
-    if encoding is None:
-        return value
-
-    if six.PY2:
-        value = unicode(value, 'UTF-8')
-
-    return value.encode(encoding)
 
 
 class WithSettings(object):

@@ -1,15 +1,9 @@
 import requests
 import logging
 import json
-import six
-
-if six.PY3:
-    from base64 import encodebytes as base64encode
-else:
-    from base64 import encodestring as base64encode
 
 from torrt.base_rpc import BaseRPC, TorrtRPCException
-from torrt.utils import RPCClassesRegistry
+from torrt.utils import RPCClassesRegistry, base64encode
 
 
 LOGGER = logging.getLogger(__name__)
