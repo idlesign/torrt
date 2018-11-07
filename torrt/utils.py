@@ -177,7 +177,7 @@ def structure_torrent_data(target_dict, hash_str, data):
 
     :param target_dict: dict - dictionary to update
     :param hash_str: str - torrent identifying hash
-    :param data: dict - torrent data recieved from RPC (see parse_torrent())
+    :param data: dict - torrent data received from RPC (see parse_torrent())
     :return:
     """
     data = dict(data)
@@ -188,9 +188,13 @@ def structure_torrent_data(target_dict, hash_str, data):
     if 'name' not in data:
         data['name'] = None
 
+    if 'url' not in data:
+        data['url'] = None
+
     target_dict[hash_str] = {
         'hash': data['hash'],
-        'name': data['name']
+        'name': data['name'],
+        'url': data['url']
     }
 
 

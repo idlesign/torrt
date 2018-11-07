@@ -16,7 +16,6 @@ LOGGER = logging.getLogger(__name__)
 
 
 def process_commands():
-
     def settings_dict_from_list(lst):
         settings_dict = {}
         for s in lst:
@@ -109,6 +108,8 @@ def process_commands():
         help='Registers torrent within torrt by its hash (for torrents already existing at torrent clients)')
     parser_register_torrent.add_argument(
         'hash', help='Torrent identifying hash')
+    parser_register_torrent.add_argument(
+        '-u', dest='url', default=None, help='URL to download torrent from')
 
     parser_unregister_torrent = subp_main.add_parser(
         'unregister_torrent', help='Unregisters torrent from torrt by its hash')
@@ -185,7 +186,7 @@ def process_commands():
         remove_torrent(args['hash'], args['delete_data'])
 
     elif args['command'] == 'register_torrent':
-        register_torrent(args['hash'])
+        register_torrent(args['hash'], url=args['url'])
 
     elif args['command'] == 'unregister_torrent':
         unregister_torrent(args['hash'])
