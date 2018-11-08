@@ -302,10 +302,10 @@ def walk(forced=False, silent=False, remove_outdated=True):
         )
 
 
-def update_torrents(to_check, remove_outdated=True):
+def update_torrents(hashes, remove_outdated=True):
     """Performs torrent updates.
 
-    :param to_check: dict - hash->torrent pairs
+    :param hashes: list - torrent identifying hashes
     :param remove_outdated: bool - flag to remove outdated torrents from torrent clients
     :return: hash-indexed dictionary with information on updated torrents
     :rtype: dict
@@ -313,9 +313,17 @@ def update_torrents(to_check, remove_outdated=True):
     updated_by_hashes = {}
     download_cache = {}
 
+    to_check = None
+    if isinstance(hashes, list):
+        warn('`hashes` argument of list type is deprecated and will be removed in 1.0. '
+             'Please pass the argument of Dict[hash, torrent] type instead.', DeprecationWarning, stacklevel=2)
+    else:
+        to_check = hashes
+        hashes = list(to_check.keys())
+
     for _, rpc_object in iter_rpc():
         LOGGER.info('Getting torrents from `%s` ...', rpc_object.alias)
-        torrents = rpc_object.method_get_torrents(list(to_check.keys()))
+        torrents = rpc_object.method_get_torrents(hashes)
 
         if not torrents:
             LOGGER.info('  No significant torrents found')
@@ -325,7 +333,7 @@ def update_torrents(to_check, remove_outdated=True):
 
             page_url = get_url_from_string(existing_torrent['comment'])
             if not page_url:
-                page_url = to_check[existing_torrent['hash']].get('url', None)
+                page_url = to_check[existing_torrent['hash']].get('url', None) if to_check else None
 
             if not page_url:
                 LOGGER.warning('    Torrent `%s` has no link in comment. Skipped', existing_torrent['name'])
