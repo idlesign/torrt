@@ -28,10 +28,14 @@ class AnilibriaTracker(GenericPublicTracker):
         divs = page_soup.select('div.download-torrent')
         for div in divs:
             quality_span = div.select('div.torrent-first-col > span')
-            match = REGEX_QUALITY.search(quality_span[0].text.strip())
-            quality = match.group(1)
-            link = self.expand_link(url, div.select('div.torrent-fourth-col a.torrent-download-link')[0]['href'])
-            available_qualities[quality] = link
+            quality_str = quality_span[0].text.strip()
+            match = REGEX_QUALITY.search(quality_str)
+            if match:
+                quality = match.group(1)
+                link = self.expand_link(url, div.select('div.torrent-fourth-col a.torrent-download-link')[0]['href'])
+                available_qualities[quality] = link
+            else:
+                LOGGER.warning('Cannot extract quality from `%s`', quality_str)
 
         LOGGER.debug('Available in qualities: %s', ', '.join(available_qualities.keys()))
 
