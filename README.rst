@@ -32,6 +32,7 @@ Automatic updates are available for:
 * RuTracker (ex torrents.ru) - http://rutracker.org/
 * RUTOR - http://rutor.org/
 * AniDUB - http://tr.anidub.com/
+* AniLibria - https://www.anilibria.tv/
 * NNM-Club - http://nnm-club.me/
 * Kinozal - http://kinozal.tv/
 
