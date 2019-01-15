@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
+* Py3 compatibility improvements.
+
+
 v0.10.0
 -------
 + Added AniLibria tracker.
