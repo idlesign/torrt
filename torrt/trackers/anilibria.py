@@ -6,7 +6,7 @@ from torrt.utils import TrackerClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
-REGEX_QUALITY = re.compile(ur".+\[(.+)\]")
+REGEX_QUALITY = re.compile(r".+\[(.+)\]")
 
 
 class AnilibriaTracker(GenericPublicTracker):

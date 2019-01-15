@@ -126,7 +126,7 @@ def process_commands():
     args = arg_parser.parse_args()
     args = vars(args)
 
-    configure_logging(logging.DEBUG if args['verbose'] else logging.INFO)
+    configure_logging(logging.DEBUG if args.get('verbose') else logging.INFO)
 
     bootstrap()
 
