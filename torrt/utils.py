@@ -12,8 +12,6 @@ from inspect import getargspec
 from torrentool.api import Torrent
 from bs4 import BeautifulSoup
 
-from .exceptions import TorrtException  # Imported for backward compatibility.
-
 
 if False:  # pragma: nocover
     from .base_tracker import GenericTracker
@@ -39,6 +37,9 @@ def import_classes():
 
     LOGGER.debug('Importing Notifier classes ...')
     import_from_path('notifiers')
+
+    LOGGER.debug('Importing Bot classes ...')
+    import_from_path('bots')
 
 
 def import_from_path(path):
@@ -197,6 +198,20 @@ def iter_rpc():
         yield rpc_alias, rpc_object
 
 
+def iter_bots():
+    """Generator to iterate through available bots objects.
+
+    :return: tuple - bot_alias, bot_object
+    :rtype: tuple
+    """
+    bot_objects = BotObjectsRegistry.get()
+    if not bot_objects:
+        LOGGER.error('No Bot objects registered, unable to proceed')
+        raise StopIteration()
+
+    return bot_objects.items()
+
+
 def iter_notifiers():
     """Generator to iterate through available notifier objects.
 
@@ -225,7 +240,8 @@ def encode_value(value, encoding=None):
         return value
 
     if six.PY2:
-        value = unicode(value, 'UTF-8')
+        if not isinstance(value, unicode):
+            value = unicode(value, 'UTF-8')
 
     return value.encode(encoding)
 
@@ -283,7 +299,8 @@ class TorrtConfig(object):
         'rpc': {},
         'trackers': {},
         'torrents': {},
-        'notifiers': {}
+        'notifiers': {},
+        'bots': {}
     }
 
     @classmethod
@@ -397,3 +414,5 @@ TrackerClassesRegistry = ObjectsRegistry()
 TrackerObjectsRegistry = ObjectsRegistry()
 NotifierClassesRegistry = ObjectsRegistry()
 NotifierObjectsRegistry = ObjectsRegistry()
+BotClassesRegistry = ObjectsRegistry()
+BotObjectsRegistry = ObjectsRegistry()

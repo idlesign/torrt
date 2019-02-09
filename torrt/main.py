@@ -7,8 +7,7 @@ from torrt.utils import RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRe
 from torrt.toolbox import add_torrent_from_url, remove_torrent, \
     register_torrent, unregister_torrent, get_registered_torrents, \
     walk, set_walk_interval, toggle_rpc, configure_logging, bootstrap, \
-    configure_rpc, configure_tracker, configure_notifier, remove_notifier
-
+    configure_rpc, configure_tracker, configure_notifier, remove_notifier, configure_bot, run_bots
 
 LOGGER = logging.getLogger(__name__)
 
@@ -68,11 +67,28 @@ def process_commands():
              'Supported settings for telegram notifier: token, chat_id.',
         nargs='*')
 
+    parser_configure_bot = subp_main.add_parser(
+        'configure_bot', help='Sets Bot settings (token, etc.)',
+        description='E.g.: configure_bot telegram token=YourBotSuperToken')
+    parser_configure_bot.add_argument(
+        'bot_alias', help='Bot alias to apply settings to')
+    parser_configure_bot.add_argument(
+        'settings',
+        help='Settings string, format: setting1=val1 setting2=val2. '
+             'Supported settings for telegram bot: token.',
+        nargs='*')
+
     parser_walk = subp_main.add_parser(
         'walk', help='Walks through registered torrents and performs automatic updates')
     parser_walk.add_argument(
         '-f', help='Forces walk. Forced walks do not respect walk interval settings', dest='forced',
         action='store_true')
+
+    parser_run_bots = subp_main.add_parser(
+        'run_bots', help='Run registered bots')
+    parser_run_bots.add_argument(
+        'aliases', help='Bots to run aliases',
+        nargs='*')
 
     parser_set_interval = subp_main.add_parser(
         'set_walk_interval', help='Sets an interval *in hours* between consecutive torrent updates checks')
@@ -197,6 +213,12 @@ def process_commands():
 
     elif args['command'] == 'remove_notifier':
         remove_notifier(args['alias'])
+
+    elif args['command'] == 'configure_bot':
+        configure_bot(args['bot_alias'], settings_dict_from_list(args['settings']))
+
+    elif args['command'] == 'run_bots':
+        run_bots(args['aliases'])
 
 
 if __name__ == '__main__':
