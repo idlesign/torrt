@@ -2,6 +2,14 @@ torrt
 =====
 https://github.com/idlesign/torrt
 
+
+.. image:: https://idlesign.github.io/lbc/py2-lbc.svg
+   :target: https://idlesign.github.io/lbc/
+   :alt: LBC Python 2
+
+----
+
+
 .. image:: https://img.shields.io/pypi/v/torrt.svg
     :target: https://pypi.python.org/pypi/torrt
 
