@@ -40,7 +40,7 @@ Automatic updates are available for:
 Requirements
 ------------
 
-1. Python 2.7+
+1. Python 2.7+, 3.5+
 2. `torrentool` Python module
 3. `requests` Python module
 4. `Beautiful Soup` 4+ Python module
