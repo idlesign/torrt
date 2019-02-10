@@ -200,17 +200,20 @@ def bootstrap():
     init_object_registries()
 
 
-def register_torrent(hash_str, torrent_data=None):
+def register_torrent(hash_str, torrent_data=None, url=None):
     """Registers torrent within torrt. Used to register torrents that already exists
     in torrent clients.
 
     :param hash_str: str - torrent identifying hash
     :param torrent_data: dict
+    :param url: fallback url that will be used in case torrent comment doesn't contain url
     :return:
     """
     LOGGER.debug('Registering `%s` torrent ...', hash_str)
     if torrent_data is None:
         torrent_data = {}
+    if url:
+        torrent_data['url'] = url
     cfg = {'torrents': {}}
     structure_torrent_data(cfg['torrents'], hash_str, torrent_data)
     TorrtConfig.update(cfg)
@@ -247,7 +250,7 @@ def add_torrent_from_url(url, download_to=None):
     else:
         for rpc_alias, rpc_object in iter_rpc():
             rpc_object.method_add_torrent(torrent_data['torrent'], download_to=download_to)
-            register_torrent(torrent_data['hash'], torrent_data)
+            register_torrent(torrent_data['hash'], torrent_data, url)
             LOGGER.info('Torrent from `%s` is added within `%s`', url, rpc_alias)
 
 
@@ -308,7 +311,7 @@ def walk(forced=False, silent=False, remove_outdated=True):
 
         updated = {}
         try:
-            updated = update_torrents(cfg['torrents'].keys(), remove_outdated=remove_outdated)
+            updated = update_torrents(cfg['torrents'], remove_outdated=remove_outdated)
         except TorrtException as e:
             if not silent:
                 raise
@@ -350,6 +353,14 @@ def update_torrents(hashes, remove_outdated=True):
     updated_by_hashes = {}
     download_cache = {}
 
+    to_check = None
+    if isinstance(hashes, list):
+        warn('`hashes` argument of list type is deprecated and will be removed in 1.0. '
+             'Please pass the argument of Dict[hash, torrent] type instead.', DeprecationWarning, stacklevel=2)
+    else:
+        to_check = hashes
+        hashes = list(to_check.keys())
+
     for _, rpc_object in iter_rpc():
         LOGGER.info('Getting torrents from `%s` ...', rpc_object.alias)
         torrents = rpc_object.method_get_torrents(hashes)
@@ -362,7 +373,10 @@ def update_torrents(hashes, remove_outdated=True):
 
             page_url = get_url_from_string(existing_torrent['comment'])
             if not page_url:
-                LOGGER.warning('    Torrent has no link in comment. Skipped', existing_torrent['name'])
+                page_url = to_check[existing_torrent['hash']].get('url', None) if to_check else None
+
+            if not page_url:
+                LOGGER.warning('    Torrent `%s` has no link in comment. Skipped', existing_torrent['name'])
                 continue
 
             if page_url in download_cache:
@@ -382,6 +396,7 @@ def update_torrents(hashes, remove_outdated=True):
             LOGGER.debug('    Update is available')
             try:
                 rpc_object.method_add_torrent(new_torrent['torrent'], existing_torrent['download_to'])
+                new_torrent['url'] = page_url
                 LOGGER.info('    Torrent is updated')
                 structure_torrent_data(updated_by_hashes, existing_torrent['hash'], new_torrent)
 
@@ -402,5 +417,3 @@ def run_bots(aliases=None):
         if aliases and alias not in aliases:
             continue
         bot_object.run()
-
-

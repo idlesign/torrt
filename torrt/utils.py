@@ -1,27 +1,67 @@
-import re
-import os
 import json
 import logging
-import six
-
-from datetime import datetime
+import os
+import re
+import threading
 from collections import Mapping
-from pkgutil import iter_modules
+from datetime import datetime
 from inspect import getargspec
+from pkgutil import iter_modules
 
-from torrentool.api import Torrent
+import six
 from bs4 import BeautifulSoup
 
+from torrentool.api import Torrent
 
 if False:  # pragma: nocover
     from .base_tracker import GenericTracker
+from .compat import encode_value, base64encode
 
 
 LOGGER = logging.getLogger(__name__)
 
+_THREAD_LOCAL = threading.local()
 
 # This regex is used to get hyperlink from torrent comment.
 RE_LINK = re.compile(r'(?P<url>https?://[^\s]+)')
+
+
+class GlobalParam(object):
+    """Represents global parameter value holder.
+    Global params can used anywhere in torrt.
+
+    """
+    @staticmethod
+    def set(name, value):
+        setattr(_THREAD_LOCAL, name, value)
+
+    @staticmethod
+    def get(name):
+        return getattr(_THREAD_LOCAL, name, None)
+
+
+def dump_contents(filename, contents):
+    """Dumps contents into a file with a given name.
+
+    :param filename:
+    :param bytes contents:
+
+    """
+    dump_into = GlobalParam.get('dump_into')
+
+    if not dump_into:
+        return
+
+    if hasattr(contents, 'encode_contents'):
+        # soup
+        text = contents.encode_contents()
+
+    else:
+        # requests lib response
+        text = contents.content
+
+    with open(os.path.join(dump_into, filename), 'wb') as f:
+        f.write(text)
 
 
 def import_classes():
@@ -140,7 +180,7 @@ def structure_torrent_data(target_dict, hash_str, data):
 
     :param target_dict: dict - dictionary to update
     :param hash_str: str - torrent identifying hash
-    :param data: dict - torrent data recieved from RPC (see parse_torrent())
+    :param data: dict - torrent data received from RPC (see parse_torrent())
     :return:
     """
     data = dict(data)
@@ -151,9 +191,13 @@ def structure_torrent_data(target_dict, hash_str, data):
     if 'name' not in data:
         data['name'] = None
 
+    if 'url' not in data:
+        data['url'] = None
+
     target_dict[hash_str] = {
         'hash': data['hash'],
-        'name': data['name']
+        'name': data['name'],
+        'url': data['url']
     }
 
 
@@ -226,24 +270,6 @@ def iter_notifiers():
     for notifier_alias, notifier_object in notifier_objects.items():
 
         yield notifier_alias, notifier_object
-
-
-def encode_value(value, encoding=None):
-    """Encodes a value.
-
-    :param str|unicode value:
-    :param str|unicode encoding: Encoding charset.
-    :rtype: bytes
-
-    """
-    if encoding is None:
-        return value
-
-    if six.PY2:
-        if not isinstance(value, unicode):
-            value = unicode(value, 'UTF-8')
-
-    return value.encode(encoding)
 
 
 class WithSettings(object):
