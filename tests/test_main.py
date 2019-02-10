@@ -1,6 +1,9 @@
 from torrt.main import *
 
 
-def test_import():
-    # Dummy test import.
-    assert VERSION
+def test_basic():
+    bootstrap()
+    assert TrackerClassesRegistry.get()
+    assert NotifierClassesRegistry.get()
+    assert RPCClassesRegistry.get()
+    walk()
