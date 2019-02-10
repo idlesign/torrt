@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
++ Added CasStudio tracker support.
+
+
 v0.10.1
 -------
 * Py3 compatibility improvements.

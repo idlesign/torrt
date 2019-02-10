@@ -29,12 +29,13 @@ and instructs your torrent client to download new files.
 
 Automatic updates are available for:
 
-* RuTracker (ex torrents.ru) - http://rutracker.org/
-* RUTOR - http://rutor.org/
 * AniDUB - http://tr.anidub.com/
 * AniLibria - https://www.anilibria.tv/
-* NNM-Club - http://nnm-club.me/
+* CasStudio - https://casstudio.tv
 * Kinozal - http://kinozal.tv/
+* NNM-Club - http://nnm-club.me/
+* RUTOR - http://rutor.org/
+* RuTracker (ex torrents.ru) - http://rutracker.org/
 
 **torrt** is able to cooperate with the following torrent clients:
 

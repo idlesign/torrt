@@ -9,17 +9,20 @@ Description
 
 *Automates torrent updates for you.*
 
-**torrt** automatically checks your favourite torrent tracker sites, where torrents are organized as articles (i.e forum-like tracker),
-to verify whether specific torrents have been updated (e.g. torrent bundling some TV-series is updated with a new episode),
-and instructs your torrent client to download new files.
+**torrt** automatically checks your favourite torrent tracker sites, where torrents
+are organized as articles (i.e forum-like tracker), to verify whether specific torrents have been updated
+(e.g. torrent bundling some TV-series is updated with a new episode), and instructs your torrent client
+to download new files.
 
 Automatic updates are available for:
 
-* RuTracker (ex torrents.ru) - http://rutracker.org/
-* RUTOR - http://rutor.org/
 * AniDUB - http://tr.anidub.com/
-* NNM-Club - http://nnm-club.me/
+* AniLibria - https://www.anilibria.tv/
+* CasStudio - https://casstudio.tv
 * Kinozal - http://kinozal.tv/
+* NNM-Club - http://nnm-club.me/
+* RUTOR - http://rutor.org/
+* RuTracker (ex torrents.ru) - http://rutracker.org/
 
 **torrt** is able to cooperate with the following torrent clients:
 
@@ -41,11 +44,7 @@ Requirements
 ------------
 
 1. Python 2.7+, 3.5+
-2. `torrentool` Python module
-3. `requests` Python module
-4. `Beautiful Soup` 4+ Python module
-5. `lxml` Python module
-6. `deluge-webapi` plugin (to work with Deluge)
+2. `deluge-webapi` plugin (to work with Deluge)
 
 
 Table of Contents
@@ -62,8 +61,12 @@ Table of Contents
 Get involved into torrt
 -----------------------
 
-**Submit issues.** If you spotted something weird in application behavior or want to propose a feature you can do that at https://github.com/idlesign/torrt/issues
+**Submit issues.** If you spotted something weird in application behavior or want to propose a feature you can do that
+at https://github.com/idlesign/torrt/issues
 
-**Write code.** If you are eager to participate in application development, fork it at https://github.com/idlesign/torrt, write your code, whether it should be a bugfix or a feature implementation, and make a pull request right from the forked project page.
+**Write code.** If you are eager to participate in application development, fork it at
+https://github.com/idlesign/torrt, write your code, whether it should be a bugfix or a feature implementation,
+and make a pull request right from the forked project page.
 
-**Spread the word.** If you have some tips and tricks or any other words in mind that you think might be of interest for the others — publish it.
+**Spread the word.** If you have some tips and tricks or any other words in mind that you think might be of interest
+for the others — publish it.
