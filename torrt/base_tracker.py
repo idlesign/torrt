@@ -185,7 +185,7 @@ class BaseTracker(WithSettings):
             return result
 
         except requests.exceptions.RequestException as e:
-            LOGGER.error('Failed to get resource from `%s`: %s', getattr(result, 'url', url), e.message)
+            LOGGER.error('Failed to get resource from `%s`: %s', getattr(result, 'url', url), e)
             return None
 
     @classmethod
