@@ -2,6 +2,14 @@ torrt
 =====
 https://github.com/idlesign/torrt
 
+
+.. image:: https://idlesign.github.io/lbc/py2-lbc.svg
+   :target: https://idlesign.github.io/lbc/
+   :alt: LBC Python 2
+
+----
+
+
 .. image:: https://img.shields.io/pypi/v/torrt.svg
     :target: https://pypi.python.org/pypi/torrt
 
@@ -29,12 +37,13 @@ and instructs your torrent client to download new files.
 
 Automatic updates are available for:
 
-* RuTracker (ex torrents.ru) - http://rutracker.org/
-* RUTOR - http://rutor.org/
 * AniDUB - http://tr.anidub.com/
 * AniLibria - https://www.anilibria.tv/
-* NNM-Club - http://nnm-club.me/
+* CasStudio - https://casstudio.tv
 * Kinozal - http://kinozal.tv/
+* NNM-Club - http://nnm-club.me/
+* RUTOR - http://rutor.org/
+* RuTracker (ex torrents.ru) - http://rutracker.org/
 
 **torrt** is able to cooperate with the following torrent clients:
 
