@@ -52,6 +52,12 @@ Update procedure
 * **set_walk_interval** - Sets an interval *in hours* between consecutive torrent updates checks
 
 
+Bots configuration and run
+--------------------------
+
+* **configure_bot** - Sets bot settings (token and users allowed to add torrents)
+
+* **run_bots** - Run bot processes. Note that this command starts process that never ends.
 
 .. note::
 

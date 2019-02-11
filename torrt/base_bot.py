@@ -20,4 +20,9 @@ class BaseBot(WithSettings):
         return False
 
     def run(self):
+        """
+        Run bot to receive incoming commands.
+
+        :return:
+        """
         pass

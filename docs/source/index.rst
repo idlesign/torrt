@@ -20,6 +20,8 @@ Automatic updates are available for:
 * AniDUB - http://tr.anidub.com/
 * NNM-Club - http://nnm-club.me/
 * Kinozal - http://kinozal.tv/
+* Anilibria - https://www.anilibria.tv/
+* CasStudio - https://casstudio.tv/
 
 **torrt** is able to cooperate with the following torrent clients:
 
@@ -36,6 +38,8 @@ Automatic updates are available for:
 
 **torrt** can function both as a console application and Python module.
 
+**torrt** can be managed through Telegram messenger. You can add new download in a few messages.
+
 
 Requirements
 ------------
@@ -46,6 +50,7 @@ Requirements
 4. `Beautiful Soup` 4+ Python module
 5. `lxml` Python module
 6. `deluge-webapi` plugin (to work with Deluge)
+7. `python-telegram-bot` plugin (to use telegram bot for downloads management)
 
 
 Table of Contents
