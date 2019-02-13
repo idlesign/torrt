@@ -64,6 +64,7 @@ Table of Contents
     quickstart
     commands
     toolbox
+    bot
 
 
 Get involved into torrt
