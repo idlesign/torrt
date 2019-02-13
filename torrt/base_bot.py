@@ -1,4 +1,4 @@
-from utils import WithSettings, BotObjectsRegistry
+from torrt.utils import WithSettings, BotObjectsRegistry
 
 
 class BaseBot(WithSettings):
