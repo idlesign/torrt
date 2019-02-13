@@ -49,25 +49,25 @@ class TelegramBot(BaseBot):
     def add_handlers(self):
 
         conv_handler = ConversationHandler(
-            entry_points=[CommandHandler('start', self.start, **self.handler_kwargs)],
+            entry_points=[CommandHandler('start', self.command_start, **self.handler_kwargs)],
 
             states={
-                self.ASKING_URL: [MessageHandler(Filters.text, self.asking_url_handler)],
-                self.URL: [RegexHandler('http[s]?://', self.url_handler, pass_user_data=True)],
-                self.PATH: [RegexHandler('/', self.path_handler, pass_user_data=True)],
+                self.ASKING_URL: [MessageHandler(Filters.text, self.handle_ask_url)],
+                self.URL: [RegexHandler('http[s]?://', self.handle_process_url, pass_user_data=True)],
+                self.PATH: [RegexHandler('/', self.handle_ask_download_path, pass_user_data=True)],
             },
 
-            fallbacks=[CommandHandler('cancel', self.cancel)]
+            fallbacks=[CommandHandler('cancel', self.cancel_handler)]
         )
 
         self.dispatcher.add_handler(conv_handler)
-        self.dispatcher.add_handler(CommandHandler('add', self.add_torrent, **self.handler_kwargs))
+        self.dispatcher.add_handler(CommandHandler('add', self.command_add_torrent, **self.handler_kwargs))
 
-    def asking_url_handler(self, bot, update):
+    def handle_ask_url(self, bot, update):
         update.message.reply_text(text="Give me an URL and I'll do the rest.")
         return self.URL
 
-    def url_handler(self, bot, update, user_data):
+    def handle_process_url(self, bot, update, user_data):
         torrent_url = update.message.text
         torrent_data = get_torrent_from_url(torrent_url)
         if torrent_data is None:
@@ -86,7 +86,7 @@ class TelegramBot(BaseBot):
                                           reply_markup=ReplyKeyboardMarkup(choices, one_time_keyboard=True))
             return self.PATH
 
-    def path_handler(self, bot, update, user_data):
+    def handle_ask_download_path(self, bot, update, user_data):
         try:
             torrent_url = user_data['url']
             if not torrent_url:
@@ -102,13 +102,14 @@ class TelegramBot(BaseBot):
                 update.message.reply_text('Torrent was not added.')
         return ConversationHandler.END
 
-    def cancel(self, bot, update):
+    def cancel_handler(self, bot, update):
         update.message.reply_text('Bye! I hope to see tou again.',
                                   reply_markup=ReplyKeyboardRemove())
 
         return ConversationHandler.END
 
-    def start(self, bot, update):
+    def command_start(self, bot, update):
+        """Start dialog handler"""
         keyboard = [["Add new torrent"]]
 
         update.message.reply_text('Do you want to add new torrents?',
@@ -116,9 +117,13 @@ class TelegramBot(BaseBot):
 
         return self.ASKING_URL
 
-    def add_torrent(self, bot, update):
+    def command_add_torrent(self, bot, update):
         """Stand-alone handler to add torrent"""
         torrent_url = update.message.text.lstrip('/add ')
+        if not torrent_url:
+            update.message.reply_text('Please provide link to the tracker page. '
+                                      'For example: \n/add https://rutracker.org/forum/viewtopic.php?t=1')
+            return
         torrents_count = len(TorrtConfig.load()['torrents'])
         add_torrent_from_url(torrent_url)
         if len(TorrtConfig.load()['torrents']) > torrents_count:
