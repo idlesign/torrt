@@ -11,7 +11,15 @@ Register bot
 
     If you have already configured notifications with Telegram you don't need create new bot. You can use existing.
 
-2. Add bot to your torrt configuration with command::
+2. Install python-telegram-bot library to your python environment with::
+
+    > pip install python-telegram-bot
+
+   Also you can install torrt with all required telegram dependencies with::
+
+    > pip install torrt[telegram]
+
+3. Add bot to your torrt configuration with command::
 
     > torrt configure_bot token=YOUR_TOKEN
 
@@ -19,7 +27,7 @@ Register bot
 
     > torrt configure_bot token=YOUR_TOKEN allowed_users=user1,user2
 
-3. Create new Telegram group and add bot.
+4. Create new Telegram group and add bot.
 
 Start bot
 ---------

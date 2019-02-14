@@ -48,6 +48,9 @@ setup(
     ],
     setup_requires=[] + (['pytest-runner'] if 'test' in sys.argv else []) + [],
 
+    extras_require={
+        'telegram': ['python-telegram-bot']
+    },
     test_suite='tests',
     tests_require=[
         'pytest',
