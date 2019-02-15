@@ -229,7 +229,7 @@ def iter_rpc():
     rpc_objects = RPCObjectsRegistry.get()
     if not rpc_objects:
         LOGGER.error('No RPC objects registered, unable to proceed')
-        raise StopIteration()
+        return
 
     for rpc_alias, rpc_object in rpc_objects.items():
         if not rpc_object.enabled:
@@ -248,7 +248,7 @@ def iter_notifiers():
     notifier_objects = NotifierObjectsRegistry.get()
     if not notifier_objects:
         LOGGER.debug('No Notifier registered. Notification skipped')
-        raise StopIteration()
+        return
 
     for notifier_alias, notifier_object in notifier_objects.items():
 
