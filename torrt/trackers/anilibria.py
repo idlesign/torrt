@@ -42,7 +42,10 @@ class AnilibriaTracker(GenericPublicTracker):
         if available_qualities:
             preferred_qualities = [quality for quality in self.quality_prefs if quality in available_qualities]
             if not preferred_qualities:
-                LOGGER.debug('Torrent is not available in preferred qualities: %s', ', '.join(self.quality_prefs))
+                LOGGER.info('Torrent is not available in preferred qualities: %s', ', '.join(self.quality_prefs))
+                quality, link = next(iter(available_qualities.items()))
+                LOGGER.info('Fallback to `%s` quality ...', quality)
+                return link
             else:
                 target_quality = preferred_qualities[0]
                 LOGGER.debug('Trying to get torrent in `%s` quality ...', target_quality)
