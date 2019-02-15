@@ -54,7 +54,7 @@ class TelegramBot(BaseBot):
             states={
                 self.ASKING_URL: [MessageHandler(Filters.text, self.handle_ask_url)],
                 self.URL: [RegexHandler('http[s]?://', self.handle_process_url, pass_user_data=True)],
-                self.PATH: [RegexHandler('/', self.handle_ask_download_path, pass_user_data=True)],
+                self.PATH: [RegexHandler('^/.+|\.', self.handle_ask_download_path, pass_user_data=True)],
             },
 
             fallbacks=[CommandHandler('cancel', self.cancel_handler)]
@@ -79,11 +79,11 @@ class TelegramBot(BaseBot):
             for rpc_alias, rpc in RPCObjectsRegistry.get().items():
                 if rpc.enabled:
                     torrents = rpc.method_get_torrents()
-                    map(download_dirs.add, [t['download_to'] for t in torrents])
+                    for torrent in torrents:
+                        download_dirs.add(torrent['download_to'])
             choices = [download_dirs]
-            if choices:
-                update.message.reply_text('Where to store data?',
-                                          reply_markup=ReplyKeyboardMarkup(choices, one_time_keyboard=True))
+            update.message.reply_text('Where to download data? Send absolute path or "."',
+                                      reply_markup=ReplyKeyboardMarkup(choices, one_time_keyboard=True))
             return self.PATH
 
     def handle_ask_download_path(self, bot, update, user_data):
@@ -94,8 +94,12 @@ class TelegramBot(BaseBot):
         except KeyError:
             update.message.reply_text('Something wrong. Try again')
         else:
+            path = update.message.text
+            if path == '.':
+                path = None
+
             torrents_count = len(TorrtConfig.load()['torrents'])
-            add_torrent_from_url(torrent_url, download_to=update.message.text)
+            add_torrent_from_url(torrent_url, download_to=path)
             if len(TorrtConfig.load()['torrents']) > torrents_count:
                 update.message.reply_text('Torrent from `%s` was added' % torrent_url)
             else:
