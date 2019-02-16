@@ -31,6 +31,9 @@ class BaseTracker(WithSettings):
     encoding = None
     """Tracker html page encoding (cp1251 or other)."""
 
+    test_urls = []
+    """Page URLs for automatic tests of torrent extraction."""
+
     def __init__(self):
         self.mirror_picked = None
 
