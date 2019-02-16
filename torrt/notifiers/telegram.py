@@ -32,13 +32,11 @@ class TelegramNotifier(BaseNotifier):
 
     def send_message(self, msg):
         url = '%s%s/sendMessage' % (self.url, self.token)
-        response = requests.post(url, data={'chat_id': self.chat_id, 'text': msg})
-        if response.ok:
-            json_data = response.json()
-            if json_data['ok']:
-                LOGGER.info('Telegram message was sent to user %s' % self.chat_id)
-            else:
-                LOGGER.error('Telegram notification not send: %s' % json_data['description'])
+        r = requests.post(url, data={'chat_id': self.chat_id, 'text': msg})
+        if r.json()['ok']:
+            LOGGER.info('Telegram message was sent to user %s' % self.chat_id)
+        else:
+            LOGGER.error('Telegram notification not send: %s' % r['description'])
 
 
 NotifierClassesRegistry.add(TelegramNotifier)
