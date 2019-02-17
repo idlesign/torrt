@@ -5,7 +5,7 @@ from time import time
 from torrt.base_rpc import TorrtRPCException
 from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, TorrtConfig, get_url_from_string, \
     get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc, \
-    NotifierClassesRegistry, iter_notifiers
+    NotifierClassesRegistry, iter_notifiers, BotClassesRegistry, iter_bots
 from torrt.exceptions import TorrtException
 
 LOGGER = logging.getLogger(__name__)
@@ -96,6 +96,29 @@ def configure_notifier(notifier_alias, settings_dict):
         LOGGER.error('Notifier `%s` is unknown', notifier_alias)
 
 
+def configure_bot(bot_alias, settings_dict):
+    """Configures bot using given settings.
+    Saves successful configuration.
+
+    :param bot_alias: bot alias
+    :param settings_dict: settings dictionary to configure bot with
+    :return:
+    """
+    LOGGER.info('Configuring `%s` bot ...', bot_alias)
+
+    bot_class = BotClassesRegistry.get(bot_alias)
+    if bot_class is not None:
+        bot = bot_class.spawn_with_settings(settings_dict)
+        configured = bot.test_configuration()
+        if configured:
+            bot.save_settings()
+            LOGGER.info('Bot `%s` is configured', bot_alias)
+        else:
+            LOGGER.error('Bot `%s` configuration failed. Check your settings', bot_alias)
+    else:
+        LOGGER.error('Bot `%s` is unknown', bot_alias)
+
+
 def remove_notifier(alias):
     """Removes notifier by alias
 
@@ -107,6 +130,22 @@ def remove_notifier(alias):
     try:
         cfg = TorrtConfig.load()
         del cfg['notifiers'][alias]
+        TorrtConfig.save(cfg)
+    except KeyError:
+        pass
+
+
+def remove_bot(alias):
+    """Removes bot by alias
+
+    :param alias: str - Bot alias to remove.
+
+    :return:
+    """
+    LOGGER.info('Removing `%s` bot ...', alias)
+    try:
+        cfg = TorrtConfig.load()
+        del cfg['bots'][alias]
         TorrtConfig.save(cfg)
     except KeyError:
         pass
@@ -125,6 +164,7 @@ def init_object_registries():
         'rpc': RPCClassesRegistry,
         'trackers': TrackerClassesRegistry,
         'notifiers': NotifierClassesRegistry,
+        'bots': BotClassesRegistry
     }
 
     for settings_entry, registry_cls in settings_to_registry_map.items():
@@ -369,3 +409,11 @@ def update_torrents(hashes, remove_outdated=True):
                     rpc_object.method_remove_torrent(existing_torrent['hash'])
 
     return updated_by_hashes
+
+
+def run_bots(aliases=None):
+    aliases = aliases or []
+    for alias, bot_object in iter_bots():
+        if aliases and alias not in aliases:
+            continue
+        bot_object.run()

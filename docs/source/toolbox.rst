@@ -50,3 +50,12 @@ Notifier classes should be implemented using this.
 .. automodule:: torrt.base_notifier
    :members:
 
+
+Base Bots class
+---------------
+
+Bot classes should be implemented using this.
+
+.. automodule:: torrt.base_bot
+   :members:
+

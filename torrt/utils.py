@@ -78,6 +78,9 @@ def import_classes():
     LOGGER.debug('Importing Notifier classes ...')
     import_from_path('notifiers')
 
+    LOGGER.debug('Importing Bot classes ...')
+    import_from_path('bots')
+
 
 def import_from_path(path):
     """Dynamically imports modules from package.
@@ -239,6 +242,20 @@ def iter_rpc():
         yield rpc_alias, rpc_object
 
 
+def iter_bots():
+    """Generator to iterate through available bots objects.
+
+    :return: tuple - bot_alias, bot_object
+    :rtype: tuple
+    """
+    bot_objects = BotObjectsRegistry.get()
+    if not bot_objects:
+        LOGGER.error('No Bot objects registered, unable to proceed')
+        raise StopIteration()
+
+    return bot_objects.items()
+
+
 def iter_notifiers():
     """Generator to iterate through available notifier objects.
 
@@ -308,7 +325,8 @@ class TorrtConfig(object):
         'rpc': {},
         'trackers': {},
         'torrents': {},
-        'notifiers': {}
+        'notifiers': {},
+        'bots': {}
     }
 
     @classmethod
@@ -422,3 +440,5 @@ TrackerClassesRegistry = ObjectsRegistry()
 TrackerObjectsRegistry = ObjectsRegistry()
 NotifierClassesRegistry = ObjectsRegistry()
 NotifierObjectsRegistry = ObjectsRegistry()
+BotClassesRegistry = ObjectsRegistry()
+BotObjectsRegistry = ObjectsRegistry()

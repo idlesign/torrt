@@ -39,6 +39,8 @@ Automatic updates are available for:
 
 **torrt** can function both as a console application and Python module.
 
+**torrt** can be managed through Telegram messenger. You can add new download in a few messages.
+
 
 Requirements
 ------------
@@ -51,6 +53,7 @@ Requirements
 
 1. Python 2.7+, 3.5+
 2. `deluge-webapi` plugin (to work with Deluge)
+3. `python-telegram-bot` (to run Telegram bot)
 
 
 Table of Contents
@@ -62,6 +65,7 @@ Table of Contents
     quickstart
     commands
     toolbox
+    bot
 
 
 Get involved into torrt
