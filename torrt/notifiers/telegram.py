@@ -41,7 +41,7 @@ class TelegramNotifier(BaseNotifier):
             if response.ok:
                 json_data = response.json()
                 if json_data['ok']:
-                    LOGGER.info('Telegram message was sent to user %s', self.chat_id)
+                    LOGGER.debug('Telegram message was sent to user %s', self.chat_id)
                 else:
                     LOGGER.error('Telegram notification not send: %s', json_data['description'])
             else:
