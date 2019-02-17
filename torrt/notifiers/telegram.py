@@ -36,16 +36,17 @@ class TelegramNotifier(BaseNotifier):
         try:
             response = requests.post(url, data={'chat_id': self.chat_id, 'text': msg})
         except RequestException as e:
-            LOGGER.error('Failed to send Telegram message: %s' % e)
+            LOGGER.error('Failed to send Telegram message: %s', e)
         else:
             if response.ok:
                 json_data = response.json()
                 if json_data['ok']:
-                    LOGGER.info('Telegram message was sent to user %s' % self.chat_id)
+                    LOGGER.info('Telegram message was sent to user %s', self.chat_id)
                 else:
-                    LOGGER.error('Telegram notification not send: %s' % json_data['description'])
+                    LOGGER.error('Telegram notification not send: %s', json_data['description'])
             else:
-                LOGGER.error('Telegram notification not send. Code: %s (%s)' % (response.status_code, response.reason))
+                LOGGER.error('Telegram notification not send. Response code: %s (%s)',
+                             response.status_code, response.reason)
 
 
 NotifierClassesRegistry.add(TelegramNotifier)
