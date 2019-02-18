@@ -1,5 +1,6 @@
 import logging
 import requests
+from requests import RequestException
 
 from torrt.base_notifier import BaseNotifier
 from torrt.utils import NotifierClassesRegistry
@@ -32,11 +33,20 @@ class TelegramNotifier(BaseNotifier):
 
     def send_message(self, msg):
         url = '%s%s/sendMessage' % (self.url, self.token)
-        r = requests.post(url, data={'chat_id': self.chat_id, 'text': msg})
-        if r.json()['ok']:
-            LOGGER.info('Telegram message was sent to user %s' % self.chat_id)
+        try:
+            response = requests.post(url, data={'chat_id': self.chat_id, 'text': msg})
+        except RequestException as e:
+            LOGGER.error('Failed to send Telegram message: %s', e)
         else:
-            LOGGER.error('Telegram notification not send: %s' % r['description'])
+            if response.ok:
+                json_data = response.json()
+                if json_data['ok']:
+                    LOGGER.debug('Telegram message was sent to user %s', self.chat_id)
+                else:
+                    LOGGER.error('Telegram notification not send: %s', json_data['description'])
+            else:
+                LOGGER.error('Telegram notification not send. Response code: %s (%s)',
+                             response.status_code, response.reason)
 
 
 NotifierClassesRegistry.add(TelegramNotifier)
