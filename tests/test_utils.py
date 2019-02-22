@@ -10,6 +10,7 @@ def test_base64encode_str():
     assert isinstance(encoded_string, str)
     assert encoded_string == "dGhpcyBpcyBzdHJpbmc=\n"
 
+
 def test_base64encode_bytes():
     bytes_to_encode = b'this is bytes to encode'
     encoded_string = utils.base64encode(bytes_to_encode)
