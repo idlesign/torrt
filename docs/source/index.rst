@@ -14,6 +14,12 @@ are organized as articles (i.e forum-like tracker), to verify whether specific t
 (e.g. torrent bundling some TV-series is updated with a new episode), and instructs your torrent client
 to download new files.
 
+**torrt** can function both as a console application and Python module.
+
+
+Trackers
+~~~~~~~~
+
 Automatic updates are available for:
 
 * AniDUB - http://tr.anidub.com/
@@ -24,6 +30,10 @@ Automatic updates are available for:
 * RUTOR - http://rutor.org/
 * RuTracker (ex torrents.ru) - http://rutracker.org/
 
+
+Torrent clients
+~~~~~~~~~~~~~~~
+
 **torrt** is able to cooperate with the following torrent clients:
 
 * Transmission (using built-in JSON RPC)
@@ -31,15 +41,22 @@ Automatic updates are available for:
 * uTorrent (using built-in RPC)
 * qBittorrent (using built-in RPC)
 
-**torrt** is able to send notifications about downloaded files with:
 
-* Mail (using SMTP server)
-* Telegram (using telegram bot API) - https://core.telegram.org/bots/api
+Notifications
+~~~~~~~~~~~~~
+
+**torrt** is able to send update notifications using:
+
+* E-Mail (SMTP)
+* Telegram (via Telegram Bot API) - https://core.telegram.org/bots/api
 
 
-**torrt** can function both as a console application and Python module.
+Bots
+~~~~
 
-**torrt** can be managed through Telegram messenger. You can add new download in a few messages.
+**torrt** can be managed through using messenger bots:
+
+* Telegram  (via Telegram Bot API) - https://core.telegram.org/bots/api
 
 
 Requirements
