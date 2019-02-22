@@ -35,13 +35,13 @@ class CasstudioTracker(GenericPrivateTracker):
 
         domain = self.extract_domain(url)
 
-        is_anonymous = self.find_links(url, page_soup, '\./ucp\.php\?mode=login') is not None
+        is_anonymous = self.find_links(url, page_soup, r'\./ucp\.php\?mode=login') is not None
         if is_anonymous:
             self.login(domain)
             page_soup = self.get_response(
                 url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
             )
-        download_link = self.find_links(url, page_soup, '\./download/file\.php\?id=\d+$')
+        download_link = self.find_links(url, page_soup, r'\./download/file\.php\?id=\d+$')
         return download_link
 
 

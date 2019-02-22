@@ -54,7 +54,7 @@ class TelegramBot(BaseBot):
             states={
                 self.ASKING_URL: [MessageHandler(Filters.text, self.handle_ask_url)],
                 self.URL: [RegexHandler('http[s]?://', self.handle_process_url, pass_user_data=True)],
-                self.PATH: [RegexHandler('^/.+|\.', self.handle_ask_download_path, pass_user_data=True)],
+                self.PATH: [RegexHandler(r'^/.+|\.', self.handle_ask_download_path, pass_user_data=True)],
             },
 
             fallbacks=[CommandHandler('cancel', self.cancel_handler)]

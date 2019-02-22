@@ -28,7 +28,7 @@ class NNMClubTracker(GenericPrivateTracker):
         page_soup = self.get_response(
             url, referer=url, cookies=self.cookies, query_string=self.get_auth_query_string(), as_soup=True
         )
-        download_link = self.find_links(url, page_soup, definite='download\.php')
+        download_link = self.find_links(url, page_soup, definite=r'download\.php')
 
         if download_link is None:
             LOGGER.debug('Login is required to download torrent file')
