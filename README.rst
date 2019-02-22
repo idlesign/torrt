@@ -75,7 +75,7 @@ Notifications
 Bots
 ~~~~
 
-**torrt** can be managed through using messenger bots:
+**torrt** can be managed using messenger's bots:
 
 * Telegram  (via Telegram Bot API) - https://core.telegram.org/bots/api
 
