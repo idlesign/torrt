@@ -5,6 +5,7 @@ torrt changelog
 Unreleased
 ----------
 + Added CasStudio tracker support.
++ Bots subsystem added featuring Telegram bot.
 + Public tracker registration made optional.
 * AniLibria.tv new page layout adoption and quality picker improvements.
 * Telegram notifier improved.
