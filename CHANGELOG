@@ -7,6 +7,7 @@ Unreleased
 + Added CasStudio tracker support.
 + Public tracker registration made optional.
 * AniLibria.tv new page layout adoption and quality picker improvements.
+* Telegram notifier improved.
 
 
 v0.10.1
