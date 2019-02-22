@@ -1,12 +1,13 @@
 import logging
-from warnings import warn
 from time import time
+from warnings import warn
 
+from torrt.base_tracker import GenericPrivateTracker
 from torrt.base_rpc import TorrtRPCException
+from torrt.exceptions import TorrtException
 from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, TorrtConfig, get_url_from_string, \
     get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc, \
     NotifierClassesRegistry, iter_notifiers, BotClassesRegistry, iter_bots
-from torrt.exceptions import TorrtException
 
 LOGGER = logging.getLogger(__name__)
 
@@ -162,15 +163,29 @@ def init_object_registries():
 
     settings_to_registry_map = {
         'rpc': RPCClassesRegistry,
-        'trackers': TrackerClassesRegistry,
         'notifiers': NotifierClassesRegistry,
-        'bots': BotClassesRegistry
+        'bots': BotClassesRegistry,
     }
 
     for settings_entry, registry_cls in settings_to_registry_map.items():
         for alias, settings in cfg[settings_entry].items():
             registry_obj = registry_cls.get(alias)
             registry_obj and registry_obj.spawn_with_settings(settings).register()
+
+    # Special case for trackers to initialize public trackers automatically.
+    for alias, tracker_cls in TrackerClassesRegistry.get().items():
+
+        settings = cfg['trackers'].get(alias)
+
+        if settings is None:
+
+            if issubclass(tracker_cls, GenericPrivateTracker):
+                # No use in registering a private tracker without credentials.
+                continue
+
+            # Considered public tracker. Use default settings.
+
+        tracker_cls.spawn_with_settings(settings or {}).register()
 
 
 def get_registered_torrents():

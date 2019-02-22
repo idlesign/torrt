@@ -5,6 +5,7 @@ torrt changelog
 Unreleased
 ----------
 + Added CasStudio tracker support.
++ Public tracker registration made optional.
 
 
 v0.10.1
