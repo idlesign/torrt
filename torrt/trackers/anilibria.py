@@ -15,8 +15,9 @@ class AnilibriaTracker(GenericPublicTracker):
     """This class implements .torrent files downloads for https://www.anilibria.tv tracker."""
 
     alias = 'anilibria.tv'
+
     test_urls = [
-        'https://www.anilibria.tv/release/sword-art-online-alicization.html'
+        'https://www.anilibria.tv/release/sword-art-online-alicization.html',
     ]
 
     def __init__(self, quality_prefs=None):

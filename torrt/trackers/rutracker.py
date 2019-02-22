@@ -16,6 +16,10 @@ class RuTrackerTracker(GenericPrivateTracker):
     mirrors = ['rutracker.org', 'rutracker.net', 'maintracker.org']
     encoding = 'cp1251'
 
+    test_urls = [
+        'https://rutracker.org/forum/viewtopic.php?t=4430338',
+    ]
+
     def get_id_from_link(self, url):
         """Returns forum thread identifier from full thread URL."""
         return url.split('=')[1]

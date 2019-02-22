@@ -15,6 +15,10 @@ class NNMClubTracker(GenericPrivateTracker):
     auth_qs_param_name = 'sid'
     mirrors = ['nnm-club.name', 'nnmclub.to']
 
+    test_urls = [
+        'http://nnm-club.me/forum/viewtopic.php?t=786946',
+    ]
+
     def get_login_form_data(self, login, password):
         """Returns a dictionary with data to be pushed to authorization form."""
         return {'username': login, 'password': password, 'autologin': 1, 'redirect': '', 'login': 'pushed'}
