@@ -5,8 +5,13 @@ import re
 import threading
 from collections import Mapping
 from datetime import datetime
-from inspect import getargspec
 from pkgutil import iter_modules
+
+try:
+    from inspect import getfullargspec
+except ImportError:
+    from inspect import getargspec as getfullargspec
+
 
 import six
 from bs4 import BeautifulSoup
@@ -277,7 +282,7 @@ def iter_rpc():
 
     if not rpc_objects:
         LOGGER.error('No RPC objects registered, unable to proceed')
-        raise StopIteration()
+        return
 
     for rpc_alias, rpc_object in rpc_objects.items():
 
@@ -298,7 +303,7 @@ def iter_bots():
 
     if not bot_objects:
         LOGGER.error('No Bot objects registered, unable to proceed')
-        raise StopIteration()
+        return
 
     return bot_objects.items()
 
@@ -313,7 +318,7 @@ def iter_notifiers():
 
     if not notifier_objects:
         LOGGER.debug('No Notifier registered. Notification skipped')
-        raise StopIteration()
+        return
 
     for notifier_alias, notifier_object in notifier_objects.items():
 
@@ -352,7 +357,7 @@ class WithSettings(object):
         settings = {}
 
         try:
-            settings_names = getargspec(self.__init__)[0]
+            settings_names = getfullargspec(self.__init__)[0]
 
             del settings_names[0]  # do not need `self`
 
