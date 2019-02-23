@@ -343,7 +343,7 @@ class WithSettings(object):
         except TypeError:
             pass  # Probably __init__ method is not user-defined.
 
-        TorrtConfig.update({self.config_entry_name: {self.alias: settings}})
+        config.update({self.config_entry_name: {self.alias: settings}})
 
 
 class TorrtConfig(object):
@@ -416,6 +416,9 @@ class TorrtConfig(object):
         LOGGER.debug('Saving configuration file %s ...', cls.USER_SETTINGS_FILE)
         with open(cls.USER_SETTINGS_FILE, 'w') as f:
             json.dump(settings_dict, f, indent=4)
+
+
+config = TorrtConfig
 
 
 class ObjectsRegistry(object):

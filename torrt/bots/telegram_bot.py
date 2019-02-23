@@ -1,13 +1,14 @@
 import logging
 
 from torrt.base_bot import BaseBot
-from torrt.toolbox import add_torrent_from_url
-from torrt.utils import TorrtConfig, BotClassesRegistry, get_torrent_from_url, RPCObjectsRegistry
+from torrt.toolbox import add_torrent_from_url, config
+from torrt.utils import BotClassesRegistry, get_torrent_from_url, RPCObjectsRegistry
 
 try:
     import telegram
     from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
     from telegram.ext import Filters, Updater, ConversationHandler, CommandHandler, MessageHandler, RegexHandler
+
 except ImportError:
     telegram = None
 
@@ -98,9 +99,9 @@ class TelegramBot(BaseBot):
             if path == '.':
                 path = None
 
-            torrents_count = len(TorrtConfig.load()['torrents'])
+            torrents_count = len(config.load()['torrents'])
             add_torrent_from_url(torrent_url, download_to=path)
-            if len(TorrtConfig.load()['torrents']) > torrents_count:
+            if len(config.load()['torrents']) > torrents_count:
                 update.message.reply_text('Torrent from `%s` was added' % torrent_url)
             else:
                 update.message.reply_text('Torrent was not added.')
@@ -128,9 +129,9 @@ class TelegramBot(BaseBot):
             update.message.reply_text('Please provide link to the tracker page. '
                                       'For example: \n/add https://rutracker.org/forum/viewtopic.php?t=1')
             return
-        torrents_count = len(TorrtConfig.load()['torrents'])
+        torrents_count = len(config.load()['torrents'])
         add_torrent_from_url(torrent_url)
-        if len(TorrtConfig.load()['torrents']) > torrents_count:
+        if len(config.load()['torrents']) > torrents_count:
             bot.send_message(chat_id=update.message.chat_id, text='Torrent from `%s` was added' % torrent_url)
         else:
             bot.send_message(chat_id=update.message.chat_id, text='Torrent was not added.')

@@ -5,7 +5,7 @@ from warnings import warn
 from torrt.base_rpc import TorrtRPCException
 from torrt.base_tracker import GenericPrivateTracker
 from torrt.exceptions import TorrtException
-from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, TorrtConfig, get_url_from_string, \
+from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, config, get_url_from_string, \
     get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc, \
     NotifierClassesRegistry, iter_notifiers, BotClassesRegistry, iter_bots, configure_entity
 
@@ -94,9 +94,9 @@ def remove_notifier(alias):
     LOGGER.info('Removing `%s` notifier ...', alias)
 
     try:
-        cfg = TorrtConfig.load()
+        cfg = config.load()
         del cfg['notifiers'][alias]
-        TorrtConfig.save(cfg)
+        config.save(cfg)
 
     except KeyError:
         pass
@@ -112,9 +112,9 @@ def remove_bot(alias):
     LOGGER.info('Removing `%s` bot ...', alias)
 
     try:
-        cfg = TorrtConfig.load()
+        cfg = config.load()
         del cfg['bots'][alias]
-        TorrtConfig.save(cfg)
+        config.save(cfg)
 
     except KeyError:
         pass
@@ -127,7 +127,7 @@ def init_object_registries():
     :return:
     """
     LOGGER.debug('Initializing objects registries from configuration file ...')
-    cfg = TorrtConfig.load()
+    cfg = config.load()
 
     settings_to_registry_map = {
         'rpc': RPCClassesRegistry,
@@ -164,7 +164,7 @@ def get_registered_torrents():
     :return: torrents dict
     :rtype: dict
     """
-    return TorrtConfig.load()['torrents']
+    return config.load()['torrents']
 
 
 def get_registerd_torrents():
@@ -203,7 +203,7 @@ def register_torrent(hash_str, torrent_data=None, url=None):
 
     cfg = {'torrents': {}}
     structure_torrent_data(cfg['torrents'], hash_str, torrent_data)
-    TorrtConfig.update(cfg)
+    config.update(cfg)
 
 
 def unregister_torrent(hash_str):
@@ -216,9 +216,9 @@ def unregister_torrent(hash_str):
     LOGGER.debug('Unregistering `%s` torrent ...', hash_str)
 
     try:
-        cfg = TorrtConfig.load()
+        cfg = config.load()
         del cfg['torrents'][hash_str]
-        TorrtConfig.save(cfg)
+        config.save(cfg)
 
     except KeyError:
         pass  # Torrent was not known by torrt
@@ -267,7 +267,7 @@ def set_walk_interval(interval_hours):
     :param interval_hours: int - hours interval
     :return:
     """
-    TorrtConfig.update({'walk_interval_hours': int(interval_hours)})
+    config.update({'walk_interval_hours': int(interval_hours)})
 
 
 def toggle_rpc(alias, enabled=True):
@@ -280,7 +280,7 @@ def toggle_rpc(alias, enabled=True):
     rpc = RPCClassesRegistry.get(alias)
 
     if rpc is not None:
-        TorrtConfig.update({'rpc': {alias: {'enabled': enabled}}})
+        config.update({'rpc': {alias: {'enabled': enabled}}})
         LOGGER.info('RPC `%s` enabled = %s', alias, enabled)
 
     else:
@@ -297,7 +297,7 @@ def walk(forced=False, silent=False, remove_outdated=True):
     """
     LOGGER.info('Torrent walk is triggered')
     now = int(time())
-    cfg = TorrtConfig.load()
+    cfg = config.load()
     next_time = cfg['time_last_check'] + (cfg['walk_interval_hours'] * 3600)
 
     if forced or now >= next_time:
@@ -337,7 +337,7 @@ def walk(forced=False, silent=False, remove_outdated=True):
                 notifier.send(updated)
 
         # Save updated torrents data into config.
-        TorrtConfig.update(new_cfg)
+        config.update(new_cfg)
 
         LOGGER.info('Torrent walk is finished')
 
