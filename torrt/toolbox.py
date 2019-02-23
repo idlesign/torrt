@@ -92,14 +92,7 @@ def remove_notifier(alias):
     :return:
     """
     LOGGER.info('Removing `%s` notifier ...', alias)
-
-    try:
-        cfg = config.load()
-        del cfg['notifiers'][alias]
-        config.save(cfg)
-
-    except KeyError:
-        pass
+    config.drop_section('notifiers', alias)
 
 
 def remove_bot(alias):
@@ -110,14 +103,7 @@ def remove_bot(alias):
     :return:
     """
     LOGGER.info('Removing `%s` bot ...', alias)
-
-    try:
-        cfg = config.load()
-        del cfg['bots'][alias]
-        config.save(cfg)
-
-    except KeyError:
-        pass
+    config.drop_section('bots', alias)
 
 
 def init_object_registries():
@@ -214,14 +200,7 @@ def unregister_torrent(hash_str):
     :return:
     """
     LOGGER.debug('Unregistering `%s` torrent ...', hash_str)
-
-    try:
-        cfg = config.load()
-        del cfg['torrents'][hash_str]
-        config.save(cfg)
-
-    except KeyError:
-        pass  # Torrent was not known by torrt
+    config.drop_section('torrents', hash_str)
 
 
 def add_torrent_from_url(url, download_to=None):

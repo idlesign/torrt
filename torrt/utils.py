@@ -382,6 +382,22 @@ class TorrtConfig(object):
     }
 
     @classmethod
+    def drop_section(cls, realm, key):
+        """Drops config section by its key (name) and updates config.
+
+        :param str|unicode realm:
+        :param str|unicode key:
+
+        """
+        try:
+            cfg = cls.load()
+            del cfg[realm][key]
+            cls.save(cfg)
+
+        except KeyError:
+            pass
+
+    @classmethod
     def bootstrap(cls):
         """Initializes configuration file if needed,
 
