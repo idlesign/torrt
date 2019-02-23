@@ -7,7 +7,13 @@ from torrt.base_tracker import GenericPrivateTracker
 from torrt.exceptions import TorrtException
 from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, TorrtConfig, get_url_from_string, \
     get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc, \
-    NotifierClassesRegistry, iter_notifiers, BotClassesRegistry, iter_bots
+    NotifierClassesRegistry, iter_notifiers, BotClassesRegistry, iter_bots, configure_entity
+
+if False:  # pragama: nocover
+    from torrt.base_rpc import BaseRPC
+    from torrt.base_tracker import BaseTracker
+    from torrt.base_notifier import BaseNotifier
+    from torrt.base_bot import BaseBot
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,27 +41,14 @@ def configure_rpc(rpc_alias, settings_dict):
 
     :param rpc_alias: RPC alias
     :param settings_dict: settings dictionary to configure RPC with
-    :return:
+    :rtype: BaseRPC|None
     """
-    LOGGER.info('Configuring `%s` RPC ...', rpc_alias)
+    rpc = configure_entity('RPC', RPCClassesRegistry, rpc_alias, settings_dict)
 
-    rpc_class = RPCClassesRegistry.get(rpc_alias)
+    if rpc:
+        rpc.enabled = True
 
-    if rpc_class is not None:
-
-        rpc_obj = rpc_class.spawn_with_settings(settings_dict)
-        version = rpc_obj.method_get_version()
-
-        if version:
-            rpc_obj.enabled = True
-            rpc_obj.save_settings()
-            LOGGER.info('RPC `%s` is configured', rpc_alias)
-
-        else:
-            LOGGER.error('RPC `%s` configuration failed. Check your settings', rpc_alias)
-
-    else:
-        LOGGER.error('RPC `%s` is unknown', rpc_alias)
+    return rpc
 
 
 def configure_tracker(tracker_alias, settings_dict):
@@ -64,26 +57,9 @@ def configure_tracker(tracker_alias, settings_dict):
 
     :param tracker_alias: tracker alias
     :param settings_dict: settings dictionary to configure tracker with
-    :return:
+    :rtype: BaseTracker|None
     """
-    LOGGER.info('Configuring `%s` tracker ...', tracker_alias)
-
-    tracker_class = TrackerClassesRegistry.get(tracker_alias)
-
-    if tracker_class is not None:
-
-        tracker_obj = tracker_class.spawn_with_settings(settings_dict)
-        configured = tracker_obj.test_configuration()
-
-        if configured:
-            tracker_obj.save_settings()
-            LOGGER.info('Tracker `%s` is configured', tracker_alias)
-
-        else:
-            LOGGER.error('Tracker `%s` configuration failed. Check your settings', tracker_alias)
-
-    else:
-        LOGGER.error('Tracker `%s` is unknown', tracker_alias)
+    return configure_entity('Tracker', TrackerClassesRegistry, tracker_alias, settings_dict)
 
 
 def configure_notifier(notifier_alias, settings_dict):
@@ -92,26 +68,9 @@ def configure_notifier(notifier_alias, settings_dict):
 
     :param notifier_alias: notifier alias
     :param settings_dict: settings dictionary to configure notifier with
-    :return:
+    :rtype: BaseNotifier|None
     """
-    LOGGER.info('Configuring `%s` notifier ...', notifier_alias)
-
-    notification_class = NotifierClassesRegistry.get(notifier_alias)
-
-    if notification_class is not None:
-
-        notifier = notification_class.spawn_with_settings(settings_dict)
-        configured = notifier.test_configuration()
-
-        if configured:
-            notifier.save_settings()
-            LOGGER.info('Notifier `%s` is configured', notifier_alias)
-
-        else:
-            LOGGER.error('Notifier `%s` configuration failed. Check your settings', notifier_alias)
-
-    else:
-        LOGGER.error('Notifier `%s` is unknown', notifier_alias)
+    return configure_entity('Notifier', NotifierClassesRegistry, notifier_alias, settings_dict)
 
 
 def configure_bot(bot_alias, settings_dict):
@@ -120,26 +79,9 @@ def configure_bot(bot_alias, settings_dict):
 
     :param bot_alias: bot alias
     :param settings_dict: settings dictionary to configure bot with
-    :return:
+    :rtype: BaseBot|None
     """
-    LOGGER.info('Configuring `%s` bot ...', bot_alias)
-
-    bot_class = BotClassesRegistry.get(bot_alias)
-
-    if bot_class is not None:
-
-        bot = bot_class.spawn_with_settings(settings_dict)
-        configured = bot.test_configuration()
-
-        if configured:
-            bot.save_settings()
-            LOGGER.info('Bot `%s` is configured', bot_alias)
-
-        else:
-            LOGGER.error('Bot `%s` configuration failed. Check your settings', bot_alias)
-
-    else:
-        LOGGER.error('Bot `%s` is unknown', bot_alias)
+    return configure_entity('Bot', BotClassesRegistry, bot_alias, settings_dict)
 
 
 def remove_notifier(alias):

@@ -74,6 +74,10 @@ class BaseRPC(WithSettings):
         raise NotImplementedError(
             '`%s` class must implement `method_get_version()` method.' % self.__class__.__name__)
 
+    def test_configuration(self):
+        # This is to conform to common interface.
+        return self.method_get_version()
+
 
 class TorrtRPCException(TorrtException):
     """Base torrt RPC exception. All other RPC related exception should inherit from that."""

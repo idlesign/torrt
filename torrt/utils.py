@@ -64,6 +64,39 @@ def dump_contents(filename, contents):
         f.write(text)
 
 
+def configure_entity(type_name, registry, alias, settings_dict=None):
+    """Configures and spawns objects using given settings.
+
+    Successful configuration is saved.
+
+    :param str|unicode type_name: Entity type name to be used in massages.
+    :param registry: Registry object.
+    :param str|unicode alias: Entity alias.
+    :param dict settings_dict: Settings dictionary to configure object with.
+
+    """
+    LOGGER.info('Configuring `%s` %s ...', alias, type_name.lower())
+
+    entity_cls = registry.get(alias)
+
+    if entity_cls is not None:
+
+        obj = entity_cls.spawn_with_settings(settings_dict or {})
+        configured = obj.test_configuration()
+
+        if configured:
+            obj.save_settings()
+            LOGGER.info('%s `%s` is configured', type_name, alias)
+
+            return obj
+
+        else:
+            LOGGER.error('%s `%s` configuration failed. Check your settings', type_name, alias)
+
+    else:
+        LOGGER.error('%s `%s` is unknown', type_name, alias)
+
+
 def import_classes():
     """Dynamically imports RPC classes and tracker handlers from their directories.
 
