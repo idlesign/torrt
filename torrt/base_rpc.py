@@ -35,7 +35,7 @@ class BaseRPC(WithSettings):
 
     def method_get_torrents(self, hashes=None):
         """This should return a dictionary with torrents info from RPC.
-        Each torrent info should be normaziled (see normalize_field_names()).
+        Each torrent info should be normalized (see normalize_field_names()).
 
         :param hashes: list - torrent hashes
         :return: dict
