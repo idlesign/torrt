@@ -330,8 +330,8 @@ def walk(forced=False, silent=False, remove_outdated=True):
         except TorrtException as e:
             if not silent:
                 raise
-            else:
-                LOGGER.error('Walk failed. Reason: %s', e.message)
+
+            LOGGER.error('Walk failed. Reason: %s', e)
 
         new_cfg = {
             'time_last_check': now
@@ -339,7 +339,14 @@ def walk(forced=False, silent=False, remove_outdated=True):
 
         if updated:
             for old_hash, new_data in updated.items():
-                del cfg['torrents'][old_hash]
+
+                try:
+                    cfg['torrents'].pop(old_hash)
+
+                except KeyError:
+                    # May be already deleted by `update_torrents` if `remove_outdated` is used.
+                    pass
+
                 cfg['torrents'][new_data['hash']] = new_data
             new_cfg['torrents'] = cfg['torrents']
             for _, notifier in iter_notifiers():
