@@ -1,3 +1,5 @@
+from os.path import dirname, realpath, join
+
 from torrentool.torrent import Torrent
 
 from torrt.base_rpc import BaseRPC
@@ -5,6 +7,8 @@ from torrt.base_tracker import GenericPublicTracker
 from torrt.toolbox import bootstrap, TrackerClassesRegistry, NotifierClassesRegistry, RPCClassesRegistry, \
     configure_rpc, configure_tracker, add_torrent_from_url, get_registered_torrents, walk, remove_torrent, toggle_rpc
 from torrt.utils import RPCObjectsRegistry
+
+CURRENT_DIR = dirname(realpath(__file__))
 
 
 def test_basic():
@@ -90,7 +94,7 @@ def test_fullcycle(monkeypatch):
             cls.cfg = settings_dict
 
     def read_file(name):
-        with open(name, 'rb') as f:
+        with open(join(CURRENT_DIR, name), 'rb') as f:
             return f.read()
 
     def patch_requests(response_contents):
