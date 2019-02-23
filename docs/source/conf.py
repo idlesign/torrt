@@ -24,7 +24,7 @@ from torrt import VERSION
 # This is used to mock certain modules.
 # It helps to build docs in environments where those modules are not available.
 # E.g. it could be useful for http://readthedocs.org/
-MODULES_TO_MOCK = ['libtorrent', 'bs4']
+MODULES_TO_MOCK = ['torrentool', 'torrentool.api', 'bs4']
 
 
 class ModuleMock(object):
