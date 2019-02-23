@@ -174,10 +174,13 @@ def get_url_from_string(string):
     :rtype: str
     """
     match = RE_LINK.search(string)
+
     try:
         match = match.group('url')
+
     except AttributeError:
         match = ''
+
     return match
 
 
@@ -200,10 +203,13 @@ def update_dict(old_dict, new_dict):
     :rtype: dict
     """
     for key, val in six.iteritems(new_dict):
+
         if isinstance(val, Mapping):
             old_dict[key] = update_dict(old_dict.get(key, {}), val)
+
         else:
             old_dict[key] = new_dict[key]
+
     return old_dict
 
 
@@ -244,15 +250,20 @@ def get_torrent_from_url(url):
     LOGGER.debug('Downloading torrent file from `%s` ...', url)
 
     tracker = TrackerObjectsRegistry.get_for_string(url)  # type: GenericTracker
+
     if tracker:
         result = tracker.get_torrent(url)
+
         if result is None:
             LOGGER.warning('Unable to get torrent from `%s`', url)
+
         else:
             LOGGER.debug('Torrent was downloaded from `%s`', url)
             return result
+
     else:
         LOGGER.warning('Tracker handler for `%s` is not registered', url)
+
     return None
 
 
@@ -263,11 +274,13 @@ def iter_rpc():
     :rtype: tuple
     """
     rpc_objects = RPCObjectsRegistry.get()
+
     if not rpc_objects:
         LOGGER.error('No RPC objects registered, unable to proceed')
         raise StopIteration()
 
     for rpc_alias, rpc_object in rpc_objects.items():
+
         if not rpc_object.enabled:
             LOGGER.debug('RPC `%s` is disabled, skipped.', rpc_object.alias)
             continue
@@ -282,6 +295,7 @@ def iter_bots():
     :rtype: tuple
     """
     bot_objects = BotObjectsRegistry.get()
+
     if not bot_objects:
         LOGGER.error('No Bot objects registered, unable to proceed')
         raise StopIteration()
@@ -296,6 +310,7 @@ def iter_notifiers():
     :rtype: tuple
     """
     notifier_objects = NotifierObjectsRegistry.get()
+
     if not notifier_objects:
         LOGGER.debug('No Notifier registered. Notification skipped')
         raise StopIteration()
@@ -326,6 +341,7 @@ class WithSettings(object):
         :return: object
         """
         LOGGER.debug('Spawning `%s` object with the given settings ...', cls.__name__)
+
         return cls(**settings)
 
     def save_settings(self):
@@ -337,9 +353,12 @@ class WithSettings(object):
 
         try:
             settings_names = getargspec(self.__init__)[0]
+
             del settings_names[0]  # do not need `self`
+
             for name in settings_names:
                 settings[name] = getattr(self, name)
+
         except TypeError:
             pass  # Probably __init__ method is not user-defined.
 
@@ -394,7 +413,9 @@ class TorrtConfig(object):
         :rtype: dict
         """
         LOGGER.debug('Loading configuration file %s ...', cls.USER_SETTINGS_FILE)
+
         cls.bootstrap()
+
         with open(cls.USER_SETTINGS_FILE) as f:
             settings = json.load(f)
 
@@ -414,6 +435,7 @@ class TorrtConfig(object):
         :return:
         """
         LOGGER.debug('Saving configuration file %s ...', cls.USER_SETTINGS_FILE)
+
         with open(cls.USER_SETTINGS_FILE, 'w') as f:
             json.dump(settings_dict, f, indent=4)
 
@@ -449,6 +471,7 @@ class ObjectsRegistry(object):
         """
         if obj_alias is None:
             return self._items
+
         return self._items.get(obj_alias)
 
     def get_for_string(self, string):
