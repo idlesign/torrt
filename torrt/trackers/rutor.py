@@ -1,17 +1,15 @@
-import re
 import logging
 
 from torrt.base_tracker import GenericPublicTracker
 from torrt.utils import TrackerClassesRegistry
 
-
 LOGGER = logging.getLogger(__name__)
+
 
 class RutorTracker(GenericPublicTracker):
     """This class implements .torrent files downloads for http://rutor.info tracker."""
 
     alias = 'rutor.org'
-    test_url = 'http://rutor.info/'
     mirrors = ['rutor.is', 'rutor.info', 'new-rutor.org']
 
     def __init__(self, cookies=None):
