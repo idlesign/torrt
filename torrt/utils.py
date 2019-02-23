@@ -10,12 +10,12 @@ from pkgutil import iter_modules
 
 import six
 from bs4 import BeautifulSoup
-
 from torrentool.api import Torrent
+
+from torrt.compat import encode_value, base64encode  # Exposed as common API.
 
 if False:  # pragma: nocover
     from .base_tracker import GenericTracker
-from .compat import encode_value, base64encode
 
 
 LOGGER = logging.getLogger(__name__)
