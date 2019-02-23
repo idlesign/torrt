@@ -2,8 +2,8 @@ import logging
 from time import time
 from warnings import warn
 
-from torrt.base_tracker import GenericPrivateTracker
 from torrt.base_rpc import TorrtRPCException
+from torrt.base_tracker import GenericPrivateTracker
 from torrt.exceptions import TorrtException
 from torrt.utils import RPCClassesRegistry, TrackerClassesRegistry, TorrtConfig, get_url_from_string, \
     get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc, \
@@ -20,8 +20,10 @@ def configure_logging(log_level=logging.INFO, show_logger_names=False):
     :return:
     """
     format_str = '%(levelname)s: %(message)s'
+
     if show_logger_names:
         format_str = '%(name)s\t\t ' + format_str
+
     logging.basicConfig(format=format_str, level=log_level)
     requests_logger = logging.getLogger('requests')
     requests_logger.setLevel(logging.ERROR)
@@ -38,15 +40,20 @@ def configure_rpc(rpc_alias, settings_dict):
     LOGGER.info('Configuring `%s` RPC ...', rpc_alias)
 
     rpc_class = RPCClassesRegistry.get(rpc_alias)
+
     if rpc_class is not None:
+
         rpc_obj = rpc_class.spawn_with_settings(settings_dict)
         version = rpc_obj.method_get_version()
+
         if version:
             rpc_obj.enabled = True
             rpc_obj.save_settings()
             LOGGER.info('RPC `%s` is configured', rpc_alias)
+
         else:
             LOGGER.error('RPC `%s` configuration failed. Check your settings', rpc_alias)
+
     else:
         LOGGER.error('RPC `%s` is unknown', rpc_alias)
 
@@ -62,14 +69,19 @@ def configure_tracker(tracker_alias, settings_dict):
     LOGGER.info('Configuring `%s` tracker ...', tracker_alias)
 
     tracker_class = TrackerClassesRegistry.get(tracker_alias)
+
     if tracker_class is not None:
+
         tracker_obj = tracker_class.spawn_with_settings(settings_dict)
         configured = tracker_obj.test_configuration()
+
         if configured:
             tracker_obj.save_settings()
             LOGGER.info('Tracker `%s` is configured', tracker_alias)
+
         else:
             LOGGER.error('Tracker `%s` configuration failed. Check your settings', tracker_alias)
+
     else:
         LOGGER.error('Tracker `%s` is unknown', tracker_alias)
 
@@ -85,14 +97,19 @@ def configure_notifier(notifier_alias, settings_dict):
     LOGGER.info('Configuring `%s` notifier ...', notifier_alias)
 
     notification_class = NotifierClassesRegistry.get(notifier_alias)
+
     if notification_class is not None:
+
         notifier = notification_class.spawn_with_settings(settings_dict)
         configured = notifier.test_configuration()
+
         if configured:
             notifier.save_settings()
             LOGGER.info('Notifier `%s` is configured', notifier_alias)
+
         else:
             LOGGER.error('Notifier `%s` configuration failed. Check your settings', notifier_alias)
+
     else:
         LOGGER.error('Notifier `%s` is unknown', notifier_alias)
 
@@ -108,14 +125,19 @@ def configure_bot(bot_alias, settings_dict):
     LOGGER.info('Configuring `%s` bot ...', bot_alias)
 
     bot_class = BotClassesRegistry.get(bot_alias)
+
     if bot_class is not None:
+
         bot = bot_class.spawn_with_settings(settings_dict)
         configured = bot.test_configuration()
+
         if configured:
             bot.save_settings()
             LOGGER.info('Bot `%s` is configured', bot_alias)
+
         else:
             LOGGER.error('Bot `%s` configuration failed. Check your settings', bot_alias)
+
     else:
         LOGGER.error('Bot `%s` is unknown', bot_alias)
 
@@ -128,10 +150,12 @@ def remove_notifier(alias):
     :return:
     """
     LOGGER.info('Removing `%s` notifier ...', alias)
+
     try:
         cfg = TorrtConfig.load()
         del cfg['notifiers'][alias]
         TorrtConfig.save(cfg)
+
     except KeyError:
         pass
 
@@ -144,10 +168,12 @@ def remove_bot(alias):
     :return:
     """
     LOGGER.info('Removing `%s` bot ...', alias)
+
     try:
         cfg = TorrtConfig.load()
         del cfg['bots'][alias]
         TorrtConfig.save(cfg)
+
     except KeyError:
         pass
 
@@ -168,6 +194,7 @@ def init_object_registries():
     }
 
     for settings_entry, registry_cls in settings_to_registry_map.items():
+
         for alias, settings in cfg[settings_entry].items():
             registry_obj = registry_cls.get(alias)
             registry_obj and registry_obj.spawn_with_settings(settings).register()
@@ -225,10 +252,13 @@ def register_torrent(hash_str, torrent_data=None, url=None):
     :return:
     """
     LOGGER.debug('Registering `%s` torrent ...', hash_str)
+
     if torrent_data is None:
         torrent_data = {}
+
     if url:
         torrent_data['url'] = url
+
     cfg = {'torrents': {}}
     structure_torrent_data(cfg['torrents'], hash_str, torrent_data)
     TorrtConfig.update(cfg)
@@ -242,10 +272,12 @@ def unregister_torrent(hash_str):
     :return:
     """
     LOGGER.debug('Unregistering `%s` torrent ...', hash_str)
+
     try:
         cfg = TorrtConfig.load()
         del cfg['torrents'][hash_str]
         TorrtConfig.save(cfg)
+
     except KeyError:
         pass  # Torrent was not known by torrt
 
@@ -260,8 +292,10 @@ def add_torrent_from_url(url, download_to=None):
     LOGGER.debug('Adding torrent from `%s` ...', url)
 
     torrent_data = get_torrent_from_url(url)
+
     if torrent_data is None:
         LOGGER.error('Unable to add torrent from `%s`', url)
+
     else:
         for rpc_alias, rpc_object in iter_rpc():
             rpc_object.method_add_torrent(torrent_data['torrent'], download_to=download_to)
@@ -302,9 +336,11 @@ def toggle_rpc(alias, enabled=True):
     :return:
     """
     rpc = RPCClassesRegistry.get(alias)
+
     if rpc is not None:
         TorrtConfig.update({'rpc': {alias: {'enabled': enabled}}})
         LOGGER.info('RPC `%s` enabled = %s', alias, enabled)
+
     else:
         LOGGER.info('RPC `%s` class is not registered', alias)
 
@@ -321,12 +357,15 @@ def walk(forced=False, silent=False, remove_outdated=True):
     now = int(time())
     cfg = TorrtConfig.load()
     next_time = cfg['time_last_check'] + (cfg['walk_interval_hours'] * 3600)
+
     if forced or now >= next_time:
         LOGGER.info('Torrent walk is started')
 
         updated = {}
+
         try:
             updated = update_torrents(cfg['torrents'], remove_outdated=remove_outdated)
+
         except TorrtException as e:
             if not silent:
                 raise
@@ -338,6 +377,7 @@ def walk(forced=False, silent=False, remove_outdated=True):
         }
 
         if updated:
+
             for old_hash, new_data in updated.items():
 
                 try:
@@ -348,7 +388,9 @@ def walk(forced=False, silent=False, remove_outdated=True):
                     pass
 
                 cfg['torrents'][new_data['hash']] = new_data
+
             new_cfg['torrents'] = cfg['torrents']
+
             for _, notifier in iter_notifiers():
                 notifier.send(updated)
 
@@ -356,6 +398,7 @@ def walk(forced=False, silent=False, remove_outdated=True):
         TorrtConfig.update(new_cfg)
 
         LOGGER.info('Torrent walk is finished')
+
     else:
         LOGGER.info(
             'Torrent walk postponed till %s (now %s)',
@@ -376,14 +419,17 @@ def update_torrents(hashes, remove_outdated=True):
     download_cache = {}
 
     to_check = None
+
     if isinstance(hashes, list):
         warn('`hashes` argument of list type is deprecated and will be removed in 1.0. '
              'Please pass the argument of Dict[hash, torrent] type instead.', DeprecationWarning, stacklevel=2)
+
     else:
         to_check = hashes
         hashes = list(to_check.keys())
 
     for _, rpc_object in iter_rpc():
+
         LOGGER.info('Getting torrents from `%s` ...', rpc_object.alias)
         torrents = rpc_object.method_get_torrents(hashes)
 
@@ -403,6 +449,7 @@ def update_torrents(hashes, remove_outdated=True):
 
             if page_url in download_cache:
                 new_torrent = download_cache[page_url]
+
             else:
                 new_torrent = get_torrent_from_url(page_url)
                 download_cache[page_url] = new_torrent
@@ -416,6 +463,7 @@ def update_torrents(hashes, remove_outdated=True):
                 continue
 
             LOGGER.debug('    Update is available')
+
             try:
                 rpc_object.method_add_torrent(new_torrent['torrent'], existing_torrent['download_to'])
                 new_torrent['url'] = page_url
@@ -427,6 +475,7 @@ def update_torrents(hashes, remove_outdated=True):
 
             else:
                 unregister_torrent(existing_torrent['hash'])
+
                 if remove_outdated:
                     rpc_object.method_remove_torrent(existing_torrent['hash'])
 
@@ -434,8 +483,11 @@ def update_torrents(hashes, remove_outdated=True):
 
 
 def run_bots(aliases=None):
+
     aliases = aliases or []
+
     for alias, bot_object in iter_bots():
         if aliases and alias not in aliases:
             continue
+
         bot_object.run()
