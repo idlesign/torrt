@@ -2,8 +2,8 @@ torrt changelog
 ===============
 
 
-Unreleased
-----------
+v0.11.0
+-------
 + Added CasStudio tracker support.
 + Bots subsystem added featuring Telegram bot.
 + Public tracker registration made optional.
