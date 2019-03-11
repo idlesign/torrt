@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import logging
-
 import six
 
 from torrt.base_tracker import GenericPrivateTracker
@@ -41,7 +41,7 @@ class CasstudioTracker(GenericPrivateTracker):
             page_soup = self.get_response(
                 url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
             )
-        download_link = self.find_links(url, page_soup, r'\./download/file\.php\?id=\d+$')
+        download_link = self.expand_link(url, page_soup.find('a', text='Скачать торрент')['href'])
         return download_link
 
 
