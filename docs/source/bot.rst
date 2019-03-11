@@ -15,27 +15,27 @@ Register bot
 
 2. Install ``python-telegram-bot`` library to your python environment with
 
-    .. code-block::
+    .. code-block:: shell
 
         $ pip install python-telegram-bot
 
     You may install **torrt** with required dependencies with:
 
-    .. code-block::
+    .. code-block:: shell
 
         $ pip install torrt[telegram]
 
 3. Configure **torrt** to use the bot:
 
-    .. code-block::
+    .. code-block:: shell
 
-        $ torrt configure_bot token=YOUR_TOKEN
+        $ torrt configure_bot telegram token=YOUR_TOKEN
 
     Restricts users (comma-separated) talking to the bot with option ``allowed_users``:
 
-    .. code-block::
+    .. code-block:: shell
 
-        $ torrt configure_bot token=YOUR_TOKEN allowed_users=user1,user2
+        $ torrt configure_bot telegram token=YOUR_TOKEN allowed_users=user1,user2
 
 4. Create a new Telegram group and add the bot.
 
@@ -45,7 +45,7 @@ Listen to commands
 
 Start listening to user commands:
 
-.. code-block::
+.. code-block:: shell
 
     $ torrt run_bots
 
@@ -80,21 +80,25 @@ Supervisor configuration
 Here described how to configure and start torrt's Telegram bot with ``supervisord``.
 
 1. Install ``supervisord`` on your host as described at http://supervisord.org/installing.html
-2. Create configuration file ``torrt.conf`` at ``/etc/supervisor/conf.d/``::
+2. Create configuration file ``torrt.conf`` at ``/etc/supervisor/conf.d/``:
 
-    [program:torrt]
-    directory=/tmp
-    command=PATH_TO_TORRT_SCRIPT run_bots
-    user=USER_ON_HOST
-    autostart=true
-    autorestart=true
+    .. code-block:: ini
+
+        [program:torrt]
+        directory=/tmp
+        command=PATH_TO_TORRT_SCRIPT run_bots
+        user=USER_ON_HOST
+        autostart=true
+        autorestart=true
 
 
   Replace ``PATH_TO_TORRT_SCRIPT`` with a location of **torrt** executable file and ``USER_ON_HOST`` with a user starting a process.
 
-3. Start process with following commands::
+3. Start process with following commands:
 
-    # supervisorctl reread
-    # supervisorctl reload
-    # supervisorctl start torrt
+    .. code-block:: shell
+
+        # supervisorctl reread
+        # supervisorctl reload
+        # supervisorctl start torrt
 
