@@ -1,7 +1,7 @@
 import logging
 
 from torrt.base_bot import BaseBot
-from torrt.toolbox import add_torrent_from_url, config
+from torrt.toolbox import add_torrent_from_url, config, get_registered_torrents
 from torrt.utils import BotClassesRegistry, get_torrent_from_url, RPCObjectsRegistry
 
 try:
@@ -63,6 +63,7 @@ class TelegramBot(BaseBot):
 
         self.dispatcher.add_handler(conv_handler)
         self.dispatcher.add_handler(CommandHandler('add', self.command_add_torrent, **self.handler_kwargs))
+        self.dispatcher.add_handler(CommandHandler('list', self.command_list_torrents, **self.handler_kwargs))
 
     def handle_ask_url(self, bot, update):
         update.message.reply_text(text="Give me an URL and I'll do the rest.",
@@ -138,6 +139,14 @@ class TelegramBot(BaseBot):
             bot.send_message(chat_id=update.message.chat_id, text='Torrent from `%s` was added' % torrent_url)
         else:
             bot.send_message(chat_id=update.message.chat_id, text='Torrent was not added.')
+
+    def command_list_torrents(self, bot, update):
+        """Command to list all monitored torrents"""
+        for i, trn in enumerate(get_registered_torrents().values(), 1):
+            if trn.get('url'):
+                update.message.reply_text('{}. {}\n{}'.format(i, trn['name'], trn['url']))
+            else:
+                update.message.reply_text('{}. {}'.format(i, trn['name']))
 
 
 BotClassesRegistry.add(TelegramBot)
