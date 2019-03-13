@@ -31,12 +31,12 @@ class TelegramBot(BaseBot):
             return
 
         self.token = token
-        allowed_users = allowed_users or ''
+        self.allowed_users = allowed_users or ''
         self.handler_kwargs = {}
         self.updater = Updater(token=self.token)
         self.dispatcher = self.updater.dispatcher
-        if allowed_users:
-            self.handler_kwargs = {'filters': Filters.user(username=allowed_users.split(','))}
+        if self.allowed_users:
+            self.handler_kwargs = {'filters': Filters.user(username=self.allowed_users.split(','))}
 
     def test_configuration(self):
         return telegram and bool(self.updater)
@@ -65,14 +65,16 @@ class TelegramBot(BaseBot):
         self.dispatcher.add_handler(CommandHandler('add', self.command_add_torrent, **self.handler_kwargs))
 
     def handle_ask_url(self, bot, update):
-        update.message.reply_text(text="Give me an URL and I'll do the rest.")
+        update.message.reply_text(text="Give me an URL and I'll do the rest.",
+                                  reply_markup=ReplyKeyboardRemove())
         return self.URL
 
     def handle_process_url(self, bot, update, user_data):
         torrent_url = update.message.text
         torrent_data = get_torrent_from_url(torrent_url)
         if torrent_data is None:
-            update.message.reply_text('Unable to add torrent from `%s`' % torrent_url)
+            update.message.reply_text('Unable to add torrent from `%s`' % torrent_url,
+                                      reply_markup=ReplyKeyboardRemove())
             return ConversationHandler.END
         else:
             user_data['url'] = torrent_url
@@ -102,13 +104,14 @@ class TelegramBot(BaseBot):
             torrents_count = len(config.load()['torrents'])
             add_torrent_from_url(torrent_url, download_to=path)
             if len(config.load()['torrents']) > torrents_count:
-                update.message.reply_text('Torrent from `%s` was added' % torrent_url)
+                update.message.reply_text('Torrent from `%s` was added' % torrent_url,
+                                          reply_markup=ReplyKeyboardRemove())
             else:
-                update.message.reply_text('Torrent was not added.')
+                update.message.reply_text('Torrent was not added.', reply_markup=ReplyKeyboardRemove())
         return ConversationHandler.END
 
     def cancel_handler(self, bot, update):
-        update.message.reply_text('Bye! I hope to see tou again.',
+        update.message.reply_text('Bye! I hope to see you again.',
                                   reply_markup=ReplyKeyboardRemove())
 
         return ConversationHandler.END
