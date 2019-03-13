@@ -18,6 +18,8 @@ class CasstudioTracker(GenericPrivateTracker):
     auth_cookie_name = 'phpbb3_lawmj_sid'
     auth_qs_param_name = 'mode'
 
+    test_urls = ['https://casstudio.tv/viewtopic.php?t=1222']
+
     def get_login_form_data(self, login, password):
         index_page = self.get_response(url=(self.login_url % {'domain': self.alias}))
         soup_response = self.make_page_soup(index_page.text)
