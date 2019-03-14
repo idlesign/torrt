@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+v0.11.1
+-------
+* Fixed CasStudio tracker support.
+
+
 v0.11.0
 -------
 + Added CasStudio tracker support.

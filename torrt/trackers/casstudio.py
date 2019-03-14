@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import logging
-
 import six
 
 from torrt.base_tracker import GenericPrivateTracker
@@ -17,6 +17,8 @@ class CasstudioTracker(GenericPrivateTracker):
     login_url = 'https://%(domain)s/ucp.php?mode=login'
     auth_cookie_name = 'phpbb3_lawmj_sid'
     auth_qs_param_name = 'mode'
+
+    test_urls = ['https://casstudio.tv/viewtopic.php?t=1222']
 
     def get_login_form_data(self, login, password):
         index_page = self.get_response(url=(self.login_url % {'domain': self.alias}))
@@ -41,7 +43,7 @@ class CasstudioTracker(GenericPrivateTracker):
             page_soup = self.get_response(
                 url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
             )
-        download_link = self.find_links(url, page_soup, r'\./download/file\.php\?id=\d+$')
+        download_link = self.expand_link(url, page_soup.find('a', text='Скачать торрент')['href'])
         return download_link
 
 
