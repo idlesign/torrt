@@ -62,16 +62,31 @@ Talking to the bot
 
 Bot supports a number of commands.
 
-1. Add a torrent using ``/add`` command (torrent is downloaded to a default directory.)::
+1. To start new conversation with bot use command::
+
+    /start
+
+  and follow further instructions. You can add new, list or remove already registered torrents.
+
+  .. note::
+    If you want to cancel current operation use `/cancel` command.
+
+2. Add a torrent using ``/add`` command (torrent is downloaded to a default directory.)::
 
     /add https://rutracker.org/forum/viewtopic.php?t=1234567
 
 
-2. If you want to download a torrent to a custom directory start a new conversation::
+3. All registered torrents can be viewed with::
 
-    /start
+   /list
 
-  and follow further instructions.
+4. To remove torrent use command::
+
+    /remove
+
+5. To show all available commands use::
+
+    /help
 
 
 Supervisor configuration
