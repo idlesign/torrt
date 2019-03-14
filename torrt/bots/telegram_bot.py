@@ -150,7 +150,7 @@ class TelegramBot(BaseBot):
                 remove_torrent(torrent_hash, with_data=bool(int(splitted_data[0])))
                 update.callback_query.message.reply_text('Torrent `{}` was removed'.format(torrent_data['name']))
             else:
-                update.callback_query.message.reply_text('Torrent not found. Try one more time with /delete')
+                update.callback_query.message.reply_text('Torrent not found. Try one more time with /remove')
 
         return
 
