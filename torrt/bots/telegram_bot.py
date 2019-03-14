@@ -1,13 +1,14 @@
 import logging
 
 from torrt.base_bot import BaseBot
-from torrt.toolbox import add_torrent_from_url, config, get_registered_torrents
+from torrt.toolbox import add_torrent_from_url, get_registered_torrents, remove_torrent
 from torrt.utils import BotClassesRegistry, get_torrent_from_url, RPCObjectsRegistry
 
 try:
     import telegram
-    from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-    from telegram.ext import Filters, Updater, ConversationHandler, CommandHandler, MessageHandler, RegexHandler
+    from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
+    from telegram.ext import Filters, Updater, ConversationHandler, CommandHandler, MessageHandler, RegexHandler, \
+    CallbackQueryHandler
 
 except ImportError:
     telegram = None
@@ -16,7 +17,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class TelegramBot(BaseBot):
-    START, ASKING_URL, URL, PATH = 1, 2, 3, 4
+    START, URL, PATH = 1, 2, 3
 
     alias = 'telegram'
     url = 'https://api.telegram.org/bot'
@@ -53,17 +54,30 @@ class TelegramBot(BaseBot):
             entry_points=[CommandHandler('start', self.command_start, **self.handler_kwargs)],
 
             states={
-                self.ASKING_URL: [MessageHandler(Filters.text, self.handle_ask_url)],
                 self.URL: [RegexHandler('http[s]?://', self.handle_process_url, pass_user_data=True)],
                 self.PATH: [RegexHandler(r'^/.+|\.', self.handle_ask_download_path, pass_user_data=True)],
             },
 
-            fallbacks=[CommandHandler('cancel', self.cancel_handler)]
+            fallbacks=[CommandHandler('cancel', self.cancel_handler)],
+            allow_reentry=True
         )
 
         self.dispatcher.add_handler(conv_handler)
+        self.dispatcher.add_handler(CallbackQueryHandler(self.handle_callbacks))
         self.dispatcher.add_handler(CommandHandler('add', self.command_add_torrent, **self.handler_kwargs))
         self.dispatcher.add_handler(CommandHandler('list', self.command_list_torrents, **self.handler_kwargs))
+        self.dispatcher.add_handler(CommandHandler('remove', self.command_remove_torrents, **self.handler_kwargs))
+        self.dispatcher.add_handler(CommandHandler('help', self.command_help, **self.handler_kwargs))
+
+    def handle_callbacks(self, bot, update):
+        if update.callback_query.data == 'add_torrent':
+            self.handle_ask_url(bot, update.callback_query)
+        elif update.callback_query.data == 'list_torrents':
+            self.command_list_torrents(bot, update.callback_query)
+        elif update.callback_query.data == 'delete_torrent':
+            self.command_remove_torrents(bot, update.callback_query)
+        elif update.callback_query.data.startswith('hash:'):
+            self.handle_remove_torrents(bot, update)
 
     def handle_ask_url(self, bot, update):
         update.message.reply_text(text="Give me an URL and I'll do the rest.",
@@ -85,7 +99,7 @@ class TelegramBot(BaseBot):
                     torrents = rpc.method_get_torrents()
                     for torrent in torrents:
                         download_dirs.add(torrent['download_to'])
-            choices = [download_dirs]
+            choices = [[d] for d in download_dirs]
             update.message.reply_text('Where to download data? Send absolute path or "."',
                                       reply_markup=ReplyKeyboardMarkup(choices, one_time_keyboard=True))
             return self.PATH
@@ -102,9 +116,14 @@ class TelegramBot(BaseBot):
             if path == '.':
                 path = None
 
-            torrents_count = len(config.load()['torrents'])
-            add_torrent_from_url(torrent_url, download_to=path)
-            if len(config.load()['torrents']) > torrents_count:
+            torrents_count = len(get_registered_torrents())
+            try:
+                add_torrent_from_url(torrent_url, download_to=path)
+            except Exception as e:
+                logging.error('Torrent was not added: {}'.format(e))
+                update.message.reply_text('Error was occurred during registering torrent.',
+                                          reply_markup=ReplyKeyboardRemove())
+            if len(get_registered_torrents()) > torrents_count:
                 update.message.reply_text('Torrent from `%s` was added' % torrent_url,
                                           reply_markup=ReplyKeyboardRemove())
             else:
@@ -117,14 +136,33 @@ class TelegramBot(BaseBot):
 
         return ConversationHandler.END
 
+    def handle_remove_torrents(self, bot, update):
+        data = update.callback_query.data
+        splitted_data = data.split(':')[1:]
+        torrent_hash = splitted_data.pop(0)
+        if not splitted_data:
+            keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(text="Yes", callback_data=data + ':1'),
+                                              InlineKeyboardButton(text="No", callback_data=data + ':0')]])
+            update.callback_query.message.reply_text('Do you want to delete data?', reply_markup=keyboard)
+        else:
+            torrent_data = get_registered_torrents().get(torrent_hash)
+            if torrent_data:
+                remove_torrent(torrent_hash, with_data=bool(int(splitted_data[0])))
+                update.callback_query.message.reply_text('Torrent `{}` was removed'.format(torrent_data['name']))
+            else:
+                update.callback_query.message.reply_text('Torrent not found. Try one more time with /delete')
+
+        return
+
     def command_start(self, bot, update):
         """Start dialog handler"""
-        keyboard = [["Add new torrent"]]
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton(text="Add torrent", callback_data="add_torrent"),
+                                    InlineKeyboardButton(text="List torrents", callback_data="list_torrents"),
+                                    InlineKeyboardButton(text="Delete torrent", callback_data="delete_torrent"),
+                                    ]])
+        bot.send_message(update.message.chat_id, 'What do you want to do?', reply_markup=kb)
 
-        update.message.reply_text('Do you want to add new torrents?',
-                                  reply_markup=ReplyKeyboardMarkup(keyboard, one_time_keyboard=True))
-
-        return self.ASKING_URL
+        return self.URL
 
     def command_add_torrent(self, bot, update):
         """Stand-alone handler to add torrent"""
@@ -133,20 +171,44 @@ class TelegramBot(BaseBot):
             update.message.reply_text('Please provide link to the tracker page. '
                                       'For example: \n/add https://rutracker.org/forum/viewtopic.php?t=1')
             return
-        torrents_count = len(config.load()['torrents'])
-        add_torrent_from_url(torrent_url)
-        if len(config.load()['torrents']) > torrents_count:
+        torrents_count = len(get_registered_torrents())
+        try:
+            add_torrent_from_url(torrent_url)
+        except Exception as e:
+            logging.error('Torrent was not added: {}'.format(e))
+            bot.send_message(chat_id=update.message.chat_id, text='Error was occurred during registering torrent.')
+
+        if len(get_registered_torrents()) > torrents_count:
             bot.send_message(chat_id=update.message.chat_id, text='Torrent from `%s` was added' % torrent_url)
         else:
             bot.send_message(chat_id=update.message.chat_id, text='Torrent was not added.')
 
     def command_list_torrents(self, bot, update):
         """Command to list all monitored torrents"""
-        for i, trn in enumerate(get_registered_torrents().values(), 1):
-            if trn.get('url'):
-                update.message.reply_text('{}. {}\n{}'.format(i, trn['name'], trn['url']))
+        for i, trnt in enumerate(get_registered_torrents().values(), 1):
+            if trnt.get('url'):
+                update.message.reply_text('{}. {} \n{}'.format(i, trnt['name'], trnt['url']))
             else:
-                update.message.reply_text('{}. {}'.format(i, trn['name']))
+                update.message.reply_text('{}. {}'.format(i, trnt['name']))
+
+    def command_remove_torrents(self, bot, update):
+        """Command to remove torrent"""
+        buttons = []
+        for trnt in get_registered_torrents().values():
+            buttons.append([InlineKeyboardButton(text=trnt['name'], callback_data='hash:{hash}'.format(**trnt))])
+
+        keyboard = InlineKeyboardMarkup(buttons)
+        bot.send_message(update.message.chat_id, text='Which torrent do you want to remove?', reply_markup=keyboard)
+
+    def command_help(self, bot, update):
+        """Command for help"""
+        helptext = "Available commands:\n" \
+                   "/start: Interactive wizard for torrent management.\n" \
+                   "/add <URL>: Quick way to add new torrent.\n" \
+                   "/list: Display all registered torrents.\n" \
+                   "/remove: Remove torrent.\n" \
+                   "/cancel: Cancel current operation."
+        update.message.reply_text(helptext)
 
 
 BotClassesRegistry.add(TelegramBot)
