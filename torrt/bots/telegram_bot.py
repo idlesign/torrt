@@ -148,9 +148,9 @@ class TelegramBot(BaseBot):
         For example 'hash:1234567890' or 'hash:1234567890:0'
         """
         data = update.callback_query.data
-        splitted_data = data.split(':')[1:]
-        torrent_hash = splitted_data.pop(0)
-        if not splitted_data:
+        split_data = data.split(':')[1:]
+        torrent_hash = split_data.pop(0)
+        if not split_data:
             # with_data attribute was not set yet, ask user
             keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(text='Yes', callback_data=data + ':1'),
                                               InlineKeyboardButton(text='No', callback_data=data + ':0')]])
@@ -158,7 +158,7 @@ class TelegramBot(BaseBot):
         else:
             torrent_data = get_registered_torrents().get(torrent_hash)
             if torrent_data:
-                remove_torrent(torrent_hash, with_data=bool(int(splitted_data[0])))
+                remove_torrent(torrent_hash, with_data=bool(int(split_data[0])))
                 update.callback_query.message.reply_text('Torrent `{}` was removed'.format(torrent_data['name']))
             else:
                 update.callback_query.message.reply_text('Torrent not found. Try one more time with /remove')
@@ -186,13 +186,13 @@ class TelegramBot(BaseBot):
         try:
             add_torrent_from_url(torrent_url)
         except Exception as e:
-            logging.error('Torrent was not added: {}'.format(e))
-            bot.send_message(chat_id=update.message.chat_id, text='Error was occurred during registering torrent.')
+            logging.error('Unable to register the torrent: {}'.format(e))
+            bot.send_message(chat_id=update.message.chat_id, text='Unable to register the torrent due to an error.')
 
         if len(get_registered_torrents()) > torrents_count:
-            bot.send_message(chat_id=update.message.chat_id, text='Torrent from `%s` was added' % torrent_url)
+            bot.send_message(chat_id=update.message.chat_id, text='The torrent is successfully registered.')
         else:
-            bot.send_message(chat_id=update.message.chat_id, text='Torrent was not added.')
+            bot.send_message(chat_id=update.message.chat_id, text='Unable to register the torrent.')
 
     def command_list_torrents(self, bot, update):
         """Command to list all monitored torrents"""
@@ -215,7 +215,7 @@ class TelegramBot(BaseBot):
         """Command for help"""
         helptext = 'Available commands:\n' \
                    '/start: Interactive wizard for torrent management.\n' \
-                   '/add <URL>: Quick way to add new torrent.\n' \
+                   '/add <URL>: Quick way to add a new torrent.\n' \
                    '/list: Display all registered torrents.\n' \
                    '/remove: Remove torrent.\n' \
                    '/cancel: Cancel current operation.'
