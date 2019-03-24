@@ -49,14 +49,14 @@ class TelegramBot(BaseBot):
             self.updater.idle()
 
     def add_handlers(self):
+        path_handler_regex = r'^/(?!(cancel|start|add|list|remove|help)(?!/)).+|\.'
 
         conv_handler = ConversationHandler(
             entry_points=[CommandHandler('start', self.command_start, **self.handler_kwargs)],
 
             states={
                 self.URL: [RegexHandler('http[s]?://', self.handle_process_url, pass_user_data=True)],
-                self.PATH: [RegexHandler(r'^/(?!(cancel|start|add|list|remove|help)(?!/)).+|\.',
-                                         self.handle_ask_download_path, pass_user_data=True)],
+                self.PATH: [RegexHandler(path_handler_regex, self.handle_ask_download_path, pass_user_data=True)],
             },
 
             fallbacks=[CommandHandler('cancel', self.cancel_handler)],
@@ -71,17 +71,20 @@ class TelegramBot(BaseBot):
         self.dispatcher.add_handler(CommandHandler('help', self.command_help, **self.handler_kwargs))
 
     def handle_callbacks(self, bot, update):
-        if update.callback_query.data == 'add_torrent':
-            self.handle_ask_url(bot, update.callback_query)
-        elif update.callback_query.data == 'list_torrents':
-            self.command_list_torrents(bot, update.callback_query)
-        elif update.callback_query.data == 'delete_torrent':
-            self.command_remove_torrents(bot, update.callback_query)
+        """Handler to process all callbacks from buttons"""
+        handlers = {
+            'add_torrent': self.handle_ask_url,
+            'list_torrents': self.command_list_torrents,
+            'delete_torrent': self.command_remove_torrents
+        }
+        handler = handlers.get(update.callback_query.data)
+        if handler:
+            handler(bot, update.callback_query)
         elif update.callback_query.data.startswith('hash:'):
             self.handle_remove_torrents(bot, update)
 
     def handle_ask_url(self, bot, update):
-        update.message.reply_text(text="Give me an URL and I'll do the rest.",
+        update.message.reply_text(text="Give me a URL and I'll do the rest.",
                                   reply_markup=ReplyKeyboardRemove())
         return self.URL
 
@@ -100,7 +103,7 @@ class TelegramBot(BaseBot):
                     torrents = rpc.method_get_torrents()
                     for torrent in torrents:
                         download_dirs.add(torrent['download_to'])
-            choices = [[d] for d in download_dirs]
+            choices = [[directory] for directory in download_dirs]
             update.message.reply_text('Where to download data? Send absolute path or "."',
                                       reply_markup=ReplyKeyboardMarkup(choices, one_time_keyboard=True))
             return self.PATH
@@ -121,27 +124,34 @@ class TelegramBot(BaseBot):
             try:
                 add_torrent_from_url(torrent_url, download_to=path)
             except Exception as e:
-                logging.error('Torrent was not added: {}'.format(e))
+                logging.error('Unable to add torrent: %s', e)
                 update.message.reply_text('Error was occurred during registering torrent.',
                                           reply_markup=ReplyKeyboardRemove())
             if len(get_registered_torrents()) > torrents_count:
                 update.message.reply_text('Torrent from `%s` was added' % torrent_url,
                                           reply_markup=ReplyKeyboardRemove())
             else:
-                update.message.reply_text('Torrent was not added.', reply_markup=ReplyKeyboardRemove())
+                update.message.reply_text('Unable to add torrent.', reply_markup=ReplyKeyboardRemove())
         return ConversationHandler.END
 
     def cancel_handler(self, bot, update):
-        update.message.reply_text('Bye! I hope to see you again.',
-                                  reply_markup=ReplyKeyboardRemove())
-
+        update.message.reply_text('Bye! I hope to see you again.', reply_markup=ReplyKeyboardRemove())
         return ConversationHandler.END
 
     def handle_remove_torrents(self, bot, update):
+        """
+        Handler for torrent remove action.
+        data is colon-joined string which is contains:
+        1. keyword `hash` - command prefix
+        2. torrent HASH from configured RPC
+        3. 0|1 - optional attribute (with_data) responsible for data removal from RPC
+        For example 'hash:1234567890' or 'hash:1234567890:0'
+        """
         data = update.callback_query.data
         splitted_data = data.split(':')[1:]
         torrent_hash = splitted_data.pop(0)
         if not splitted_data:
+            # with_data attribute was not set yet, ask user
             keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(text="Yes", callback_data=data + ':1'),
                                               InlineKeyboardButton(text="No", callback_data=data + ':0')]])
             update.callback_query.message.reply_text('Do you want to delete data?', reply_markup=keyboard)
