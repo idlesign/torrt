@@ -152,8 +152,8 @@ class TelegramBot(BaseBot):
         torrent_hash = splitted_data.pop(0)
         if not splitted_data:
             # with_data attribute was not set yet, ask user
-            keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(text="Yes", callback_data=data + ':1'),
-                                              InlineKeyboardButton(text="No", callback_data=data + ':0')]])
+            keyboard = InlineKeyboardMarkup([[InlineKeyboardButton(text='Yes', callback_data=data + ':1'),
+                                              InlineKeyboardButton(text='No', callback_data=data + ':0')]])
             update.callback_query.message.reply_text('Do you want to delete data?', reply_markup=keyboard)
         else:
             torrent_data = get_registered_torrents().get(torrent_hash)
@@ -167,9 +167,9 @@ class TelegramBot(BaseBot):
 
     def command_start(self, bot, update):
         """Start dialog handler"""
-        kb = InlineKeyboardMarkup([[InlineKeyboardButton(text="Add torrent", callback_data="add_torrent"),
-                                    InlineKeyboardButton(text="List torrents", callback_data="list_torrents"),
-                                    InlineKeyboardButton(text="Delete torrent", callback_data="delete_torrent"),
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton(text='Add torrent', callback_data='add_torrent'),
+                                    InlineKeyboardButton(text='List torrents', callback_data='list_torrents'),
+                                    InlineKeyboardButton(text='Delete torrent', callback_data='delete_torrent'),
                                     ]])
         bot.send_message(update.message.chat_id, 'What do you want to do?', reply_markup=kb)
 
@@ -213,12 +213,12 @@ class TelegramBot(BaseBot):
 
     def command_help(self, bot, update):
         """Command for help"""
-        helptext = "Available commands:\n" \
-                   "/start: Interactive wizard for torrent management.\n" \
-                   "/add <URL>: Quick way to add new torrent.\n" \
-                   "/list: Display all registered torrents.\n" \
-                   "/remove: Remove torrent.\n" \
-                   "/cancel: Cancel current operation."
+        helptext = 'Available commands:\n' \
+                   '/start: Interactive wizard for torrent management.\n' \
+                   '/add <URL>: Quick way to add new torrent.\n' \
+                   '/list: Display all registered torrents.\n' \
+                   '/remove: Remove torrent.\n' \
+                   '/cancel: Cancel current operation.'
         update.message.reply_text(helptext)
 
 
