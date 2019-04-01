@@ -2,6 +2,12 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
++ New commands for Telegram bot.
+* Improved CasStudio tracker support.
+
+
 v0.11.1
 -------
 * Fixed CasStudio tracker support.
