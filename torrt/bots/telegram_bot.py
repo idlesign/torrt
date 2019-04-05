@@ -196,11 +196,16 @@ class TelegramBot(BaseBot):
 
     def command_list_torrents(self, bot, update):
         """Command to list all monitored torrents"""
+        torrents = []
         for i, trnt in enumerate(get_registered_torrents().values(), 1):
             if trnt.get('url'):
-                update.message.reply_text('{}. {} \n{}'.format(i, trnt['name'], trnt['url']))
+                torrents.append('{}. {}\n{}'.format(i, trnt['name'], trnt['url']))
             else:
-                update.message.reply_text('{}. {}'.format(i, trnt['name']))
+                torrents.append('{}. {}'.format(i, trnt['name']))
+        if torrents:
+            update.message.reply_text('\n\n'.join(torrents))
+        else:
+            update.message.reply_text('No torrents yet.')
 
     def command_remove_torrents(self, bot, update):
         """Command to remove torrent"""
