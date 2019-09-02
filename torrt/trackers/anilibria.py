@@ -28,6 +28,37 @@ class AnilibriaTracker(GenericPublicTracker):
 
     def get_download_link(self, url):
         """Tries to find .torrent file download link at forum thread page and return that one."""
+        available_qualities = self.find_available_qualities(url)
+
+        LOGGER.debug('Available in qualities: %s', ', '.join(available_qualities.keys()))
+
+        if available_qualities:
+            quality_prefs = []
+            for pref in self.quality_prefs:
+                pref = self.sanitize_quality(pref)
+                if pref not in quality_prefs:
+                    quality_prefs.append(pref)
+
+            preferred_qualities = [quality for quality in quality_prefs if quality in available_qualities]
+            if not preferred_qualities:
+                LOGGER.info('Torrent is not available in preferred qualities: %s', ', '.join(quality_prefs))
+                quality, link = next(iter(available_qualities.items()))
+                LOGGER.info('Fallback to `%s` quality ...', quality)
+                return link
+            else:
+                target_quality = preferred_qualities[0]
+                LOGGER.debug('Trying to get torrent in `%s` quality ...', target_quality)
+
+                return available_qualities[target_quality]
+
+        return None
+
+    def find_available_qualities(self, url):
+        """
+        Tries to find .torrent download links at forum thread page.
+        :param url: url to forum thread page
+        :return: dict where key is quality and value is .torrent download link
+        """
         page_soup = self.get_response(url, as_soup=True)
 
         available_qualities = {}
@@ -43,23 +74,7 @@ class AnilibriaTracker(GenericPublicTracker):
             else:
                 LOGGER.warning('Cannot extract quality from `%s`', quality_str)
 
-        LOGGER.debug('Available in qualities: %s', ', '.join(available_qualities.keys()))
-
-        if available_qualities:
-            quality_prefs = {self.sanitize_quality(pref) for pref in self.quality_prefs}
-            preferred_qualities = [quality for quality in quality_prefs if quality in available_qualities]
-            if not preferred_qualities:
-                LOGGER.info('Torrent is not available in preferred qualities: %s', ', '.join(quality_prefs))
-                quality, link = next(iter(available_qualities.items()))
-                LOGGER.info('Fallback to `%s` quality ...', quality)
-                return link
-            else:
-                target_quality = preferred_qualities[0]
-                LOGGER.debug('Trying to get torrent in `%s` quality ...', target_quality)
-
-                return available_qualities[target_quality]
-
-        return None
+        return available_qualities
 
     @staticmethod
     def sanitize_quality(quality_str):
