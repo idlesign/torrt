@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Cross-version compatability library
+"""Cross-version compatibility library
 
 This module contains various version-bound function implementations.
 
@@ -34,12 +34,12 @@ if six.PY3:
         """Return base64 encoded input
 
         :param string_or_bytes:
-        :return: str
+        :return: bytes
         """
         if isinstance(string_or_bytes, str):
             string_or_bytes = string_or_bytes.encode('utf-8')
 
-        return base64.encodebytes(string_or_bytes).decode('ascii')
+        return base64.encodebytes(string_or_bytes).decode('ascii').encode('utf-8')
 
 else:
 
@@ -47,6 +47,6 @@ else:
         """Return base64 encoded input
 
         :param string_or_bytes:
-        :return: str
+        :return: bytes
         """
         return base64.encodestring(string_or_bytes)
