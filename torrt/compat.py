@@ -47,6 +47,6 @@ else:
         """Return base64 encoded input
 
         :param string_or_bytes:
-        :return: str
+        :return: bytes
         """
         return base64.encodestring(string_or_bytes)
