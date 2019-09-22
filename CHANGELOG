@@ -2,8 +2,8 @@ torrt changelog
 ===============
 
 
-Unreleased
-----------
+v0.13.0 [2019-09-22]
+--------------------
 + Telegram bots. Batch messages for /list command.
 * Anilibria. Qualities picking related changes.
 * Py2/3 compat impovements.
