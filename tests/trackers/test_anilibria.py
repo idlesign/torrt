@@ -4,6 +4,14 @@ from torrt.trackers.anilibria import AnilibriaTracker
 
 
 @pytest.mark.parametrize("test_input,expected", [
+    ('https://www.anilibria.tv/release/kabukichou-sherlock.html', 'kabukichou-sherlock'),
+    ('https://www.anilibria.tv/release/mairimashita-iruma-kun.html', 'mairimashita-iruma-kun'),
+])
+def test_extract_release_code(test_input, expected):
+    assert AnilibriaTracker.extract_release_code(test_input) == expected
+
+
+@pytest.mark.parametrize("test_input,expected", [
     ('WEBRip 1080p', 'webrip1080p'),
     ('WEBRip-1080p', 'webrip1080p'),
     ('WEBRip_1080p', 'webrip1080p'),
