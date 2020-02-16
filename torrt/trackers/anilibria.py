@@ -1,5 +1,6 @@
 import logging
 import re
+from collections import defaultdict
 
 from torrt.base_tracker import GenericPublicTracker
 from torrt.utils import TrackerClassesRegistry
@@ -9,6 +10,10 @@ LOGGER = logging.getLogger(__name__)
 REGEX_QUALITY = re.compile(r".+\[(.+)\]")
 # This regex is used to remove every non-word character or underscore from quality string.
 REGEX_NON_WORD = re.compile(r'[\W_]')
+REGEX_RANGE = re.compile(r'\d+-\d+')
+
+HOST = 'https://www.anilibria.tv'
+API_URL = HOST + '/public/api/index.php'
 
 
 class AnilibriaTracker(GenericPublicTracker):
@@ -55,26 +60,46 @@ class AnilibriaTracker(GenericPublicTracker):
 
     def find_available_qualities(self, url):
         """
-        Tries to find .torrent download links at forum thread page.
-        :param url: url to forum thread page
+        Tries to find .torrent download links in `Release` model
+        :param url: str - url to forum thread page
         :return: dict where key is quality and value is .torrent download link
         """
-        page_soup = self.get_response(url, as_soup=True)
+        code = self.extract_release_code(url)
+        response = self.get_response(API_URL, {'query': 'release', 'code': code}, as_soup=False)
+        json = response.json()
+
+        if not json.get('status', False):
+            LOGGER.error('Failed to get release `%s` from API', code)
+            return {}
 
         available_qualities = {}
-        rows = page_soup.select('#publicTorrentTable tr')
-        for row in rows:
-            quality_td = row.select('td.torrentcol1')
-            quality_str = quality_td[0].text.strip()
-            match = REGEX_QUALITY.search(quality_str)
-            if match:
-                quality = self.sanitize_quality(match.group(1))
-                link = self.expand_link(url, row.select('td.torrentcol4 a.torrent-download-link')[0]['href'])
-                available_qualities[quality] = link
-            else:
-                LOGGER.warning('Cannot extract quality from `%s`', quality_str)
+        torrents = json['data']['torrents']
+        series2torrents = defaultdict(list)
+        for torrent in torrents:
+            if REGEX_RANGE.match(torrent['series']):  # filter out single-file torrents like trailers,...
+                series2torrents[torrent['series']].append(torrent)
+
+        # some releases can be broken into several .torrent files, e.g. 1-20 and 21-41 - take the last one
+        sorted_series = sorted(series2torrents.keys(), reverse=True)
+        for torrent in series2torrents[sorted_series[0]]:
+            quality = self.sanitize_quality(torrent['quality'])
+            available_qualities[quality] = HOST + torrent['url']
 
         return available_qualities
+
+    @staticmethod
+    def extract_release_code(url):
+        """
+        Extracts anilibria release code from forum thread page
+        Example:
+
+        `extract_release_code('https://www.anilibria.tv/release/kabukichou-sherlock.html')` -> 'kabukichou-sherlock'
+
+        :param url: str - url to forum thread page
+        :rtype: str
+        :return: release code
+        """
+        return url.replace(HOST + '/release/', '').replace('.html', '')
 
     @staticmethod
     def sanitize_quality(quality_str):
