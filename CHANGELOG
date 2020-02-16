@@ -5,6 +5,7 @@ torrt changelog
 Unreleased
 ----------
 * Anilibria. Switched to API.
+* Fixed Transmission RPC 'add_torrent()' regression.
 
 
 v0.13.0 [2019-09-22]
