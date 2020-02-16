@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
+* Anilibria. Switched to API.
+
+
 v0.13.0 [2019-09-22]
 --------------------
 + Telegram bots. Batch messages for /list command.
