@@ -88,7 +88,7 @@ class TransmissionRPC(BaseRPC):
 
     def method_add_torrent(self, torrent, download_to=None):
         args = {
-            'metainfo': base64encode(torrent),
+            'metainfo': base64encode(torrent).decode('utf-8'),
         }
         if download_to is not None:
             args['download-dir'] = download_to
