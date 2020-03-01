@@ -80,7 +80,7 @@ class AnilibriaTracker(GenericPublicTracker):
                 series2torrents[torrent['series']].append(torrent)
 
         # some releases can be broken into several .torrent files, e.g. 1-20 and 21-41 - take the last one
-        sorted_series = sorted(series2torrents.keys(), reverse=True)
+        sorted_series = sorted(series2torrents.keys(), key=self.to_tuple, reverse=True)
         for torrent in series2torrents[sorted_series[0]]:
             quality = self.sanitize_quality(torrent['quality'])
             available_qualities[quality] = HOST + torrent['url']
@@ -120,6 +120,21 @@ class AnilibriaTracker(GenericPublicTracker):
         if quality_str:
             return REGEX_NON_WORD.sub('', quality_str).lower()
         return ''
+
+    @staticmethod
+    def to_tuple(range_str: str):
+        """
+        Turn passed range_str into tuple of integers.
+        Examples:
+
+        * `to_tuple('1-10')` -> (1, 10)
+
+        :type range_str: str
+        :param range_str: series range string
+        :rtype Tuple[int, int]
+        :return: range as a tuple of integers
+        """
+        return tuple(map(int, range_str.split('-')))
 
 
 TrackerClassesRegistry.add(AnilibriaTracker)
