@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
+* Anilibria. Improved series range picking.
+
+
 v0.13.1 [2020-02-16]
 --------------------
 * Anilibria. Switched to API.
