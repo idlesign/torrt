@@ -1,8 +1,7 @@
 import logging
 
-from torrt.base_tracker import GenericPrivateTracker
-from torrt.utils import TrackerClassesRegistry
-
+from ..base_tracker import GenericPrivateTracker
+from ..utils import TrackerClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 

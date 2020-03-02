@@ -4,8 +4,9 @@ from urllib.parse import urljoin
 
 import requests
 
-from torrt.base_rpc import BaseRPC, TorrtRPCException
-from torrt.utils import RPCClassesRegistry
+from ..base_rpc import BaseRPC
+from ..exceptions import TorrtRPCException
+from ..utils import RPCClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 

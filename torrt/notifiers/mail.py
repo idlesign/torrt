@@ -2,8 +2,9 @@ import logging
 import socket
 from email.mime.text import MIMEText
 from smtplib import SMTP, SMTPAuthenticationError
-from torrt.base_notifier import BaseNotifier
-from torrt.utils import NotifierClassesRegistry
+
+from ..base_notifier import BaseNotifier
+from ..utils import NotifierClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 

@@ -1,15 +1,17 @@
 import logging
+
 import requests
 from requests import RequestException
 
-from torrt.base_notifier import BaseNotifier
-from torrt.utils import NotifierClassesRegistry
+from ..base_notifier import BaseNotifier
+from ..utils import NotifierClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
 
 class TelegramNotifier(BaseNotifier):
     """Telegram bot notifier. See instructions how to create bot at https://core.telegram.org/bots/api"""
+
     alias = 'telegram'
     url = 'https://api.telegram.org/bot'
 

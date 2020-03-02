@@ -1,83 +1,67 @@
-from torrt.utils import WithSettings, RPCObjectsRegistry
-from torrt.exceptions import TorrtException
+from typing import Dict, List
+
+from .utils import WithSettings, RPCObjectsRegistry
 
 
 class BaseRPC(WithSettings):
     """Base RPC class. All RPC classes should inherit from this."""
 
-    # class alias (required to work with registries)
-    alias = None
-    # entry name under which RPCs settings are stored
-    config_entry_name = 'rpc'
-    # mapping from torrent fields names in terms of RPC to field names in term of torrt
-    torrent_fields_map = {}
+    config_entry_name: str = 'rpc'
 
-    enabled = False
+    torrent_fields_map: Dict[str, str] = {}
+    """mapping from torrent fields names in terms of RPC to field names in term of torrt"""
+
+    enabled: bool = False
 
     def register(self):
-        """Adds this object into RPCObjectsRegistry.
+        """Adds this object into RPCObjectsRegistry."""
 
-        :return:
-        """
         RPCObjectsRegistry.add(self)
 
     @classmethod
-    def normalize_field_names(cls, torrent_info):
+    def normalize_field_names(cls, torrent_info: dict):
         """Translates from torrent fields names in terms of RPC to field names in term of torrt.
-        Updates accordingly a given torrent_info.
+        Updates accordingly a given torrent_info inplace.
 
-        :param torrent_info: dict
-        :return:
+        :param torrent_info:
+
         """
         for old_name, new_name in cls.torrent_fields_map.items():
             if old_name in torrent_info:
                 torrent_info[new_name] = torrent_info[old_name]
 
-    def method_get_torrents(self, hashes=None):
+    def method_get_torrents(self, hashes: List[str] = None) -> dict:
         """This should return a dictionary with torrents info from RPC.
         Each torrent info should be normalized (see normalize_field_names()).
 
-        :param hashes: list - torrent hashes
-        :return: dict
-        :rtype: dict
-        """
-        raise NotImplementedError(
-            '`%s` class must implement `method_get_torrents()` method.' % self.__class__.__name__)
+        :param hashes: torrent hashes
 
-    def method_add_torrent(self, torrent, download_to=None):
+        """
+        raise NotImplementedError  # pragma: nocover
+
+    def method_add_torrent(self, torrent: str, download_to: str = None):
         """Adds torrent to torrent client using RPC.
 
-        :param torrent: str - torrent file contents
-        :param download_to: str or None - path to download files from torrent into
-        (in terms of torrent client filesystem)
-        :return:
-        """
-        raise NotImplementedError(
-            '`%s` class must implement `method_add_torrent()` method.' % self.__class__.__name__)
+        :param torrent: torrent file contents
+        :param download_to: path to download files from torrent into (in terms of torrent client filesystem)
 
-    def method_remove_torrent(self, hash_str, with_data=False):
+        """
+        raise NotImplementedError  # pragma: nocover
+
+    def method_remove_torrent(self, hash_str: str, with_data: bool = False):
         """Removes torrent from torrent client using RPC.
 
-        :param hash_str: str - torrent identifying hash
-        :param with_data: bool - flag to also remove files from torrent
-        :return:
+        :param hash_str: torrent identifying hash
+        :param with_data: flag to also remove files from torrent
+
         """
-        raise NotImplementedError(
-            '`%s` class must implement `method_remove_torrent()` method.' % self.__class__.__name__)
+        raise NotImplementedError  # pragma: nocover
 
-    def method_get_version(self):
-        """Returns torrent client API version.
+    def method_get_version(self) -> str:
+        """Returns torrent client API version."""
 
-        :return: str
-        :rtype: str
-        """
-        raise NotImplementedError(
-            '`%s` class must implement `method_get_version()` method.' % self.__class__.__name__)
+        raise NotImplementedError  # pragma: nocover
 
-    def test_configuration(self):
+    def test_configuration(self) -> str:
         # This is to conform to common interface.
         return self.method_get_version()
-
-
-class TorrtRPCException(TorrtException):
-    """Base torrt RPC exception. All other RPC related exception should inherit from that."""

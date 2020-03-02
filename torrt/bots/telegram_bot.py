@@ -1,8 +1,8 @@
 import logging
 
-from torrt.base_bot import BaseBot
-from torrt.toolbox import add_torrent_from_url, get_registered_torrents, remove_torrent
-from torrt.utils import BotClassesRegistry, get_torrent_from_url, RPCObjectsRegistry
+from ..base_bot import BaseBot
+from ..toolbox import add_torrent_from_url, get_registered_torrents, remove_torrent
+from ..utils import BotClassesRegistry, get_torrent_from_url, RPCObjectsRegistry
 
 try:
     import telegram

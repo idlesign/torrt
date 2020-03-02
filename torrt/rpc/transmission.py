@@ -1,10 +1,11 @@
-import requests
-import logging
 import json
+import logging
 
-from torrt.base_rpc import BaseRPC, TorrtRPCException
-from torrt.utils import RPCClassesRegistry, base64encode
+import requests
 
+from ..base_rpc import BaseRPC
+from ..exceptions import TorrtRPCException
+from ..utils import RPCClassesRegistry, base64encode
 
 LOGGER = logging.getLogger(__name__)
 

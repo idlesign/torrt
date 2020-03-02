@@ -2,8 +2,8 @@ import logging
 import re
 from collections import defaultdict
 
-from torrt.base_tracker import GenericPublicTracker
-from torrt.utils import TrackerClassesRegistry
+from ..base_tracker import GenericPublicTracker
+from ..utils import TrackerClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
