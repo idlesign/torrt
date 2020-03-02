@@ -20,10 +20,6 @@ https://github.com/idlesign/torrt
     :target: https://coveralls.io/r/idlesign/torrt
 
 .. image:: https://img.shields.io/travis/idlesign/torrt/master.svg
-    :target: https://travis-ci.org/idlesign/torrt
-
-.. image:: https://landscape.io/github/idlesign/torrt/master/landscape.svg?style=plastic
-   :target: https://landscape.io/github/idlesign/torrt/master
 
 
 Description
