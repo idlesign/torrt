@@ -4,6 +4,7 @@ torrt changelog
 
 Unreleased
 ----------
+! Dropped support for Python 2.
 * Anilibria. Improved series range picking.
 
 

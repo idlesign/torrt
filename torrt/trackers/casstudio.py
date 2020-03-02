@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import logging
-import six
 
 from torrt.base_tracker import GenericPrivateTracker
 from torrt.utils import TrackerClassesRegistry
@@ -27,7 +24,7 @@ class CasstudioTracker(GenericPrivateTracker):
         self.cookies = index_page.cookies
         self.login_url += '&sid=%s' % sid
         return {'username': login, 'password': password, 'autologin': 'on',
-                'redirect': 'index.php', 'sid': sid, 'login': six.u('Вход')}
+                'redirect': 'index.php', 'sid': sid, 'login': 'Вход'}
 
     def get_download_link(self, url):
         """Tries to find .torrent file download link at forum thread page and return that one."""

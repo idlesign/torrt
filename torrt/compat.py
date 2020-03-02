@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
 """Cross-version compatibility library
 
 This module contains various version-bound function implementations.
 
-Todo:
-    * Split this module into multiple files, if it's length exceeds 100 LOC
-
 """
-import six
 import base64
 
 
@@ -22,31 +17,16 @@ def encode_value(value, encoding=None):
     if encoding is None:
         return value
 
-    if six.PY2:
-        value = unicode(value, 'UTF-8')
-
     return value.encode(encoding)
 
 
-if six.PY3:
+def base64encode(string_or_bytes):
+    """Return base64 encoded input
 
-    def base64encode(string_or_bytes):
-        """Return base64 encoded input
+    :param string_or_bytes:
+    :return: bytes
+    """
+    if isinstance(string_or_bytes, str):
+        string_or_bytes = string_or_bytes.encode('utf-8')
 
-        :param string_or_bytes:
-        :return: bytes
-        """
-        if isinstance(string_or_bytes, str):
-            string_or_bytes = string_or_bytes.encode('utf-8')
-
-        return base64.encodebytes(string_or_bytes).decode('ascii').encode('utf-8')
-
-else:
-
-    def base64encode(string_or_bytes):
-        """Return base64 encoded input
-
-        :param string_or_bytes:
-        :return: bytes
-        """
-        return base64.encodestring(string_or_bytes)
+    return base64.encodebytes(string_or_bytes).decode('ascii').encode('utf-8')

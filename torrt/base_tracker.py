@@ -3,9 +3,9 @@ import re
 from datetime import datetime
 from functools import partial
 from itertools import chain
+from urllib.parse import urlparse, urljoin
 
 import requests
-from six.moves.urllib.parse import urlparse, urljoin, parse_qs
 
 from torrt.exceptions import TorrtException
 from torrt.utils import parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, dump_contents

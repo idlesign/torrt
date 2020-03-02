@@ -1,11 +1,11 @@
-import requests
-import logging
 import json
+import logging
+from urllib.parse import urljoin
 
-from six.moves.urllib.parse import urljoin
+import requests
+
 from torrt.base_rpc import BaseRPC, TorrtRPCException
 from torrt.utils import RPCClassesRegistry
-
 
 LOGGER = logging.getLogger(__name__)
 

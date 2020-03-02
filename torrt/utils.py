@@ -13,7 +13,6 @@ except ImportError:
     from inspect import getargspec as getfullargspec
 
 
-import six
 from bs4 import BeautifulSoup
 from torrentool.api import Torrent
 
@@ -207,7 +206,7 @@ def update_dict(old_dict, new_dict):
     :return: updated dict
     :rtype: dict
     """
-    for key, val in six.iteritems(new_dict):
+    for key, val in new_dict.items():
 
         if isinstance(val, Mapping):
             old_dict[key] = update_dict(old_dict.get(key, {}), val)

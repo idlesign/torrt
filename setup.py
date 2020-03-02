@@ -44,7 +44,6 @@ setup(
         'beautifulsoup4',
         'torrentool',
         'lxml',
-        'six',
     ],
     setup_requires=[] + (['pytest-runner'] if 'test' in sys.argv else []) + [],
 
