@@ -22,6 +22,15 @@ def test_sanitize_quantity(test_input, expected):
     assert AnilibriaTracker.sanitize_quality(test_input) == expected
 
 
+@pytest.mark.parametrize("test_input,expected", [
+    ('1-9', (1, 9)),
+    ('1-10', (1, 10)),
+    ('21-39', (21, 39)),
+])
+def test_to_tuple(test_input, expected):
+    assert AnilibriaTracker.to_tuple(test_input) == expected
+
+
 def test_get_download_link_preserve_priorities(monkeypatch):
     """
     Test that `get_download_link` returns link according user-defined quality priorities
