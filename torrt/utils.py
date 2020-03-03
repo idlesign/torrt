@@ -1,25 +1,24 @@
+import base64
 import json
 import logging
 import os
 import re
 import threading
-from collections import Mapping
+from collections import Mapping, namedtuple
 from datetime import datetime
+from inspect import getfullargspec
 from pkgutil import iter_modules
-
-try:
-    from inspect import getfullargspec
-except ImportError:
-    from inspect import getargspec as getfullargspec
-
+from typing import Any, Optional, Union, Generator, Tuple
 
 from bs4 import BeautifulSoup
+from requests import Response
 from torrentool.api import Torrent
-
-from torrt.compat import encode_value, base64encode  # Exposed as common API.
 
 if False:  # pragma: nocover
     from .base_tracker import GenericTracker
+    from .base_rpc import BaseRPC
+    from .base_bot import BaseBot
+    from .base_notifier import BaseNotifier
 
 
 LOGGER = logging.getLogger(__name__)
@@ -30,25 +29,50 @@ _THREAD_LOCAL = threading.local()
 RE_LINK = re.compile(r'(?P<url>https?://[^\s]+)')
 
 
-class GlobalParam(object):
+def encode_value(value: str, encoding: str = None) -> Union[str, bytes]:
+    """Encodes a value.
+
+    :param value:
+    :param encoding: Encoding charset.
+
+    """
+    if encoding is None:
+        return value
+
+    return value.encode(encoding)
+
+
+def base64encode(string_or_bytes: Union[str, bytes]) -> bytes:
+    """Return base64 encoded input
+
+    :param string_or_bytes:
+
+    """
+    if isinstance(string_or_bytes, str):
+        string_or_bytes = string_or_bytes.encode()
+
+    return base64.encodebytes(string_or_bytes).decode('ascii').encode()
+
+
+class GlobalParam:
     """Represents global parameter value holder.
     Global params can used anywhere in torrt.
 
     """
     @staticmethod
-    def set(name, value):
+    def set(name: str, value: Any):
         setattr(_THREAD_LOCAL, name, value)
 
     @staticmethod
-    def get(name):
+    def get(name: str) -> Any:
         return getattr(_THREAD_LOCAL, name, None)
 
 
-def dump_contents(filename, contents):
+def dump_contents(filename: str, contents: Union[bytes, Response]):
     """Dumps contents into a file with a given name.
 
     :param filename:
-    :param bytes contents:
+    :param contents:
 
     """
     dump_into = GlobalParam.get('dump_into')
@@ -68,15 +92,15 @@ def dump_contents(filename, contents):
         f.write(text)
 
 
-def configure_entity(type_name, registry, alias, settings_dict=None):
+def configure_entity(type_name: str, registry, alias: str, settings_dict: dict = None) -> Optional['WithSettings']:
     """Configures and spawns objects using given settings.
 
     Successful configuration is saved.
 
-    :param str|unicode type_name: Entity type name to be used in massages.
+    :param type_name: Entity type name to be used in massages.
     :param registry: Registry object.
-    :param str|unicode alias: Entity alias.
-    :param dict settings_dict: Settings dictionary to configure object with.
+    :param alias: Entity alias.
+    :param settings_dict: Settings dictionary to configure object with.
 
     """
     LOGGER.info('Configuring `%s` %s ...', alias, type_name.lower())
@@ -102,10 +126,8 @@ def configure_entity(type_name, registry, alias, settings_dict=None):
 
 
 def import_classes():
-    """Dynamically imports RPC classes and tracker handlers from their directories.
+    """Dynamically imports RPC classes and tracker handlers from their directories."""
 
-    :return:
-    """
     LOGGER.debug('Importing RPC classes ...')
     import_from_path('rpc')
 
@@ -119,25 +141,31 @@ def import_classes():
     import_from_path('bots')
 
 
-def import_from_path(path):
+def import_from_path(path: str):
     """Dynamically imports modules from package.
     It is an .egg-friendly alternative to os.listdir() walking.
 
-    :param path: str - path under torrt
-    :return:
+    :param path: path under torrt
+
     """
     for _, pname, ispkg in iter_modules([os.path.join(os.path.dirname(__file__), path)]):
         __import__('torrt.%s.%s' % (path, pname))
 
 
-def parse_torrent(torrent):
+def parse_torrent(torrent: bytes) -> dict:
     """Returns a dictionary with basic information from torrent contents.
 
+        keys:
+            * hash;
+            * name;
+            * files;
+            * torrent (torrent file contents just from input).
+
     :param torrent:
-    :return: torrent info dict - keys: hash; name; files; torrent (torrent file contents just from input).
-    :rtype: dict
+
     """
     torrent_info = Torrent.from_string(torrent)
+
     files_from_torrent = [a_file[0] for a_file in torrent_info.files]
     info = {
         'hash': str(torrent_info.info_hash),
@@ -148,34 +176,33 @@ def parse_torrent(torrent):
     return info
 
 
-def parse_torrent_file(filepath):
+def parse_torrent_file(filepath: str) -> dict:
     """Reads a torrent file from filesystem and returns information about it.
 
-    :param filepath: str
-    :return: file contents
-    :rtype: str
+    :param filepath:
+
     """
+
     with open(filepath, 'rb') as f:
         contents = f.read()
+
     return parse_torrent(contents)
 
 
-def make_soup(html):
+def make_soup(html: str) -> BeautifulSoup:
     """Returns BeautifulSoup object from a html.
 
-    :param html: str
-    :return: object
-    :rtype: BeautifulSoup
+    :param html:
+
     """
     return BeautifulSoup(html, 'lxml')
 
 
-def get_url_from_string(string):
+def get_url_from_string(string: str) -> str:
     """Returns URL from a string, e.g. torrent comment.
 
     :param string:
-    :return: url
-    :rtype: str
+
     """
     match = RE_LINK.search(string)
 
@@ -188,23 +215,21 @@ def get_url_from_string(string):
     return match
 
 
-def get_iso_from_timestamp(ts):
+def get_iso_from_timestamp(ts: int) -> str:
     """Get ISO formatted string from timestamp.
 
-    :param ts: int - timestamp
-    :return: string
-    :rtype: str
+    :param ts: timestamp
+
     """
     return datetime.fromtimestamp(ts).isoformat(' ')
 
 
-def update_dict(old_dict, new_dict):
-    """Updates old dictionary with data from a new one with respect to existing values.
+def update_dict(old_dict: dict, new_dict: dict) -> dict:
+    """Updates [inplace] old dictionary with data from a new one with respect to existing values.
 
     :param old_dict:
     :param new_dict:
-    :return: updated dict
-    :rtype: dict
+
     """
     for key, val in new_dict.items():
 
@@ -217,14 +242,14 @@ def update_dict(old_dict, new_dict):
     return old_dict
 
 
-def structure_torrent_data(target_dict, hash_str, data):
+def structure_torrent_data(target_dict: dict, hash_str: str, data: dict):
     """Updated target dict with torrent data structured suitably
     for config storage.
 
-    :param target_dict: dict - dictionary to update
-    :param hash_str: str - torrent identifying hash
-    :param data: dict - torrent data received from RPC (see parse_torrent())
-    :return:
+    :param target_dict: dictionary to update inplace
+    :param hash_str: torrent identifying hash
+    :param data: torrent data received from RPC (see parse_torrent())
+
     """
     data = dict(data)
 
@@ -244,12 +269,11 @@ def structure_torrent_data(target_dict, hash_str, data):
     }
 
 
-def get_torrent_from_url(url):
+def get_torrent_from_url(url: Optional[str]) -> Optional[dict]:
     """Downloads torrent from a given URL and returns it as string.
 
-    :param url: str or None
-    :return: torrent contents
-    :rtype: str
+    :param url:
+
     """
     LOGGER.debug('Downloading torrent file from `%s` ...', url)
 
@@ -271,11 +295,10 @@ def get_torrent_from_url(url):
     return None
 
 
-def iter_rpc():
+def iter_rpc() -> Generator[Tuple[str, 'BaseRPC'], None, None]:
     """Generator to iterate through available and enable RPC objects.
+        tuple - rpc_alias, rpc_object
 
-    :return: tuple - rpc_alias, rpc_object
-    :rtype: tuple
     """
     rpc_objects = RPCObjectsRegistry.get()
 
@@ -292,11 +315,10 @@ def iter_rpc():
         yield rpc_alias, rpc_object
 
 
-def iter_bots():
+def iter_bots() -> Generator[Tuple[str, 'BaseBot'], None, None]:
     """Generator to iterate through available bots objects.
+        tuple - bot_alias, bot_object
 
-    :return: tuple - bot_alias, bot_object
-    :rtype: tuple
     """
     bot_objects = BotObjectsRegistry.get()
 
@@ -304,14 +326,14 @@ def iter_bots():
         LOGGER.error('No Bot objects registered, unable to proceed')
         return
 
-    return bot_objects.items()
+    for alias, object in bot_objects.items():
+        yield alias, object
 
 
-def iter_notifiers():
+def iter_notifiers() -> Generator[Tuple[str, 'BaseNotifier'], None, None]:
     """Generator to iterate through available notifier objects.
+        tuple - notifier_alias, notifier_object
 
-    :return: tuple - notifier_alias, notifier_object
-    :rtype: tuple
     """
     notifier_objects = NotifierObjectsRegistry.get()
 
@@ -324,7 +346,7 @@ def iter_notifiers():
         yield notifier_alias, notifier_object
 
 
-class WithSettings(object):
+class WithSettings:
     """Introduces settings support for class objects.
 
     NB: * Settings names are taken from inheriting classes __init__() methods.
@@ -333,26 +355,25 @@ class WithSettings(object):
 
     """
 
-    config_entry_name = None
-    settings = {}
-    alias = None
+    alias: str = None
+
+    config_entry_name: str = None
+    settings: dict = {}
 
     @classmethod
-    def spawn_with_settings(cls, settings):
+    def spawn_with_settings(cls, settings: dict) -> 'WithSettings':
         """Spawns and returns object initialized with given settings.
 
         :param settings:
-        :return: object
+
         """
         LOGGER.debug('Spawning `%s` object with the given settings ...', cls.__name__)
 
         return cls(**settings)
 
     def save_settings(self):
-        """Saves object settings into torrt configuration file.
+        """Saves object settings into torrt configuration file."""
 
-        :return:
-        """
         settings = {}
 
         try:
@@ -369,7 +390,7 @@ class WithSettings(object):
         config.update({self.config_entry_name: {self.alias: settings}})
 
 
-class TorrtConfig(object):
+class TorrtConfig:
     """Gives methods to work with torrt configuration file."""
 
     USER_DATA_PATH = os.path.join(os.path.expanduser('~'), '.torrt')
@@ -386,11 +407,11 @@ class TorrtConfig(object):
     }
 
     @classmethod
-    def drop_section(cls, realm, key):
+    def drop_section(cls, realm: str, key: str):
         """Drops config section by its key (name) and updates config.
 
-        :param str|unicode realm:
-        :param str|unicode key:
+        :param realm:
+        :param key:
 
         """
         try:
@@ -403,10 +424,8 @@ class TorrtConfig(object):
 
     @classmethod
     def bootstrap(cls):
-        """Initializes configuration file if needed,
+        """Initializes configuration file if needed."""
 
-        :return:
-        """
         if not os.path.exists(cls.USER_DATA_PATH):
             os.makedirs(cls.USER_DATA_PATH)
 
@@ -417,21 +436,18 @@ class TorrtConfig(object):
         os.chmod(cls.USER_SETTINGS_FILE, 0o600)
 
     @classmethod
-    def update(cls, settings_dict):
+    def update(cls, settings_dict: dict):
         """Updates configuration file with given settings.
 
-        :param settings_dict: dict
-        :return:
+        :param settings_dict:
+
         """
         cls.save(update_dict(cls.load(), settings_dict))
 
     @classmethod
-    def load(cls):
-        """Returns current settings dictionary.
+    def load(cls) -> dict:
+        """Returns current settings dictionary."""
 
-        :return: settings dict
-        :rtype: dict
-        """
         LOGGER.debug('Loading configuration file %s ...', cls.USER_SETTINGS_FILE)
 
         cls.bootstrap()
@@ -448,11 +464,11 @@ class TorrtConfig(object):
         return settings
 
     @classmethod
-    def save(cls, settings_dict):
+    def save(cls, settings_dict: dict):
         """Saves a given dict as torrt configuration.
 
-        :param settings_dict: dict
-        :return:
+        :param settings_dict:
+
         """
         LOGGER.debug('Saving configuration file %s ...', cls.USER_SETTINGS_FILE)
 
@@ -463,43 +479,44 @@ class TorrtConfig(object):
 config = TorrtConfig
 
 
-class ObjectsRegistry(object):
+class ObjectsRegistry:
 
     __slots__ = ['_items']
 
     def __init__(self):
         self._items = {}
 
-    def add(self, obj):
+    def add(self, obj: Any):
         """Add an object to registry.
 
         NB: object MUST have `alias` attribute.
 
-        :param obj: object
-        :return:
+        :param obj:
+
         """
         name = getattr(obj, 'alias')
+
         LOGGER.debug('Registering `%s` from %s ...', name, obj)
+
         self._items[name] = obj
 
-    def get(self, obj_alias=None):
-        """Returns registered objects or a definite object by its alias.
+    def get(self, obj_alias: str = None) -> Union[dict, Any]:
+        """Returns registered objects or a definite object by its alias,
+        or registry items if no alias provided.
 
-        :param obj_alias: str or None
-        :return: dict or object
-        :rtype: dict or object
+        :param obj_alias:
+
         """
         if obj_alias is None:
             return self._items
 
         return self._items.get(obj_alias)
 
-    def get_for_string(self, string):
+    def get_for_string(self, string: str) -> Optional[Any]:
         """Returns registered object which can handle a given string.
 
-        :param string: str
-        :return: object or None
-        :rtype: object or None
+        :param string:
+
         """
         for name, obj in self._items.items():
             can_handle_method = getattr(obj, 'can_handle', None)
