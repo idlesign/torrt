@@ -1,4 +1,5 @@
 import logging
+from typing import List, Any
 from urllib.parse import urljoin
 
 import requests
@@ -16,11 +17,19 @@ class UTorrentRPC(BaseRPC):
     idle sign: What a shame - uTorrent API is a load of mess.
 
     """
+    alias: str = 'utorrent'
 
-    alias = 'utorrent'
-    token_page_path = 'token.html'
+    token_page_path: str = 'token.html'
 
-    def __init__(self, url=None, host='localhost', port=8080, user=None, password=None, enabled=False):
+    def __init__(
+            self,
+            url: str = None,
+            host: str = 'localhost',
+            port: int = 8080,
+            user: str = None,
+            password: str = None,
+            enabled: bool = False
+    ):
         self.cookies = {}
         self.user = user
         self.password = password
@@ -28,45 +37,64 @@ class UTorrentRPC(BaseRPC):
         self.host = host
         self.port = port
         self.csrf_token = ''
+
         if url is not None:
             self.url = url
+
         else:
             self.url = 'http://%s:%s/gui/' % (host, port)
 
     def login(self):
+
         try:
             response = requests.get(
                 urljoin(self.url, self.token_page_path),
                 auth=(self.user, self.password),
                 cookies=self.cookies
             )
+
             self.csrf_token = make_soup(response.text).find(id='token').text
+
             if not self.csrf_token:
                 raise UTorrentRPCException('Unable to fetch CSRF token.')
-            self.cookies = response.cookies
-        except Exception as e:
-            LOGGER.error('Failed to login using `%s` RPC: %s', self.url, e.message)
-            raise UTorrentRPCException(e.message)
 
-    def build_params(self, action=None, params=None):
+            self.cookies = response.cookies
+
+        except Exception as e:
+
+            LOGGER.error('Failed to login using `%s` RPC: %s', self.url, e)
+            raise UTorrentRPCException(str(e))
+
+    def build_params(self, action: str = None, params: dict = None) -> dict:
+
         document = {'action': action}
+
         if params is not None:
             document.update(params)
+
         return document
 
-    def get_request_url(self, params):
+    def get_request_url(self, params: dict) -> str:
+
         rest = []
         join = lambda l: '&'.join(l)
+
         for param_name, param_val in params.items():
+
             if param_val is None:
                 continue
+
             val = param_val
+
             if isinstance(param_val, list):
                 val = join(param_val)
+
             rest.append('%s=%s' % (param_name, val))
+
         return '%s?token=%s&%s' % (self.url,  self.csrf_token, join(rest))
 
-    def query(self, data, files=None):
+    def query(self, data: dict, files: dict = None):
+
         LOGGER.debug('RPC action `%s` ...', data['action'] or 'list')
 
         if not self.cookies:
@@ -79,48 +107,62 @@ class UTorrentRPC(BaseRPC):
         }
 
         method = requests.get
+
         if files is not None:
             method = requests.post
             request_kwargs['files'] = files
 
         try:
             response = method(url, auth=(self.user, self.password), **request_kwargs)
+
             if response.status_code != 200:
                 raise UTorrentRPCException(response.text.strip())
+
         except Exception as e:
-            LOGGER.error('Failed to query RPC `%s`: %s', url, e.message)
-            raise UTorrentRPCException(e.message)
+
+            LOGGER.error('Failed to query RPC `%s`: %s', url, e)
+            raise UTorrentRPCException(str(e))
+
         response = response.json()
 
         return response
 
-    def method_get_torrents(self, hashes=None):
+    def method_get_torrents(self, hashes: List[str] = None) -> List[dict]:
+
         result = self.query(self.build_params(params={'list': 1}))
 
-        torrents_info = {}
+        torrents_info = []
+
         for torrent_data in result['torrents']:
-            if hashes is None or torrent_data[0] in hashes:
-                torrents_info[torrent_data[0]] = {
-                    'hash': torrent_data[0],
+            hash_ = torrent_data[0]
+
+            if hashes is None or hash_ in hashes:
+
+                torrents_info.append({
+                    'hash': hash_,
                     'name': torrent_data[2],
                     'download_to': torrent_data[26]
-                }
+                })
 
         return torrents_info
 
-    def method_add_torrent(self, torrent, download_to=None):
+    def method_add_torrent(self, torrent: bytes, download_to: str = None) -> Any:
+
         # NB: `download_to` is ignored, as existing API approach to it is crippled.
         file_data = {'torrent_file': ('from_torrt.torrent', torrent)}
+
         return self.query(self.build_params(action='add-file'), file_data)
 
-    def method_remove_torrent(self, hash_str, with_data=False):
+    def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
+
         action = 'remove'
+
         if with_data:
             action = 'removedata'
-        self.query(self.build_params(action=action, params={'hash': hash_str}))
-        return True
 
-    def method_get_version(self):
+        return self.query(self.build_params(action=action, params={'hash': hash_str}))
+
+    def method_get_version(self) -> str:
         result = self.query(self.build_params(action='getversion'))
         return result['version']['ui_version']
 

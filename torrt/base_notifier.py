@@ -23,10 +23,10 @@ class BaseNotifier(WithSettings):
         """
         raise NotImplementedError  # pragma: nocover
 
-    def make_message(self, torrent_data):
+    def make_message(self, torrent_data: dict) -> str:
         """Creates message in format suitable for notifier backend
 
-        :param: torrent_data: dict - dictionary with updated torrents data during the walk operation
+        :param: torrent_data: dictionary with updated torrents data during the walk operation
 
         """
         raise NotImplementedError  # pragma: nocover

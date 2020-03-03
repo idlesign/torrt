@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 
 from .utils import WithSettings, RPCObjectsRegistry
 
@@ -30,7 +30,7 @@ class BaseRPC(WithSettings):
             if old_name in torrent_info:
                 torrent_info[new_name] = torrent_info[old_name]
 
-    def method_get_torrents(self, hashes: List[str] = None) -> dict:
+    def method_get_torrents(self, hashes: List[str] = None) -> List[dict]:
         """This should return a dictionary with torrents info from RPC.
         Each torrent info should be normalized (see normalize_field_names()).
 
@@ -39,7 +39,7 @@ class BaseRPC(WithSettings):
         """
         raise NotImplementedError  # pragma: nocover
 
-    def method_add_torrent(self, torrent: str, download_to: str = None):
+    def method_add_torrent(self, torrent: bytes, download_to: str = None) -> Any:
         """Adds torrent to torrent client using RPC.
 
         :param torrent: torrent file contents
@@ -48,7 +48,7 @@ class BaseRPC(WithSettings):
         """
         raise NotImplementedError  # pragma: nocover
 
-    def method_remove_torrent(self, hash_str: str, with_data: bool = False):
+    def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
         """Removes torrent from torrent client using RPC.
 
         :param hash_str: torrent identifying hash

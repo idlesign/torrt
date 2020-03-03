@@ -259,6 +259,7 @@ class BaseTracker(WithSettings):
         """
         if not link.startswith('http'):
             link = urljoin(base_url, link)
+
         return link
 
     def test_configuration(self) -> bool:
@@ -296,7 +297,7 @@ class GenericTracker(BaseTracker):
         torrent_data = None
         download_link = self.get_download_link(url)
 
-        if download_link is None:
+        if not download_link:
             LOGGER.error('Cannot find torrent file download link at %s', url)
 
         else:

@@ -1,7 +1,8 @@
-import json
 import logging
+from typing import Dict, Any, Union, List
 
 import requests
+from requests import Response
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
@@ -13,39 +14,56 @@ LOGGER = logging.getLogger(__name__)
 class TransmissionRPC(BaseRPC):
     """See https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt for protocol spec details"""
 
-    csrf_header = 'X-Transmission-Session-Id'
-    session_id = None
-    alias = 'transmission'
-    torrent_fields_map = {
+    csrf_header: str = 'X-Transmission-Session-Id'
+    session_id: str = ''
+
+    alias: str = 'transmission'
+
+    torrent_fields_map: Dict[str, str] = {
         'hashString': 'hash',
         'downloadDir': 'download_to',
     }
 
-    def __init__(self, url=None, host='localhost', port=9091, user=None, password=None, enabled=False):
+    def __init__(
+            self,
+            url: str = None,
+            host: str = 'localhost',
+            port: int = 9091,
+            user: str = None,
+            password: str = None,
+            enabled: bool = False
+    ):
         self.user = user
         self.password = password
         self.enabled = enabled
         self.host = host
         self.port = port
+
         if url is not None:
             self.url = url
+
         else:
             self.url = 'http://%s:%s/transmission/rpc' % (host, port)
 
-    def query_(self, data):
+    def query_(self, data: dict) -> Response:
+
         try:
             response = requests.post(
                 self.url,
                 auth=(self.user, self.password),
-                data=json.dumps(data),
+                json=data,
                 headers={self.csrf_header: self.session_id}
             )
+
         except requests.exceptions.RequestException as e:
-            LOGGER.error('Failed to query RPC `%s`: %s', self.url, e.message)
-            raise TransmissionRPCException(e.message)
+
+            LOGGER.error('Failed to query RPC `%s`: %s', self.url, e)
+            raise TransmissionRPCException(str(e))
+
         return response
 
-    def query(self, data):
+    def query(self, data: dict) -> Any:
+
         LOGGER.debug('RPC method `%s` ...', data['method'])
 
         response = self.query_(data)
@@ -62,48 +80,61 @@ class TransmissionRPC(BaseRPC):
         return response['arguments']
 
     @staticmethod
-    def build_request_payload(method, arguments=None, tag=None):
+    def build_request_payload(method: str, arguments: Union[dict, list] = None, tag: str = None) -> dict:
+
         document = {'method': method}
+
         if arguments is not None:
             document.update({'arguments': arguments})
+
         if tag is not None:
             document.update({'tag': tag})
+
         return document
 
-    def method_get_torrents(self, hashes=None):
+    def method_get_torrents(self, hashes: List[str] = None) -> List[dict]:
+
         fields = [
             'id',
             'name',
             'hashString',
             'comment',
-            'downloadDir'
+            'downloadDir',
         ]
+
         args = {'fields': fields}
+
         if hashes is not None:
             args.update({'ids': hashes})
 
         result = self.query(self.build_request_payload('torrent-get', args))
+
         for torrent_info in result['torrents']:
             self.normalize_field_names(torrent_info)
+
         return result['torrents']
 
-    def method_add_torrent(self, torrent, download_to=None):
+    def method_add_torrent(self, torrent: bytes, download_to: str = None) -> Any:
+
         args = {
-            'metainfo': base64encode(torrent).decode('utf-8'),
+            'metainfo': base64encode(torrent).decode(),
         }
+
         if download_to is not None:
             args['download-dir'] = download_to
-        return self.query(self.build_request_payload('torrent-add', args))  # torrent-added
 
-    def method_remove_torrent(self, hash_str, with_data=False):
+        return self.query(self.build_request_payload('torrent-add', args))
+
+    def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
+
         args = {
             'ids': [hash_str],
             'delete-local-data': with_data
         }
-        self.query(self.build_request_payload('torrent-remove', args))
-        return True
 
-    def method_get_version(self):
+        return self.query(self.build_request_payload('torrent-remove', args))
+
+    def method_get_version(self) -> str:
         result = self.query(self.build_request_payload('session-get', ['rpc-version-minimum']))
         return result['rpc-version-minimum']
 
