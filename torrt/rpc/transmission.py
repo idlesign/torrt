@@ -113,16 +113,16 @@ class TransmissionRPC(BaseRPC):
 
         for torrent_info in result['torrents']:
             self.normalize_field_names(torrent_info)
-            torrent_info['excluded_files'] = self.__get_unwanted_files(torrent_info)
+            torrent_info['exclude_files'] = self.__get_unwanted_files(torrent_info)
 
         return result['torrents']
 
-    def method_add_torrent(self, torrent: bytes, download_to: str = None, excluded_files: List[str] = None) -> Any:
+    def method_add_torrent(self, torrent: bytes, download_to: str = None, exclude_files: List[str] = None) -> Any:
         args = {
             'metainfo': base64encode(torrent).decode(),
         }
 
-        if excluded_files:
+        if exclude_files:
             # REVIEW: I don't have good idea on how not to parse torrent again.
             # We can pass list of indices, so we don't need to parse torrent again.
             # But I think list of file names is more generic then list of file indices
@@ -130,7 +130,7 @@ class TransmissionRPC(BaseRPC):
             torrent = parse_torrent(torrent)
             excluded_indices = []
             for i, f in enumerate(torrent['files']):
-                if f in excluded_files:
+                if f in exclude_files:
                     excluded_indices.append(i)
 
             if not excluded_indices:

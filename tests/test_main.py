@@ -39,7 +39,7 @@ class DummyRPC(BaseRPC):
         self.enabled = enabled
         self.torrents = {}
 
-    def method_add_torrent(self, torrent, download_to=None, excluded_files: List[str] = None):
+    def method_add_torrent(self, torrent, download_to=None, exclude_files: List[str] = None):
         parsed = Torrent.from_string(torrent)
         self.torrents[parsed.info_hash] = parsed
 

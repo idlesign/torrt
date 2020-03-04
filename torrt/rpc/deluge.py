@@ -131,7 +131,7 @@ class DelugeRPC(BaseRPC):
 
         return result['torrents']
 
-    def method_add_torrent(self, torrent: bytes, download_to: str = None, excluded_files: List[str] = None) -> Any:
+    def method_add_torrent(self, torrent: bytes, download_to: str = None, exclude_files: List[str] = None) -> Any:
 
         torrent_dump = base64encode(torrent).decode()
 

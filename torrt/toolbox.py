@@ -377,7 +377,7 @@ def update_torrents(hashes: Dict[str, dict], remove_outdated: bool = True) -> Di
                 rpc_object.method_add_torrent(
                     new_torrent['torrent'],
                     existing_torrent['download_to'],
-                    excluded_files=existing_torrent.get('excluded_files', None)
+                    exclude_files=existing_torrent.get('exclude_files', None)
                 )
                 new_torrent['url'] = page_url
 
