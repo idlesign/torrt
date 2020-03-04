@@ -183,9 +183,9 @@ class QBittorrentRPC(BaseRPC):
 
         return torrents_info
 
-    def method_add_torrent(self, torrent: bytes, download_to: str = None, exclude_files: List[str] = None) -> Any:
+    def method_add_torrent(self, torrent: dict, download_to: str = None, params: dict = None) -> Any:
 
-        file_data = {'torrents': torrent}
+        file_data = {'torrents': torrent['torrent']}
 
         if download_to is not None:
             file_data.update({'savepath': download_to})

@@ -113,25 +113,31 @@ class TransmissionRPC(BaseRPC):
 
         for torrent_info in result['torrents']:
             self.normalize_field_names(torrent_info)
-            torrent_info['exclude_files'] = self.__get_unwanted_files(torrent_info)
+            files = {}
+            for idx in range(len(torrent_info['files'])):
+                filename = torrent_info['files'][idx]['name']
+                stats = torrent_info['fileStats'][idx]
+
+                files[filename] = {'name': filename, 'exclude': not stats['wanted'], 'priority': stats['priority']}
+
+            torrent_info['params'] = {'files': files}
+
+            del torrent_info['files']
+            del torrent_info['fileStats']
 
         return result['torrents']
 
-    def method_add_torrent(self, torrent: bytes, download_to: str = None, exclude_files: List[str] = None) -> Any:
+    def method_add_torrent(self, torrent: dict, download_to: str = None, params: dict = None) -> Any:
         args = {
-            'metainfo': base64encode(torrent).decode(),
+            'metainfo': base64encode(torrent['torrent']).decode(),
         }
 
-        if exclude_files:
-            # REVIEW: I don't have good idea on how not to parse torrent again.
-            # We can pass list of indices, so we don't need to parse torrent again.
-            # But I think list of file names is more generic then list of file indices
-            # and RPC implementation must adapt the list accordingly
-            torrent = parse_torrent(torrent)
+        if params:
             excluded_indices = []
-            for i, f in enumerate(torrent['files']):
-                if f in exclude_files:
-                    excluded_indices.append(i)
+            for idx, filename in enumerate(torrent['files']):
+                file_info: dict = params.get(filename, None)
+                if file_info and file_info.get('exclude', False):
+                    excluded_indices.append(idx)
 
             if not excluded_indices:
                 args['files-unwanted'] = excluded_indices
@@ -153,14 +159,6 @@ class TransmissionRPC(BaseRPC):
     def method_get_version(self) -> str:
         result = self.query(self.build_request_payload('session-get', ['rpc-version-minimum']))
         return result['rpc-version-minimum']
-
-    @staticmethod
-    def __get_unwanted_files(torrent_info):
-        result = []
-        for i, file_stat in enumerate(torrent_info['fileStats']):
-            if not file_stat['wanted']:
-                result.append(torrent_info['files'][i]['name'])
-        return result
 
 
 class TransmissionRPCException(TorrtRPCException):
