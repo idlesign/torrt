@@ -6,7 +6,7 @@ from requests import Response
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import RPCClassesRegistry, base64encode
+from ..utils import RPCClassesRegistry, base64encode, parse_torrent
 
 LOGGER = logging.getLogger(__name__)
 
@@ -100,6 +100,8 @@ class TransmissionRPC(BaseRPC):
             'hashString',
             'comment',
             'downloadDir',
+            'files',
+            'fileStats',
         ]
 
         args = {'fields': fields}
@@ -111,14 +113,34 @@ class TransmissionRPC(BaseRPC):
 
         for torrent_info in result['torrents']:
             self.normalize_field_names(torrent_info)
+            files = {}
+            for idx in range(len(torrent_info['files'])):
+                filename = torrent_info['files'][idx]['name']
+                stats = torrent_info['fileStats'][idx]
+
+                files[filename] = {'name': filename, 'exclude': not stats['wanted'], 'priority': stats['priority']}
+
+            torrent_info['params'] = {'files': files}
+
+            del torrent_info['files']
+            del torrent_info['fileStats']
 
         return result['torrents']
 
-    def method_add_torrent(self, torrent: bytes, download_to: str = None) -> Any:
-
+    def method_add_torrent(self, torrent: dict, download_to: str = None, params: dict = None) -> Any:
         args = {
-            'metainfo': base64encode(torrent).decode(),
+            'metainfo': base64encode(torrent['torrent']).decode(),
         }
+
+        if params:
+            excluded_indices = []
+            for idx, filename in enumerate(torrent['files']):
+                file_info: dict = params.get(filename, None)
+                if file_info and file_info.get('exclude', False):
+                    excluded_indices.append(idx)
+
+            if not excluded_indices:
+                args['files-unwanted'] = excluded_indices
 
         if download_to is not None:
             args['download-dir'] = download_to

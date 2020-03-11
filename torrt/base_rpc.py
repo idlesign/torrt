@@ -39,11 +39,12 @@ class BaseRPC(WithSettings):
         """
         raise NotImplementedError  # pragma: nocover
 
-    def method_add_torrent(self, torrent: bytes, download_to: str = None) -> Any:
+    def method_add_torrent(self, torrent: dict, download_to: str = None, params: dict = None) -> Any:
         """Adds torrent to torrent client using RPC.
 
-        :param torrent: torrent file contents
+        :param torrent: torrent info
         :param download_to: path to download files from torrent into (in terms of torrent client filesystem)
+        :param params: optional information attached to torrent that should be saved
 
         """
         raise NotImplementedError  # pragma: nocover

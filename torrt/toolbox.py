@@ -210,8 +210,7 @@ def add_torrent_from_url(url: str, download_to: str = None):
     else:
 
         for rpc_alias, rpc_object in iter_rpc():
-
-            rpc_object.method_add_torrent(torrent_data['torrent'], download_to=download_to)
+            rpc_object.method_add_torrent(torrent_data, download_to=download_to)
             register_torrent(torrent_data['hash'], torrent_data, url)
 
             LOGGER.info('Torrent from `%s` is added within `%s`', url, rpc_alias)
@@ -375,7 +374,11 @@ def update_torrents(hashes: Dict[str, dict], remove_outdated: bool = True) -> Di
             LOGGER.debug('    Update is available')
 
             try:
-                rpc_object.method_add_torrent(new_torrent['torrent'], existing_torrent['download_to'])
+                rpc_object.method_add_torrent(
+                    new_torrent,
+                    existing_torrent['download_to'],
+                    params=existing_torrent.get('params', None)
+                )
                 new_torrent['url'] = page_url
 
                 LOGGER.info('    Torrent is updated')
