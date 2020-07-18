@@ -51,3 +51,43 @@ def test_get_download_link_preserve_priorities(monkeypatch):
     actual = testable.get_download_link('https://anilibria.tv/release/dummy_release.html')
     # then
     assert actual == expected
+
+
+def test_find_available_qualities_handle_no_results(monkeypatch):
+    """
+    Test that `find_available_qualities` doesn't fail if there are no acceptable results available.
+    """
+
+    # given
+    testable = AnilibriaTracker()
+
+    def mockreturn(url):
+        return {
+            "status": True,
+            "data": {
+                "id": 1000,
+                "code": "dummy_release",
+                "series": "1",
+                "torrents": [
+                    {
+                        "id": 10001,
+                        "hash": "cb88332e8a1bb5bd0eb8e831b93e72fa0edb8b7a",
+                        "leechers": 1,
+                        "seeders": 86,
+                        "completed": 612,
+                        "quality": "WEBRip 1080p",
+                        "series": "1",
+                        "size": 1537651272,
+                        "url": "/upload/torrents/11113.torrent",
+                        "ctime": 1594909216
+                    }
+                ]
+            },
+            "error": None
+        }
+
+    monkeypatch.setattr(testable, "api_get_release_by_code", mockreturn)
+    # when
+    actual = testable.find_available_qualities('https://anilibria.tv/release/dummy_release.html')
+    # then
+    assert not actual
