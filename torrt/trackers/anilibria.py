@@ -80,9 +80,7 @@ class AnilibriaTracker(GenericPublicTracker):
         """
         code = self.extract_release_code(url)
 
-        response = self.get_response(API_URL, {'query': 'release', 'code': code}, as_soup=False)
-
-        json = response.json()
+        json = self.api_get_release_by_code(code)
 
         if not json.get('status', False):
             LOGGER.error('Failed to get release `%s` from API', code)
@@ -98,6 +96,9 @@ class AnilibriaTracker(GenericPublicTracker):
 
         # some releases can be broken into several .torrent files, e.g. 1-20 and 21-41 - take the last one
         sorted_series = sorted(series2torrents.keys(), key=self.to_tuple, reverse=True)
+
+        if not sorted_series:
+            return {}
 
         for torrent in series2torrents[sorted_series[0]]:
             quality = self.sanitize_quality(torrent['quality'])
@@ -150,6 +151,16 @@ class AnilibriaTracker(GenericPublicTracker):
 
         """
         return tuple(map(int, range_str.split('-')))
+
+    def api_get_release_by_code(self, code: str) -> dict:
+        """
+        Get release json by passed `code` from Anilibria API.
+
+        :param code: release code
+        :return: json
+        """
+        response = self.get_response(API_URL, {'query': 'release', 'code': code}, as_soup=False)
+        return response.json()
 
 
 TrackerClassesRegistry.add(AnilibriaTracker)
