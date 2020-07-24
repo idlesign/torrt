@@ -6,6 +6,8 @@ Unreleased
 ----------
 ! Dropped QA for Python 3.5. Added QA for 3.8.
 ! Dropped support for Python 2.
++ Add mirrors for casstudio and kinozal (see #55).
++ RPC. Try to preserve list of excluded files.
 * Anilibria. Improved series range picking.
 
 

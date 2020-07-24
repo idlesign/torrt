@@ -14,6 +14,7 @@ class CasstudioTracker(GenericPrivateTracker):
     login_url: str = 'https://%(domain)s/ucp.php?mode=login'
     auth_cookie_name: str = 'phpbb3_lawmj_sid'
     auth_qs_param_name: str = 'mode'
+    mirrors = ['casstudio.tk']
 
     test_urls: List[str] = ['https://casstudio.tv/viewtopic.php?t=1222']
 

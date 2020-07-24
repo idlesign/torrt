@@ -13,7 +13,7 @@ class KinozalTracker(GenericPrivateTracker):
     alias: str = 'kinozal.tv'
     login_url: str = 'http://%(domain)s/takelogin.php'
     auth_cookie_name: str = 'uid'
-    mirrors: List[str] = ['kinozal.me']
+    mirrors: List[str] = ['kinozal-tv.appspot.com', 'kinozal.me']
     encoding: str = 'cp1251'
 
     def get_login_form_data(self, login: str, password: str) -> dict:
