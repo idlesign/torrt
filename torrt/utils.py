@@ -355,11 +355,16 @@ class WithSettings:
         * Inheriting classes MUST save settings under object properties with the same name as in __init__().
 
     """
-
     alias: str = None
 
     config_entry_name: str = None
     settings: dict = {}
+
+    def __init__(self, **kwargs):
+        pass
+
+    def __str__(self) -> str:
+        return self.alias
 
     @classmethod
     def spawn_with_settings(cls, settings: dict) -> 'WithSettings':
