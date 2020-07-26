@@ -1,6 +1,8 @@
 import logging
 from typing import List
 
+from bs4 import BeautifulSoup
+
 from ..base_tracker import GenericPrivateTracker
 from ..utils import TrackerClassesRegistry
 
@@ -40,18 +42,12 @@ class AniDUBTracker(GenericPrivateTracker):
 
         download_link = ''
 
-        page_soup = self.get_response(
-            url,
-            referer=url,
-            cookies=self.cookies,
-            query_string=self.query_string,
-            as_soup=True
-        )
+        page_soup = self.get_torrent_page(url)
 
         if page_soup.select('form input[name="login"]'):
 
             LOGGER.debug('Login is required to download torrent file.')
-            domain =  self.extract_domain(url)
+            domain = self.extract_domain(url)
 
             if self.login(domain):
                 download_link = self.get_download_link(url)

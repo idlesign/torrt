@@ -23,12 +23,24 @@ class NNMClubTracker(GenericPrivateTracker):
         """Returns a dictionary with data to be pushed to authorization form."""
         return {'username': login, 'password': password, 'autologin': 1, 'redirect': '', 'login': 'pushed'}
 
+    def extract_page_cover(self) -> str:
+        attrs = getattr(self._torrent_page.select_one('var.postImg'), 'attrs', {})
+        title = attrs.get('title')
+
+        if not title:
+            return super().extract_page_cover()
+
+        _, _, link = title.partition('link=')
+
+        return link
+
+    def extract_page_date_updated(self) -> str:
+        return getattr(self._torrent_page.select_one('span.postdata'), 'text', '').strip()
+
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link at forum thread page and return that one."""
 
-        page_soup = self.get_response(
-            url, referer=url, cookies=self.cookies, query_string=self.get_auth_query_string(), as_soup=True
-        )
+        page_soup = self.get_torrent_page(url)
 
         download_link = self.find_links(url, page_soup, definite=r'download\.php')
 

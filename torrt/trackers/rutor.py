@@ -1,6 +1,8 @@
 import logging
 from typing import List
 
+from bs4 import BeautifulSoup
+
 from ..base_tracker import GenericPublicTracker
 from ..utils import TrackerClassesRegistry
 
@@ -36,9 +38,8 @@ class RutorTracker(GenericPublicTracker):
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link at forum thread page and return that one."""
 
-        response = self.get_response(url, cookies=self.cookies)
+        page_soup = self.get_torrent_page(url)
 
-        page_soup = self.make_page_soup(response.text)
         expected_link = f'/download/{self.get_id_from_link(url)}'
         download_link = self.find_links(url, page_soup, definite=expected_link)
 

@@ -37,9 +37,7 @@ class RuTrackerTracker(GenericPrivateTracker):
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link at forum thread page and return that one."""
 
-        page_soup = self.get_response(
-            url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
-        )
+        page_soup = self.get_torrent_page(url)
 
         domain = self.extract_domain(url)
 
@@ -48,9 +46,7 @@ class RuTrackerTracker(GenericPrivateTracker):
         if is_anonymous:
             self.login(domain)
 
-            page_soup = self.get_response(
-                url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
-            )
+            page_soup = self.get_torrent_page(url, drop_cache=True)
 
         download_link = self.find_links(url, page_soup, r'dl\.php')
 
@@ -82,7 +78,11 @@ class RuTrackerTracker(GenericPrivateTracker):
             form_data = None
 
         response = self.get_response(
-            url, form_data=form_data, cookies=self.cookies, query_string=self.get_auth_query_string(), referer=referer
+            url,
+            form_data=form_data,
+            cookies=self.cookies,
+            query_string=self.get_query_string(),
+            referer=referer,
         )
 
         if response is None:

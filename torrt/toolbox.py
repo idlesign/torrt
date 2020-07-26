@@ -391,7 +391,7 @@ def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> 
                 LOGGER.error(f'    Unable to get torrent from `{page_url}`')
                 continue
 
-            if rpc_torrent['hash'] == tracker_torrent.hash +'xxx': # todo
+            if rpc_torrent['hash'] == tracker_torrent.hash:
                 LOGGER.info('    No updates')
                 continue
 

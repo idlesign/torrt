@@ -42,9 +42,7 @@ class CasstudioTracker(GenericPrivateTracker):
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link at forum thread page and return that one."""
 
-        page_soup = self.get_response(
-            url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
-        )
+        page_soup = self.get_torrent_page(url)
 
         domain = self.extract_domain(url)
         is_anonymous = self.find_links(url, page_soup, r'\./ucp\.php\?mode=login') is not None
@@ -54,9 +52,7 @@ class CasstudioTracker(GenericPrivateTracker):
             self.logged_in = False
             self.login(domain)
 
-            page_soup = self.get_response(
-                url, referer=url, cookies=self.cookies, query_string=self.query_string, as_soup=True
-            )
+            page_soup = self.get_torrent_page(url, drop_cache=True)
 
         download_tag = page_soup.find('a', text='Скачать торрент')
 

@@ -136,7 +136,7 @@ class TransmissionRPC(BaseRPC):
             'metainfo': base64encode(torrent.raw).decode(),
         }
 
-        params_files = params.get('files')
+        params_files = (params or {}).get('files')
 
         if params_files:
             # Handle download exclusions.

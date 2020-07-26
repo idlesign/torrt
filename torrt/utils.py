@@ -240,6 +240,23 @@ def update_dict(old_dict: dict, new_dict: dict) -> dict:
     return old_dict
 
 
+class PageData:
+    """Represents data extracted from torrent page."""
+
+    def __init__(self, title: str, cover: str, date_updated: str):
+        self.title = title
+        self.cover = cover
+        self.date_updated = date_updated
+
+    def to_dict(self):
+        data = {
+            'title': self.title,
+            'cover': self.cover,
+            'date_updated': self.date_updated,
+        }
+        return data
+
+
 class TorrentData:
     """Represents information about torrent."""
 
@@ -251,6 +268,7 @@ class TorrentData:
             url: str = '',
             url_file: str = '',
             raw: bytes = b'',
+            page: PageData = None,
             parsed: Torrent = None,
     ):
         self.url = url
@@ -258,6 +276,7 @@ class TorrentData:
 
         self.raw = raw
         self.parsed = parsed
+        self.page = page
 
         self._name = name
         self._hash = hash
@@ -278,11 +297,14 @@ class TorrentData:
     name = property(_get_name, _set_name)
 
     def to_dict(self) -> dict:
+        page = self.page
+
         result = {
             'hash': self.hash,
             'name': self.name,
             'url': self.url,
             'url_file': self.url_file,
+            'page': page.to_dict() if page else {},
         }
         return result
 

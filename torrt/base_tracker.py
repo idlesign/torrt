@@ -12,7 +12,8 @@ from requests import Response
 
 from .exceptions import TorrtTrackerException
 from .utils import (
-    parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, dump_contents, TorrentData
+    parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, dump_contents, TorrentData,
+    PageData
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -39,9 +40,21 @@ class BaseTracker(WithSettings):
     test_urls: List[str] = []
     """Page URLs for automatic tests of torrent extraction."""
 
-    def __init__(self):
+    def __init__(self, cookies: dict = None, query_string: str = None):
         self.mirror_picked: Optional[str] = None
+
+        if cookies is None:
+            cookies = {}
+
+        self.cookies = cookies
+        self.query_string = query_string
+
+        self._torrent_page: Optional[BeautifulSoup] = None
+
         super().__init__()
+
+    def get_query_string(self) -> str:
+        return self.query_string
 
     def encode_value(self, value: str) -> Union[bytes, str]:
         """Encodes a value.
@@ -161,7 +174,7 @@ class BaseTracker(WithSettings):
         :param as_soup: whether to return BeautifulSoup object instead of Requests response
 
         """
-        if query_string is not None:
+        if query_string:
 
             delim = '?'
 
@@ -278,6 +291,49 @@ class BaseTracker(WithSettings):
         """
         raise NotImplementedError  # pragma: nocover
 
+    def extract_page_data(self) -> PageData:
+        data = PageData(
+            title=self.extract_page_title(),
+            cover=self.extract_page_cover(),
+            date_updated=self.extract_page_date_updated(),
+        )
+        return data
+
+    def extract_page_title(self) -> str:
+        page = self._torrent_page
+
+        if not page:
+            return ''
+
+        return getattr(page.select_one('title'), 'text', '')
+
+    def extract_page_cover(self) -> str:
+        return ''
+
+    def extract_page_date_updated(self) -> str:
+        return ''
+
+    def get_torrent_page(self, url: str, *, drop_cache: bool = False) -> BeautifulSoup:
+        """Get torrent page as soup for further data extraction.
+
+        :param url:
+        :param drop_cache: Do not use cached version if any.
+
+        """
+        torrent_page = self._torrent_page
+
+        if drop_cache or not torrent_page:
+            torrent_page = self.get_response(
+                url,
+                referer=url,
+                cookies=self.cookies,
+                query_string=self.get_query_string(),
+                as_soup=True
+            )
+            self._torrent_page = torrent_page
+
+        return torrent_page
+
 
 class GenericTracker(BaseTracker):
     """Generic torrent tracker handler class implementing most common tracker handling methods."""
@@ -303,6 +359,8 @@ class GenericTracker(BaseTracker):
             LOGGER.error(f'Cannot find torrent file download link at {url}')
             return None
 
+        page_data = self.extract_page_data()
+
         LOGGER.debug(f'Torrent download link found: {download_link}')
 
         torrent_contents = self.download_torrent(download_link, referer=url)
@@ -318,6 +376,7 @@ class GenericTracker(BaseTracker):
             url_file=download_link,
             parsed=parsed,
             raw=torrent_contents,
+            page=page_data,
         )
 
     def get_download_link(self, url: str) -> str:
@@ -375,7 +434,11 @@ class GenericPrivateTracker(GenericPublicTracker):
     """HTTP GET (query string) parameter name to verify that a log in was successful. Probably session ID."""
 
     def __init__(self, username: str = None, password: str = None, cookies: dict = None, query_string: str = None):
-        super(GenericPrivateTracker, self).__init__()
+
+        super(GenericPrivateTracker, self).__init__(
+            cookies=cookies,
+            query_string=query_string,
+        )
 
         self.logged_in = False
         # Stores a number of login attempts to prevent recursion.
@@ -383,12 +446,6 @@ class GenericPrivateTracker(GenericPublicTracker):
 
         self.username = username
         self.password = password
-
-        if cookies is None:
-            cookies = {}
-
-        self.cookies = cookies
-        self.query_string = query_string
 
     def get_encode_form_data(self, data: dict) -> dict:
         """Encode dictionary from get_login_form_data using Tracker page encoding.
@@ -474,14 +531,14 @@ class GenericPrivateTracker(GenericPublicTracker):
 
         """
 
-    def get_auth_query_string(self) -> str:
+    def get_query_string(self) -> str:
         """Returns an auth query string to be passed to get_response()
         for auth purposes.
 
         :return: auth string, e.g. sid=1234567890
 
         """
-        query_string = None
+        query_string = super().get_query_string()
 
         if self.auth_qs_param_name:
             query_string = f'{self.auth_qs_param_name}={self.query_string}'
@@ -496,7 +553,7 @@ class GenericPrivateTracker(GenericPublicTracker):
         response = self.get_response(
             url,
             cookies=self.cookies,
-            query_string=self.get_auth_query_string(),
+            query_string=self.get_query_string(),
             referer=referer
         )
 
