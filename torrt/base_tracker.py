@@ -41,6 +41,12 @@ class BaseTracker(WithSettings):
     test_urls: List[str] = []
     """Page URLs for automatic tests of torrent extraction."""
 
+    raise_on_error_response: bool = False
+    """Whether to raise an exception on request errors.
+    Primary use is debug and testsuite.
+    
+    """
+
     def __init__(self, cookies: dict = None, query_string: str = None):
         self.mirror_picked: Optional[str] = None
 
@@ -223,6 +229,10 @@ class BaseTracker(WithSettings):
 
         except requests.exceptions.RequestException as e:
             LOGGER.error(f"Failed to get resource from `{getattr(result, 'url', url)}`: {e}")
+
+            if self.raise_on_error_response:
+                raise
+
             return None
 
     @classmethod

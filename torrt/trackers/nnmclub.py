@@ -17,7 +17,7 @@ class NNMClubTracker(GenericPrivateTracker):
     mirrors: List[str] = ['nnm-club.name', 'nnmclub.to']
 
     test_urls: List[str] = [
-        'https://nnm-club.me/forum/viewtopic.php?t=786946',
+        'https://nnmclub.to/forum/viewtopic.php?t=889443',
     ]
 
     def get_login_form_data(self, login: str, password: str) -> dict:

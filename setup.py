@@ -54,6 +54,7 @@ setup(
     tests_require=[
         'pytest',
         'pytest-datafixtures',
+        'pytest-responsemock>=1.0.0',
     ],
 
     entry_points={
