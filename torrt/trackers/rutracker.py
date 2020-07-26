@@ -70,7 +70,7 @@ class RuTrackerTracker(GenericPrivateTracker):
 
     def download_torrent(self, url: str, referer: str = None) -> Optional[bytes]:
 
-        LOGGER.debug('Downloading torrent file from %s ...', url)
+        LOGGER.debug(f'Downloading torrent file from {url} ...')
 
         self.before_download(url)
 

@@ -30,7 +30,7 @@ class TelegramNotifier(BaseNotifier):
             '\n'.join(map(lambda t: t['name'], torrent_data.values())))
 
     def test_configuration(self) -> bool:
-        url = '%s%s/getMe' % (self.url, self.token)
+        url = f'{self.url}{self.token}/getMe'
 
         response = requests.get(url)
 
@@ -38,13 +38,13 @@ class TelegramNotifier(BaseNotifier):
 
     def send_message(self, msg: str):
 
-        url = '%s%s/sendMessage' % (self.url, self.token)
+        url = f'{self.url}{self.token}/sendMessage'
 
         try:
             response = requests.post(url, data={'chat_id': self.chat_id, 'text': msg})
 
         except RequestException as e:
-            LOGGER.error('Failed to send Telegram message: %s', e)
+            LOGGER.error(f'Failed to send Telegram message: {e}')
 
         else:
 
@@ -53,15 +53,15 @@ class TelegramNotifier(BaseNotifier):
                 json_data = response.json()
 
                 if json_data['ok']:
-                    LOGGER.debug('Telegram message was sent to user %s', self.chat_id)
+                    LOGGER.debug(f'Telegram message was sent to user {self.chat_id}')
 
                 else:
-                    LOGGER.error('Telegram notification not send: %s', json_data['description'])
+                    LOGGER.error(f"Telegram notification not send: {json_data['description']}")
 
             else:
                 LOGGER.error(
-                    'Telegram notification not send. Response code: %s (%s)',
-                    response.status_code, response.reason)
+                    'Telegram notification not sent. '
+                    f'Response code: {response.status_code} ({response.reason})')
 
 
 NotifierClassesRegistry.add(TelegramNotifier)

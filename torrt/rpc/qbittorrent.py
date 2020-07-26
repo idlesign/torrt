@@ -58,7 +58,7 @@ class QBittorrentRPC(BaseRPC):
             self.url = url
 
         else:
-            self.url = 'http://%s:%s/' % (host, port)
+            self.url = f'http://{host}:{port}/'
 
     def login(self):
 
@@ -77,7 +77,7 @@ class QBittorrentRPC(BaseRPC):
 
         except Exception as e:
 
-            LOGGER.error('Failed to login using `%s` RPC: %s', self.url, str(e))
+            LOGGER.error(f'Failed to login using `{self.url}` RPC: {e}')
             raise QBittorrentRPCException(str(e))
 
     @staticmethod
@@ -103,7 +103,8 @@ class QBittorrentRPC(BaseRPC):
 
     def query(self, data: dict, files: dict = None) -> Response:
 
-        LOGGER.debug('RPC action `%s` ...', data['action'] or 'list')
+        action = data['action'] or 'list'
+        LOGGER.debug(f'RPC action `{action}` ...')
 
         try:
             url = self.get_request_url(data)
@@ -129,12 +130,12 @@ class QBittorrentRPC(BaseRPC):
 
             except Exception as e:
 
-                LOGGER.error('Failed to query RPC `%s`: %s', url, e)
+                LOGGER.error(f'Failed to query RPC `{url}`: {e}')
                 raise QBittorrentRPCException(e)
 
         except Exception as e:
 
-            LOGGER.error('Failed to query RPC `%s`: %s', data['action'], e)
+            LOGGER.error(f'Failed to query RPC `{action}`: {e}')
             raise QBittorrentRPCException(str(e))
 
         return response

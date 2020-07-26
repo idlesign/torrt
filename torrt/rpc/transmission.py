@@ -43,7 +43,7 @@ class TransmissionRPC(BaseRPC):
             self.url = url
 
         else:
-            self.url = 'http://%s:%s/transmission/rpc' % (host, port)
+            self.url = f'http://{host}:{port}/transmission/rpc'
 
     def query_(self, data: dict) -> Response:
 
@@ -57,14 +57,14 @@ class TransmissionRPC(BaseRPC):
 
         except requests.exceptions.RequestException as e:
 
-            LOGGER.error('Failed to query RPC `%s`: %s', self.url, e)
+            LOGGER.error(f'Failed to query RPC `{self.url}`: {e}')
             raise TransmissionRPCException(str(e))
 
         return response
 
     def query(self, data: dict) -> Any:
 
-        LOGGER.debug('RPC method `%s` ...', data['method'])
+        LOGGER.debug(f"RPC method `{data['method']}` ...")
 
         response = self.query_(data)
 

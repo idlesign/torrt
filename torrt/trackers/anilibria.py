@@ -40,7 +40,7 @@ class AnilibriaTracker(GenericPublicTracker):
 
         available_qualities = self.find_available_qualities(url)
 
-        LOGGER.debug('Available in qualities: %s', ', '.join(available_qualities.keys()))
+        LOGGER.debug(f"Available in qualities: {', '.join(available_qualities)}")
 
         if available_qualities:
 
@@ -55,17 +55,19 @@ class AnilibriaTracker(GenericPublicTracker):
             preferred_qualities = [quality for quality in quality_prefs if quality in available_qualities]
 
             if not preferred_qualities:
-                LOGGER.info('Torrent is not available in preferred qualities: %s', ', '.join(quality_prefs))
+                LOGGER.info(
+                    'Torrent is not available in preferred qualities: '
+                    f"{', '.join(quality_prefs)}")
 
                 quality, link = next(iter(available_qualities.items()))
 
-                LOGGER.info('Fallback to `%s` quality ...', quality)
+                LOGGER.info(f'Fallback to `{quality}` quality ...')
 
                 return link
 
             else:
                 target_quality = preferred_qualities[0]
-                LOGGER.debug('Trying to get torrent in `%s` quality ...', target_quality)
+                LOGGER.debug(f'Trying to get torrent in `{target_quality}` quality ...')
 
                 return available_qualities[target_quality]
 
@@ -83,7 +85,7 @@ class AnilibriaTracker(GenericPublicTracker):
         json = self.api_get_release_by_code(code)
 
         if not json.get('status', False):
-            LOGGER.error('Failed to get release `%s` from API', code)
+            LOGGER.error(f'Failed to get release `{code}` from API')
             return {}
 
         available_qualities = {}

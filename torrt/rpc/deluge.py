@@ -48,7 +48,7 @@ class DelugeRPC(BaseRPC):
             self.url = url
 
         else:
-            self.url = 'http://%s:%s/json' % (host, port)
+            self.url = f'http://{host}:{port}/json'
 
     def method_login(self) -> bool:
 
@@ -84,7 +84,7 @@ class DelugeRPC(BaseRPC):
 
         except requests.exceptions.RequestException as e:
 
-            LOGGER.error('Failed to query RPC `%s`: %s', self.url, str(e))
+            LOGGER.error(f'Failed to query RPC `{self.url}`: {e}')
             raise DelugeRPCException(str(e))
 
         return response
@@ -94,7 +94,7 @@ class DelugeRPC(BaseRPC):
         if not self.cookies:
             self.method_login()
 
-        LOGGER.debug('RPC method `%s` ...', data['method'])
+        LOGGER.debug(f"RPC method `{data['method']}` ...")
 
         response = self.query_(data)
         response = response.json()

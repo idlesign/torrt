@@ -168,11 +168,11 @@ def process_commands():
             rpc_statuses[rpc_alias] = 'enabled' if rpc.enabled else 'disabled'
 
         for rpc_alias, rpc_status in rpc_statuses.items():
-            LOGGER.info('%s\t status=%s', rpc_alias, rpc_status)
+            LOGGER.info(f'{rpc_alias}\t status={rpc_status}')
 
     elif args['command'] == 'list_torrents':
         for torrent_hash, torrent_data in get_registered_torrents().items():
-            LOGGER.info('%s\t%s', torrent_hash, torrent_data['name'])
+            LOGGER.info(f"{torrent_hash}\t{torrent_data['name']}")
 
     elif args['command'] == 'list_notifiers':
         notifiers = {}
@@ -183,7 +183,7 @@ def process_commands():
             notifiers[notifier_alias] = 'enabled'
 
         for notifier_alias, notifier_status in notifiers.items():
-            LOGGER.info('%s\t status=%s', notifier_alias, notifier_status)
+            LOGGER.info(f"{notifier_alias}\t status={notifier_status}")
 
     elif args['command'] == 'walk':
         dump_into = args.get('dump')

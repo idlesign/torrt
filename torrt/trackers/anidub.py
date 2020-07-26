@@ -65,22 +65,28 @@ class AniDUBTracker(GenericPrivateTracker):
             for quality_div in quality_divs:
                 available_qualities.append(quality_div['id'])
 
-            LOGGER.debug('Available in qualities: %s', ', '.join(available_qualities))
+            LOGGER.debug(f"Available in qualities: {', '.join(available_qualities)}")
 
             if available_qualities:
 
-                prefered_qualities = [quality for quality in self.quality_prefs if quality in available_qualities]
+                preferred_qualities = [
+                    quality
+                    for quality in self.quality_prefs
+                    if quality in available_qualities
+                ]
 
-                if not prefered_qualities:
-                    LOGGER.debug('Torrent is not available in preferred qualities: %s', ', '.join(self.quality_prefs))
+                if not preferred_qualities:
+                    LOGGER.debug(
+                        "Torrent is not available in preferred qualities: "
+                        f"{', '.join(self.quality_prefs)}")
 
                 else:
 
-                    target_quality = prefered_qualities[0]
+                    target_quality = preferred_qualities[0]
 
-                    LOGGER.debug('Trying to get torrent in `%s` quality ...', target_quality)
+                    LOGGER.debug(f'Trying to get torrent in `{target_quality}` quality ...')
 
-                    target_links = page_soup.select('div#%s div.torrent_h a' % target_quality)
+                    target_links = page_soup.select(f'div#{target_quality} div.torrent_h a')
 
                     if target_links:
 
@@ -93,7 +99,7 @@ class AniDUBTracker(GenericPrivateTracker):
                         download_link = self.expand_link(url, download_link)
 
                     else:
-                        LOGGER.debug('Unable to find a link for `%s` quality', target_quality)
+                        LOGGER.debug(f'Unable to find a link for `{target_quality}` quality')
 
         return download_link
 

@@ -89,7 +89,7 @@ def remove_notifier(alias: str):
     :param alias: Notifier alias to remove.
 
     """
-    LOGGER.info('Removing `%s` notifier ...', alias)
+    LOGGER.info(f'Removing `{alias}` notifier ...')
 
     config.drop_section('notifiers', alias)
 
@@ -100,7 +100,7 @@ def remove_bot(alias: str):
     :param alias: Bot alias to remove.
 
     """
-    LOGGER.info('Removing `%s` bot ...', alias)
+    LOGGER.info(f'Removing `{alias}` bot ...')
 
     config.drop_section('bots', alias)
 
@@ -168,7 +168,7 @@ def register_torrent(hash_str: str, torrent_data: dict = None, url: str = None):
     :param url: fallback url that will be used in case torrent comment doesn't contain url
 
     """
-    LOGGER.debug('Registering `%s` torrent ...', hash_str)
+    LOGGER.debug(f'Registering `{hash_str}` torrent ...')
 
     if torrent_data is None:
         torrent_data = {}
@@ -188,7 +188,7 @@ def unregister_torrent(hash_str: str):
     :param hash_str: torrent identifying hash
 
     """
-    LOGGER.debug('Unregistering `%s` torrent ...', hash_str)
+    LOGGER.debug(f'Unregistering `{hash_str}` torrent ...')
 
     config.drop_section('torrents', hash_str)
 
@@ -200,12 +200,12 @@ def add_torrent_from_url(url: str, download_to: str = None):
     :param download_to: path to download files from torrent into (in terms of torrent client filesystem)
 
     """
-    LOGGER.debug('Adding torrent from `%s` ...', url)
+    LOGGER.debug(f'Adding torrent from `{url}` ...')
 
     torrent_data = get_torrent_from_url(url)
 
     if torrent_data is None:
-        LOGGER.error('Unable to add torrent from `%s`', url)
+        LOGGER.error(f'Unable to add torrent from `{url}`')
 
     else:
 
@@ -213,7 +213,7 @@ def add_torrent_from_url(url: str, download_to: str = None):
             rpc_object.method_add_torrent(torrent_data, download_to=download_to)
             register_torrent(torrent_data['hash'], torrent_data, url)
 
-            LOGGER.info('Torrent from `%s` is added within `%s`', url, rpc_alias)
+            LOGGER.info(f'Torrent from `{url}` is added within `{rpc_alias}`')
 
 
 def remove_torrent(hash_str: str, with_data: bool = False):
@@ -223,10 +223,10 @@ def remove_torrent(hash_str: str, with_data: bool = False):
     :param with_data: flag to also remove files from torrent
 
     """
-    LOGGER.info('Removing torrent `%s` (with data = %s) ...', hash_str, with_data)
+    LOGGER.info(f'Removing torrent `{hash_str}` (with data = {with_data}) ...')
 
     for _, rpc_object in iter_rpc():
-        LOGGER.info('Removing torrent using `%s` RPC ...', rpc_object.alias)
+        LOGGER.info(f'Removing torrent using `{rpc_object.alias}` RPC ...')
         rpc_object.method_remove_torrent(hash_str, with_data=with_data)
 
     unregister_torrent(hash_str)
@@ -253,10 +253,10 @@ def toggle_rpc(alias: str, enabled: bool = True):
     if rpc is not None:
         config.update({'rpc': {alias: {'enabled': enabled}}})
 
-        LOGGER.info('RPC `%s` enabled = %s', alias, enabled)
+        LOGGER.info(f'RPC `{alias}` enabled = {enabled}')
 
     else:
-        LOGGER.info('RPC `%s` class is not registered', alias)
+        LOGGER.info(f'RPC `{alias}` class is not registered')
 
 
 def walk(forced: bool = False, silent: bool = False, remove_outdated: bool = True):
@@ -286,7 +286,7 @@ def walk(forced: bool = False, silent: bool = False, remove_outdated: bool = Tru
             if not silent:
                 raise
 
-            LOGGER.error('Walk failed. Reason: %s', e)
+            LOGGER.error(f'Walk failed. Reason: {e}')
 
         new_cfg = {
             'time_last_check': now
@@ -317,9 +317,9 @@ def walk(forced: bool = False, silent: bool = False, remove_outdated: bool = Tru
 
     else:
         LOGGER.info(
-            'Torrent walk postponed till %s (now %s)',
-            get_iso_from_timestamp(next_time),
-            get_iso_from_timestamp(now)
+            'Torrent walk postponed '
+            f'till {get_iso_from_timestamp(next_time)} '
+            f'(now {get_iso_from_timestamp(now)})'
         )
 
 
@@ -339,21 +339,21 @@ def update_torrents(hashes: Dict[str, dict], remove_outdated: bool = True) -> Di
 
     for _, rpc_object in iter_rpc():
 
-        LOGGER.info('Getting torrents from `%s` ...', rpc_object.alias)
+        LOGGER.info(f'Getting torrents from `{rpc_object.alias}` ...')
         torrents = rpc_object.method_get_torrents(hashes)
 
         if not torrents:
             LOGGER.info('  No significant torrents found')
 
         for existing_torrent in torrents:
-            LOGGER.info('  Processing `%s`...', existing_torrent['name'])
+            LOGGER.info(f"  Processing `{existing_torrent['name']}`...")
 
             page_url = get_url_from_string(existing_torrent['comment'])
             if not page_url:
                 page_url = to_check[existing_torrent['hash']].get('url', None) if to_check else None
 
             if not page_url:
-                LOGGER.warning('    Torrent `%s` has no link in comment. Skipped', existing_torrent['name'])
+                LOGGER.warning(f"    Torrent `{existing_torrent['name']}` has no link in comment. Skipped")
                 continue
 
             if page_url in download_cache:
@@ -364,7 +364,7 @@ def update_torrents(hashes: Dict[str, dict], remove_outdated: bool = True) -> Di
                 download_cache[page_url] = new_torrent
 
             if new_torrent is None:
-                LOGGER.error('    Unable to get torrent from `%s`', page_url)
+                LOGGER.error(f'    Unable to get torrent from `{page_url}`')
                 continue
 
             if existing_torrent['hash'] == new_torrent['hash']:
@@ -386,7 +386,7 @@ def update_torrents(hashes: Dict[str, dict], remove_outdated: bool = True) -> Di
                 structure_torrent_data(updated_by_hashes, existing_torrent['hash'], new_torrent)
 
             except TorrtRPCException as e:
-                LOGGER.error('    Unable to replace torrent: %s', e)
+                LOGGER.error(f'    Unable to replace torrent: {e}')
 
             else:
                 unregister_torrent(existing_torrent['hash'])

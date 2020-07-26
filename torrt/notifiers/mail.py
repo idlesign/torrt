@@ -43,7 +43,7 @@ class EmailNotifier(BaseNotifier):
             connection.ehlo()
 
         except socket.error as e:
-            LOGGER.error('Could not connect to SMTP server: %s' % e)
+            LOGGER.error(f'Could not connect to SMTP server: {e}')
             return
 
         if self.use_tls:
@@ -77,8 +77,11 @@ class EmailNotifier(BaseNotifier):
     def make_message(self, torrent_data: dict) -> str:
 
         text = (
-            'The following torrents were updated:\n%s\n\nBest regards,\ntorrt.' %
-            '\n'.join(map(lambda t: t['name'], torrent_data.values()))
+            'The following torrents were updated:\n'
+            '%s\n\n'
+            'Best regards,\n'
+            'torrt.' %
+            '\n'.join(map(lambda torrent: torrent['name'], torrent_data.values()))
         )
 
         msg = MIMEText(text)
@@ -87,7 +90,7 @@ class EmailNotifier(BaseNotifier):
         msg['From'] = self.sender
         msg['To'] = self.email
 
-        LOGGER.info('Notification message was sent to user %s' % self.email)
+        LOGGER.info(f'Notification message was sent to user {self.email}')
 
         return msg.as_string()
 

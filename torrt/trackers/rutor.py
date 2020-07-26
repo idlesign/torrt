@@ -39,7 +39,7 @@ class RutorTracker(GenericPublicTracker):
         response = self.get_response(url, cookies=self.cookies)
 
         page_soup = self.make_page_soup(response.text)
-        expected_link = '/download/%s' % self.get_id_from_link(url)
+        expected_link = f'/download/{self.get_id_from_link(url)}'
         download_link = self.find_links(url, page_soup, definite=expected_link)
 
         return download_link or ''

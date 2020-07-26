@@ -42,7 +42,7 @@ class UTorrentRPC(BaseRPC):
             self.url = url
 
         else:
-            self.url = 'http://%s:%s/gui/' % (host, port)
+            self.url = f'http://{host}:{port}/gui/'
 
     def login(self):
 
@@ -62,7 +62,7 @@ class UTorrentRPC(BaseRPC):
 
         except Exception as e:
 
-            LOGGER.error('Failed to login using `%s` RPC: %s', self.url, e)
+            LOGGER.error(f'Failed to login using `{self.url}` RPC: {e}')
             raise UTorrentRPCException(str(e))
 
     def build_params(self, action: str = None, params: dict = None) -> dict:
@@ -89,13 +89,14 @@ class UTorrentRPC(BaseRPC):
             if isinstance(param_val, list):
                 val = join(param_val)
 
-            rest.append('%s=%s' % (param_name, val))
+            rest.append(f'{param_name}={val}')
 
-        return '%s?token=%s&%s' % (self.url,  self.csrf_token, join(rest))
+        return f'{self.url}?token={self.csrf_token}&{join(rest)}'
 
     def query(self, data: dict, files: dict = None):
 
-        LOGGER.debug('RPC action `%s` ...', data['action'] or 'list')
+        action = data['action'] or 'list'
+        LOGGER.debug(f'RPC action `{action}` ...', )
 
         if not self.cookies:
             self.login()
@@ -120,7 +121,7 @@ class UTorrentRPC(BaseRPC):
 
         except Exception as e:
 
-            LOGGER.error('Failed to query RPC `%s`: %s', url, e)
+            LOGGER.error(f'Failed to query RPC `{url}`: {e}')
             raise UTorrentRPCException(str(e))
 
         response = response.json()

@@ -26,7 +26,7 @@ class CasstudioTracker(GenericPrivateTracker):
         sid = soup_response.find(attrs={'name': 'sid'}).get('value')
 
         self.cookies = index_page.cookies
-        self.login_url += '&sid=%s' % sid
+        self.login_url += f'&sid={sid}'
 
         result = {
             'username': login,

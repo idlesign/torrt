@@ -103,7 +103,7 @@ def configure_entity(type_name: str, registry, alias: str, settings_dict: dict =
     :param settings_dict: Settings dictionary to configure object with.
 
     """
-    LOGGER.info('Configuring `%s` %s ...', alias, type_name.lower())
+    LOGGER.info(f'Configuring `{alias}` {type_name.lower()} ...')
 
     entity_cls = registry.get(alias)
 
@@ -114,15 +114,15 @@ def configure_entity(type_name: str, registry, alias: str, settings_dict: dict =
 
         if configured:
             obj.save_settings()
-            LOGGER.info('%s `%s` is configured', type_name, alias)
+            LOGGER.info(f'{type_name} `{alias}` is configured')
 
             return obj
 
         else:
-            LOGGER.error('%s `%s` configuration failed. Check your settings', type_name, alias)
+            LOGGER.error(f'{type_name} `{alias}` configuration failed. Check your settings')
 
     else:
-        LOGGER.error('%s `%s` is unknown', type_name, alias)
+        LOGGER.error(f'{type_name} `{alias}` is unknown')
 
 
 def import_classes():
@@ -149,7 +149,7 @@ def import_from_path(path: str):
 
     """
     for _, pname, ispkg in iter_modules([os.path.join(os.path.dirname(__file__), path)]):
-        __import__('torrt.%s.%s' % (path, pname))
+        __import__(f'torrt.{path}.{pname}')
 
 
 def parse_torrent(torrent: bytes) -> dict:
@@ -275,7 +275,7 @@ def get_torrent_from_url(url: Optional[str]) -> Optional[dict]:
     :param url:
 
     """
-    LOGGER.debug('Downloading torrent file from `%s` ...', url)
+    LOGGER.debug(f'Downloading torrent file from `{url}` ...')
 
     tracker = TrackerObjectsRegistry.get_for_string(url)  # type: GenericTracker
 
@@ -283,14 +283,14 @@ def get_torrent_from_url(url: Optional[str]) -> Optional[dict]:
         result = tracker.get_torrent(url)
 
         if result is None:
-            LOGGER.warning('Unable to get torrent from `%s`', url)
+            LOGGER.warning(f'Unable to get torrent from `{url}`')
 
         else:
-            LOGGER.debug('Torrent was downloaded from `%s`', url)
+            LOGGER.debug(f'Torrent was downloaded from `{url}`')
             return result
 
     else:
-        LOGGER.warning('Tracker handler for `%s` is not registered', url)
+        LOGGER.warning(f'Tracker handler for `{url}` is not registered')
 
     return None
 
@@ -309,7 +309,7 @@ def iter_rpc() -> Generator[Tuple[str, 'BaseRPC'], None, None]:
     for rpc_alias, rpc_object in rpc_objects.items():
 
         if not rpc_object.enabled:
-            LOGGER.debug('RPC `%s` is disabled, skipped.', rpc_object.alias)
+            LOGGER.debug(f'RPC `{rpc_object.alias}` is disabled, skipped.')
             continue
 
         yield rpc_alias, rpc_object
@@ -367,7 +367,7 @@ class WithSettings:
         :param settings:
 
         """
-        LOGGER.debug('Spawning `%s` object with the given settings ...', cls.__name__)
+        LOGGER.debug(f'Spawning `{cls.__name__}` object with the given settings ...')
 
         return cls(**settings)
 
@@ -448,7 +448,7 @@ class TorrtConfig:
     def load(cls) -> dict:
         """Returns current settings dictionary."""
 
-        LOGGER.debug('Loading configuration file %s ...', cls.USER_SETTINGS_FILE)
+        LOGGER.debug(f'Loading configuration file {cls.USER_SETTINGS_FILE} ...')
 
         cls.bootstrap()
 
@@ -470,7 +470,7 @@ class TorrtConfig:
         :param settings_dict:
 
         """
-        LOGGER.debug('Saving configuration file %s ...', cls.USER_SETTINGS_FILE)
+        LOGGER.debug(f'Saving configuration file {cls.USER_SETTINGS_FILE} ...')
 
         with open(cls.USER_SETTINGS_FILE, 'w') as f:
             json.dump(settings_dict, f, indent=4)
@@ -496,7 +496,7 @@ class ObjectsRegistry:
         """
         name = getattr(obj, 'alias')
 
-        LOGGER.debug('Registering `%s` from %s ...', name, obj)
+        LOGGER.debug(f'Registering `{name}` from {obj} ...')
 
         self._items[name] = obj
 

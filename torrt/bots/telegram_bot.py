@@ -110,7 +110,7 @@ class TelegramBot(BaseBot):
 
         if torrent_data is None:
             update.message.reply_text(
-                'Unable to add torrent from `%s`' % torrent_url,
+                f'Unable to add torrent from `{torrent_url}`',
                 reply_markup=ReplyKeyboardRemove())
 
             return ConversationHandler.END
@@ -162,7 +162,8 @@ class TelegramBot(BaseBot):
 
             except Exception as e:
 
-                logging.error('Unable to add torrent: %s', e)
+                logging.error(f'Unable to add torrent: {e}')
+
                 update.message.reply_text(
                     'Error was occurred during registering torrent.',
                     reply_markup=ReplyKeyboardRemove())
@@ -170,7 +171,7 @@ class TelegramBot(BaseBot):
             if len(get_registered_torrents()) > torrents_count:
 
                 update.message.reply_text(
-                    'Torrent from `%s` was added' % torrent_url,
+                    f'Torrent from `{torrent_url}` was added',
                     reply_markup=ReplyKeyboardRemove())
 
             else:
