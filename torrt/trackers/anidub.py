@@ -12,7 +12,7 @@ class AniDUBTracker(GenericPrivateTracker):
 
     alias: str = 'tr.anidub.com'
 
-    login_url: str = 'http://%(domain)s/'
+    login_url: str = 'https://%(domain)s/'
     auth_cookie_name: str = 'dle_user_id'
 
     def __init__(

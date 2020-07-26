@@ -11,7 +11,7 @@ class NNMClubTracker(GenericPrivateTracker):
     """This class implements .torrent files downloads for http://nnm-club.me tracker."""
 
     alias: str = 'nnm-club.me'
-    login_url: str = 'http://%(domain)s/forum/login.php'
+    login_url: str = 'https://%(domain)s/forum/login.php'
     auth_qs_param_name: str = 'sid'
     mirrors: List[str] = ['nnm-club.name', 'nnmclub.to']
 
