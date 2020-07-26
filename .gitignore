@@ -2,6 +2,7 @@
 .pydevproject
 .idea
 .tox
+.env
 __pycache__
 *.pyc
 *.pyo

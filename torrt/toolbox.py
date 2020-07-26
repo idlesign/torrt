@@ -8,13 +8,38 @@ from .utils import RPCClassesRegistry, TrackerClassesRegistry, config, get_url_f
     get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc, \
     NotifierClassesRegistry, iter_notifiers, BotClassesRegistry, iter_bots, configure_entity
 
+try:
+    from envbox import get_environment
+    # Allow env vars from .env files.
+    environ = get_environment()
+
+except ImportError:
+    from os import environ
+
 if False:  # pragma: nocover
-    from .base_rpc import BaseRPC
-    from .base_tracker import BaseTracker
-    from .base_notifier import BaseNotifier
-    from .base_bot import BaseBot
+    from .base_rpc import BaseRPC  # noqa
+    from .base_tracker import BaseTracker  # noqa
+    from .base_notifier import BaseNotifier  # noqa
+    from .base_bot import BaseBot  # noqa
 
 LOGGER = logging.getLogger(__name__)
+
+
+def tunnel():
+    """Try to setup a tunnel for requests."""
+    tunnel_through = environ.get('TORRT_TUNNEL')
+
+    if tunnel_through:
+
+        if tunnel_through == 'local':
+            tunnel_through = 'socks5://127.0.0.1:9150'
+
+        # Instruct `requests` http://docs.python-requests.org/en/master/user/advanced/#socks
+        environ['HTTP_PROXY'] = tunnel_through
+        environ['HTTPS_PROXY'] = tunnel_through
+
+
+tunnel()
 
 
 def configure_logging(log_level: int = logging.INFO, show_logger_names: bool = False):
