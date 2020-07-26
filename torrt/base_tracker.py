@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 from functools import partial
 from itertools import chain
+from locale import getlocale, setlocale, LC_ALL
 from typing import List, Optional, Union
 from urllib.parse import urlparse, urljoin, parse_qs
 
@@ -295,7 +296,7 @@ class BaseTracker(WithSettings):
         data = PageData(
             title=self.extract_page_title(),
             cover=self.extract_page_cover(),
-            date_updated=self.extract_page_date_updated(),
+            date_updated=f"{self.extract_page_date_updated() or ''}",
         )
         return data
 
@@ -310,8 +311,23 @@ class BaseTracker(WithSettings):
     def extract_page_cover(self) -> str:
         return ''
 
-    def extract_page_date_updated(self) -> str:
-        return ''
+    def extract_page_date_updated(self) -> Optional[datetime]:
+        return None
+
+    def parse_datetime(self, dt_str: str, fmt: str, *, locale: str = ''):
+        old_locale = getlocale()
+
+        if locale:
+            setlocale(LC_ALL, (locale, 'UTF-8'))
+
+        try:
+            try:
+                return datetime.strptime(dt_str, fmt)
+
+            except ValueError:
+                return None
+        finally:
+            setlocale(LC_ALL, old_locale)
 
     def get_torrent_page(self, url: str, *, drop_cache: bool = False) -> BeautifulSoup:
         """Get torrent page as soup for further data extraction.

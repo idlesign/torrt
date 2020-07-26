@@ -1,5 +1,6 @@
 import logging
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 from ..base_tracker import GenericPrivateTracker
 from ..utils import TrackerClassesRegistry
@@ -34,8 +35,9 @@ class NNMClubTracker(GenericPrivateTracker):
 
         return link
 
-    def extract_page_date_updated(self) -> str:
-        return getattr(self._torrent_page.select_one('span.postdata'), 'text', '').strip()
+    def extract_page_date_updated(self) -> Optional[datetime]:
+        dt_val = getattr(self._torrent_page.select_one('span.postdata'), 'text', '').strip()
+        return self.parse_datetime(dt_val, '%d %b %Y %H:%M:%S', locale='ru')
 
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link at forum thread page and return that one."""
