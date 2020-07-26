@@ -166,37 +166,21 @@ def import_from_path(path: str):
         __import__(f'torrt.{path}.{pname}')
 
 
-def parse_torrent(torrent: bytes) -> dict:
-    """Returns a dictionary with basic information from torrent contents.
+def parse_torrent(torrent: bytes) -> Torrent:
+    """Returns Torrent object from torrent contents.
 
-        keys:
-            * hash;
-            * name;
-            * files;
-            * torrent (torrent file contents just from input).
-
-    :param torrent:
+    :param torrent: Torrent file contents.
 
     """
-    torrent_info = Torrent.from_string(torrent)
-
-    files_from_torrent = [a_file[0] for a_file in torrent_info.files]
-    info = {
-        'hash': str(torrent_info.info_hash),
-        'name': torrent_info.name,
-        'files': files_from_torrent,
-        'torrent': torrent
-    }
-    return info
+    return Torrent.from_string(torrent)
 
 
-def parse_torrent_file(filepath: str) -> dict:
+def parse_torrent_file(filepath: str) -> Torrent:
     """Reads a torrent file from filesystem and returns information about it.
 
     :param filepath:
 
     """
-
     with open(filepath, 'rb') as f:
         contents = f.read()
 
@@ -256,35 +240,64 @@ def update_dict(old_dict: dict, new_dict: dict) -> dict:
     return old_dict
 
 
-def structure_torrent_data(target_dict: dict, hash_str: str, data: dict):
+class TorrentData:
+    """Represents information about torrent."""
+
+    def __init__(
+            self,
+            *,
+            hash: str = '',
+            name: str = '',
+            url: str = '',
+            url_file: str = '',
+            raw: bytes = b'',
+            parsed: Torrent = None,
+    ):
+        self.url = url
+        self.url_file = url_file
+        self.name = name
+
+        self.raw = raw
+        self.parsed = parsed
+
+        self._hash = hash
+
+    def _get_hash(self):
+        return self._hash or self.parsed.info_hash
+
+    def _set_hash(self, val: str):
+        self._hash = val
+
+    hash = property(_get_hash, _set_hash)
+
+    def to_dict(self) -> dict:
+        result = {
+            'hash': self.hash,
+            'name': self.name,
+            'url': self.url,
+            'url_file': self.url_file,
+        }
+        return result
+
+
+def structure_torrent_data(target_dict: dict, hash_str: str, data: TorrentData):
     """Updated target dict with torrent data structured suitably
     for config storage.
 
     :param target_dict: dictionary to update inplace
     :param hash_str: torrent identifying hash
-    :param data: torrent data received from RPC (see parse_torrent())
+    :param data: torrent data (e.g. from tracker page or received from RPC (see parse_torrent()))
 
     """
-    data = dict(data)
 
-    if 'hash' not in data:
-        data['hash'] = hash_str
+    if not data.hash:
+        data.hash = hash_str
 
-    if 'name' not in data:
-        data['name'] = None
-
-    if 'url' not in data:
-        data['url'] = None
-
-    target_dict[hash_str] = {
-        'hash': data['hash'],
-        'name': data['name'],
-        'url': data['url']
-    }
+    target_dict[hash_str] = data.to_dict()
 
 
-def get_torrent_from_url(url: Optional[str]) -> Optional[dict]:
-    """Downloads torrent from a given URL and returns it as string.
+def get_torrent_from_url(url: Optional[str]) -> Optional[TorrentData]:
+    """Downloads torrent from a given URL and returns torrent data.
 
     :param url:
 
@@ -294,14 +307,14 @@ def get_torrent_from_url(url: Optional[str]) -> Optional[dict]:
     tracker = TrackerObjectsRegistry.get_for_string(url)  # type: GenericTracker
 
     if tracker:
-        result = tracker.get_torrent(url)
+        torrent_info = tracker.get_torrent(url)
 
-        if result is None:
+        if torrent_info is None:
             LOGGER.warning(f'Unable to get torrent from `{url}`')
 
         else:
             LOGGER.debug(f'Torrent was downloaded from `{url}`')
-            return result
+            return torrent_info
 
     else:
         LOGGER.warning(f'Tracker handler for `{url}` is not registered')

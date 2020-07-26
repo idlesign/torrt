@@ -6,7 +6,7 @@ import requests
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import RPCClassesRegistry, make_soup
+from ..utils import RPCClassesRegistry, make_soup, TorrentData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +43,8 @@ class UTorrentRPC(BaseRPC):
 
         else:
             self.url = f'http://{host}:{port}/gui/'
+
+        super().__init__()
 
     def login(self):
 
@@ -147,10 +149,10 @@ class UTorrentRPC(BaseRPC):
 
         return torrents_info
 
-    def method_add_torrent(self, torrent: dict, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
 
         # NB: `download_to` is ignored, as existing API approach to it is crippled.
-        file_data = {'torrent_file': ('from_torrt.torrent', torrent['torrent'])}
+        file_data = {'torrent_file': ('from_torrt.torrent', torrent.raw)}
 
         return self.query(self.build_params(action='add-file'), file_data)
 

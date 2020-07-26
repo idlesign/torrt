@@ -23,6 +23,7 @@ class TelegramNotifier(BaseNotifier):
         """
         self.token = token
         self.chat_id = chat_id
+        super().__init__()
 
     def make_message(self, torrent_data: dict) -> str:
         return (

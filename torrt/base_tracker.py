@@ -11,7 +11,9 @@ from bs4 import BeautifulSoup
 from requests import Response
 
 from .exceptions import TorrtTrackerException
-from .utils import parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, dump_contents
+from .utils import (
+    parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, dump_contents, TorrentData
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +41,7 @@ class BaseTracker(WithSettings):
 
     def __init__(self):
         self.mirror_picked: Optional[str] = None
+        super().__init__()
 
     def encode_value(self, value: str) -> Union[bytes, str]:
         """Encodes a value.
@@ -266,7 +269,7 @@ class BaseTracker(WithSettings):
         """This should implement a configuration test, e.g. make test login and report success."""
         return True
 
-    def get_torrent(self, url: str) -> bytes:
+    def get_torrent(self, url: str) -> Optional[TorrentData]:
         """This method should be implemented in torrent tracker handler class
         and must return .torrent file contents.
 
@@ -287,31 +290,35 @@ class GenericTracker(BaseTracker):
         """
         return url.split('=')[1]
 
-    def get_torrent(self, url: str) -> Optional[dict]:
+    def get_torrent(self, url: str) -> Optional[TorrentData]:
         """This is the main method which returns torrent file contents
         of file located at URL.
 
         :param url: URL to find and get torrent from
 
         """
-        torrent_data = None
         download_link = self.get_download_link(url)
 
         if not download_link:
             LOGGER.error(f'Cannot find torrent file download link at {url}')
+            return None
 
-        else:
-            LOGGER.debug(f'Torrent download link found: {download_link}')
+        LOGGER.debug(f'Torrent download link found: {download_link}')
 
-            torrent_data = self.download_torrent(download_link, referer=url)
+        torrent_contents = self.download_torrent(download_link, referer=url)
 
-            if torrent_data is None:
-                LOGGER.debug(f'Torrent download from `{download_link}` has failed')
+        if torrent_contents is None:
+            LOGGER.debug(f'Torrent download from `{download_link}` has failed')
+            return None
 
-            else:
-                torrent_data = parse_torrent(torrent_data)
+        parsed = parse_torrent(torrent_contents)
 
-        return torrent_data
+        return TorrentData(
+            url=url,
+            url_file=download_link,
+            parsed=parsed,
+            raw=torrent_contents,
+        )
 
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link on page and return it.

@@ -6,7 +6,7 @@ from requests import Response
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import RPCClassesRegistry, base64encode, parse_torrent
+from ..utils import RPCClassesRegistry, base64encode, TorrentData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +45,8 @@ class TransmissionRPC(BaseRPC):
         else:
             self.url = f'http://{host}:{port}/transmission/rpc'
 
+        super().__init__()
+
     def query_(self, data: dict) -> Response:
 
         try:
@@ -52,7 +54,8 @@ class TransmissionRPC(BaseRPC):
                 self.url,
                 auth=(self.user, self.password),
                 json=data,
-                headers={self.csrf_header: self.session_id}
+                headers={self.csrf_header: self.session_id},
+                proxies={'http': None, 'https': None},  # todo factor out httpclient
             )
 
         except requests.exceptions.RequestException as e:
@@ -127,19 +130,23 @@ class TransmissionRPC(BaseRPC):
 
         return result['torrents']
 
-    def method_add_torrent(self, torrent: dict, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
+
         args = {
-            'metainfo': base64encode(torrent['torrent']).decode(),
+            'metainfo': base64encode(torrent.raw).decode(),
         }
 
-        if params:
+        params_files = params.get('files')
+
+        if params_files:
+            # Handle download exclusions.
             excluded_indices = []
-            for idx, filename in enumerate(torrent['files']):
-                file_info: dict = params.get(filename, None)
+            for idx, (filename, _) in enumerate(torrent.parsed.files):
+                file_info: dict = params_files.get(filename, None)
                 if file_info and file_info.get('exclude', False):
                     excluded_indices.append(idx)
 
-            if not excluded_indices:
+            if excluded_indices:
                 args['files-unwanted'] = excluded_indices
 
         if download_to is not None:

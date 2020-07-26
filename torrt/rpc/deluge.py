@@ -7,7 +7,7 @@ from requests import Response
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import RPCClassesRegistry, base64encode
+from ..utils import RPCClassesRegistry, base64encode, TorrentData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +49,8 @@ class DelugeRPC(BaseRPC):
 
         else:
             self.url = f'http://{host}:{port}/json'
+
+        super().__init__()
 
     def method_login(self) -> bool:
 
@@ -131,9 +133,9 @@ class DelugeRPC(BaseRPC):
 
         return result['torrents']
 
-    def method_add_torrent(self, torrent: dict, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
 
-        torrent_dump = base64encode(torrent['torrent']).decode()
+        torrent_dump = base64encode(torrent.raw).decode()
 
         return self.query(
             self.build_request_payload(

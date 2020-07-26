@@ -7,7 +7,7 @@ from requests import Response
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import RPCClassesRegistry
+from ..utils import RPCClassesRegistry, TorrentData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +59,8 @@ class QBittorrentRPC(BaseRPC):
 
         else:
             self.url = f'http://{host}:{port}/'
+
+        super().__init__()
 
     def login(self):
 
@@ -184,9 +186,9 @@ class QBittorrentRPC(BaseRPC):
 
         return torrents_info
 
-    def method_add_torrent(self, torrent: dict, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
 
-        file_data = {'torrents': torrent['torrent']}
+        file_data = {'torrents': torrent.raw}
 
         if download_to is not None:
             file_data.update({'savepath': download_to})

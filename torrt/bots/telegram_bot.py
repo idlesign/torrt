@@ -44,6 +44,8 @@ class TelegramBot(BaseBot):
         if self.allowed_users:
             self.handler_kwargs = {'filters': Filters.user(username=self.allowed_users.split(','))}
 
+        super().__init__()
+
     def test_configuration(self) -> bool:
         return telegram and bool(self.updater)
 

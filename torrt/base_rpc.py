@@ -1,6 +1,6 @@
 from typing import Dict, List, Any
 
-from .utils import WithSettings, RPCObjectsRegistry
+from .utils import WithSettings, RPCObjectsRegistry, TorrentData
 
 
 class BaseRPC(WithSettings):
@@ -39,7 +39,7 @@ class BaseRPC(WithSettings):
         """
         raise NotImplementedError  # pragma: nocover
 
-    def method_add_torrent(self, torrent: dict, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
         """Adds torrent to torrent client using RPC.
 
         :param torrent: torrent info

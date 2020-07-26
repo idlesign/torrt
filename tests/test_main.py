@@ -6,7 +6,7 @@ from torrt.base_rpc import BaseRPC
 from torrt.base_tracker import GenericPublicTracker
 from torrt.toolbox import bootstrap, TrackerClassesRegistry, NotifierClassesRegistry, RPCClassesRegistry, \
     configure_rpc, configure_tracker, add_torrent_from_url, get_registered_torrents, walk, remove_torrent, toggle_rpc
-from torrt.utils import RPCObjectsRegistry
+from torrt.utils import RPCObjectsRegistry, TorrentData
 
 CURRENT_DIR = dirname(realpath(__file__))
 
@@ -37,9 +37,10 @@ class DummyRPC(BaseRPC):
     def __init__(self, enabled=False):
         self.enabled = enabled
         self.torrents = {}
+        super().__init__()
 
-    def method_add_torrent(self, torrent: dict, download_to: str = None, params: dict = None):
-        parsed = Torrent.from_string(torrent['torrent'])
+    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None):
+        parsed = Torrent.from_string(torrent.raw)
         self.torrents[parsed.info_hash] = parsed
 
     def method_remove_torrent(self, hash_str, with_data=False):

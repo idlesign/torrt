@@ -36,6 +36,8 @@ class EmailNotifier(BaseNotifier):
 
         self.connection = self.get_connection()
 
+        super().__init__()
+
     def get_connection(self):
 
         try:
