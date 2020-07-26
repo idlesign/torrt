@@ -157,9 +157,13 @@ class AnilibriaTracker(GenericPublicTracker):
         Get release json by passed `code` from Anilibria API.
 
         :param code: release code
-        :return: json
+
         """
         response = self.get_response(API_URL, {'query': 'release', 'code': code}, as_soup=False)
+
+        if not response:
+            return {}
+
         return response.json()
 
 
