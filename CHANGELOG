@@ -9,6 +9,7 @@ Unreleased
 + Add mirrors for casstudio and kinozal (see #55).
 + RPC. Try to preserve list of excluded files.
 * Anilibria. Improved series range picking.
+* Fixed automatic PRC enable on configuration.
 
 
 v0.13.1 [2020-02-16]

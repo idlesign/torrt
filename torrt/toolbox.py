@@ -32,9 +32,10 @@ def tunnel():
     if tunnel_through:
 
         if tunnel_through == 'local':
+            # pip install requests[socks]
             tunnel_through = 'socks5://127.0.0.1:9150'
 
-        # Instruct `requests` http://docs.python-requests.org/en/master/user/advanced/#socks
+        # Instruct `requests` https://requests.readthedocs.io/en/master/user/advanced/#socks
         environ['HTTP_PROXY'] = tunnel_through
         environ['HTTPS_PROXY'] = tunnel_through
 
@@ -67,12 +68,10 @@ def configure_rpc(rpc_alias: str, settings_dict: dict) -> Optional['BaseRPC']:
     :param settings_dict: settings dictionary to configure RPC with
 
     """
-    rpc = configure_entity('RPC', RPCClassesRegistry, rpc_alias, settings_dict)
-
-    if rpc:
+    def enable(rpc: 'BaseRPC'):
         rpc.enabled = True
 
-    return rpc
+    return configure_entity('RPC', RPCClassesRegistry, rpc_alias, settings_dict, before_save=enable)
 
 
 def configure_tracker(tracker_alias: str, settings_dict: dict) -> Optional['BaseTracker']:

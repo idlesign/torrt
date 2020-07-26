@@ -9,7 +9,7 @@ from datetime import datetime
 from inspect import getfullargspec
 from pathlib import Path
 from pkgutil import iter_modules
-from typing import Any, Optional, Union, Generator, Tuple
+from typing import Any, Optional, Union, Generator, Tuple, Callable
 
 from bs4 import BeautifulSoup
 from requests import Response
@@ -93,15 +93,27 @@ def dump_contents(filename: str, contents: Union[bytes, Response]):
         f.write(text)
 
 
-def configure_entity(type_name: str, registry, alias: str, settings_dict: dict = None) -> Optional['WithSettings']:
+def configure_entity(
+        type_name: str,
+        registry, alias: str,
+        settings_dict: dict = None,
+        *,
+        before_save: Callable = None
+) -> Optional['WithSettings']:
     """Configures and spawns objects using given settings.
 
     Successful configuration is saved.
 
     :param type_name: Entity type name to be used in massages.
+
     :param registry: Registry object.
+
     :param alias: Entity alias.
+
     :param settings_dict: Settings dictionary to configure object with.
+
+    :param before_save: Function to trigger right before configuration is saved.
+        Should accept entity object as argument.
 
     """
     LOGGER.info(f'Configuring `{alias}` {type_name.lower()} ...')
@@ -114,6 +126,7 @@ def configure_entity(type_name: str, registry, alias: str, settings_dict: dict =
         configured = obj.test_configuration()
 
         if configured:
+            before_save and before_save(obj)
             obj.save_settings()
             LOGGER.info(f'{type_name} `{alias}` is configured')
 
