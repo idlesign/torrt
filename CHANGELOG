@@ -6,6 +6,7 @@ Unreleased
 ----------
 ! Dropped QA for Python 3.5. Added QA for 3.8.
 ! Dropped support for Python 2.
++ Add --dump switch for 'add_torrent' command.
 + Add mirrors for casstudio and kinozal (see #55).
 + Added tools to extract additional information from torrent pages.
 + RPC. Try to preserve list of excluded files.

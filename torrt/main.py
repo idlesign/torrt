@@ -16,6 +16,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def process_commands():
+
     def settings_dict_from_list(lst):
         settings_dict = {}
         for s in lst:
@@ -111,6 +112,8 @@ def process_commands():
         '-d',
         help='Destination path to download torrent contents into (in filesystem where torrent client daemon works)',
         dest='download_to', default=None)
+    parser_add_torrent.add_argument(
+        '--dump', help='Dump web pages scraped by torrt into current or a given directory', dest='dump')
 
     parser_remove_torrent = subp_main.add_parser(
         'remove_torrent', help='Removes torrent by its hash both from torrt and torrent clients')
@@ -146,6 +149,11 @@ def process_commands():
     configure_logging(logging.DEBUG if args.get('verbose') else logging.INFO)
 
     bootstrap()
+
+    dump_into = args.get('dump')
+
+    if dump_into:
+        GlobalParam.set('dump_into', path.abspath(dump_into))
 
     if args['command'] == 'enable_rpc':
         toggle_rpc(args['alias'], True)
@@ -186,11 +194,6 @@ def process_commands():
             LOGGER.info(f"{notifier_alias}\t status={notifier_status}")
 
     elif args['command'] == 'walk':
-        dump_into = args.get('dump')
-
-        if dump_into:
-            GlobalParam.set('dump_into', path.abspath(dump_into))
-
         walk(forced=args['forced'], silent=True)
 
     elif args['command'] == 'set_walk_interval':
