@@ -4,9 +4,10 @@ import logging
 import os
 import re
 import threading
-from collections import Mapping, namedtuple
+from collections import Mapping
 from datetime import datetime
 from inspect import getfullargspec
+from pathlib import Path
 from pkgutil import iter_modules
 from typing import Any, Optional, Union, Generator, Tuple
 
@@ -15,10 +16,10 @@ from requests import Response
 from torrentool.api import Torrent
 
 if False:  # pragma: nocover
-    from .base_tracker import GenericTracker
-    from .base_rpc import BaseRPC
-    from .base_bot import BaseBot
-    from .base_notifier import BaseNotifier
+    from .base_tracker import GenericTracker  # noqa
+    from .base_rpc import BaseRPC  # noqa
+    from .base_bot import BaseBot  # noqa
+    from .base_notifier import BaseNotifier  # noqa
 
 
 LOGGER = logging.getLogger(__name__)
@@ -88,7 +89,7 @@ def dump_contents(filename: str, contents: Union[bytes, Response]):
         # requests lib response
         text = contents.content
 
-    with open(os.path.join(dump_into, filename), 'wb') as f:
+    with open(str(Path(dump_into) / filename), 'wb') as f:
         f.write(text)
 
 
@@ -148,7 +149,7 @@ def import_from_path(path: str):
     :param path: path under torrt
 
     """
-    for _, pname, ispkg in iter_modules([os.path.join(os.path.dirname(__file__), path)]):
+    for _, pname, ispkg in iter_modules([str(Path(__file__).parent / path)]):
         __import__(f'torrt.{path}.{pname}')
 
 
@@ -393,8 +394,8 @@ class WithSettings:
 class TorrtConfig:
     """Gives methods to work with torrt configuration file."""
 
-    USER_DATA_PATH = os.path.join(os.path.expanduser('~'), '.torrt')
-    USER_SETTINGS_FILE = os.path.join(USER_DATA_PATH, 'config.json')
+    USER_DATA_PATH = Path('~').expanduser() / '.torrt'
+    USER_SETTINGS_FILE = USER_DATA_PATH / 'config.json'
 
     _basic_settings = {
         'time_last_check': 0,
@@ -426,14 +427,14 @@ class TorrtConfig:
     def bootstrap(cls):
         """Initializes configuration file if needed."""
 
-        if not os.path.exists(cls.USER_DATA_PATH):
-            os.makedirs(cls.USER_DATA_PATH)
+        if not cls.USER_DATA_PATH.exists():
+            os.makedirs(str(cls.USER_DATA_PATH))
 
-        if not os.path.exists(cls.USER_SETTINGS_FILE):
+        if not cls.USER_SETTINGS_FILE.exists():
             cls.save(cls._basic_settings)
 
         # My precious.
-        os.chmod(cls.USER_SETTINGS_FILE, 0o600)
+        os.chmod(str(cls.USER_SETTINGS_FILE), 0o600)
 
     @classmethod
     def update(cls, settings_dict: dict):
@@ -452,7 +453,7 @@ class TorrtConfig:
 
         cls.bootstrap()
 
-        with open(cls.USER_SETTINGS_FILE) as f:
+        with open(str(cls.USER_SETTINGS_FILE)) as f:
             settings = json.load(f)
 
         # Pick up settings entries added in new version
@@ -472,7 +473,7 @@ class TorrtConfig:
         """
         LOGGER.debug(f'Saving configuration file {cls.USER_SETTINGS_FILE} ...')
 
-        with open(cls.USER_SETTINGS_FILE, 'w') as f:
+        with open(str(cls.USER_SETTINGS_FILE), 'w') as f:
             json.dump(settings_dict, f, indent=4)
 
 
