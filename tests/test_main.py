@@ -1,5 +1,4 @@
 from os.path import dirname, realpath, join
-from typing import List
 
 from torrentool.torrent import Torrent
 
@@ -71,7 +70,7 @@ class DummyRPC(BaseRPC):
 RPCClassesRegistry.add(DummyRPC)
 
 
-def test_fullcycle(monkeypatch):
+def test_fullcycle(monkeypatch, datafix_dir):
 
     # todo Dummy notifier
     # todo Dummy bot
@@ -94,18 +93,14 @@ def test_fullcycle(monkeypatch):
         def save(cls, settings_dict):
             cls.cfg = settings_dict
 
-    def read_file(name):
-        with open(join(CURRENT_DIR, name), 'rb') as f:
-            return f.read()
-
     def patch_requests(response_contents):
         monkeypatch.setattr('requests.get', lambda url, **kwargs: DummyResponse(url, response_contents))
 
     torrent_one_hash = 'c815be93f20bf8b12fed14bee35c14b19b1d1984'
-    torrent_one_data = read_file('torr_one.torrent')
+    torrent_one_data = (datafix_dir / 'torr_one.torrent').read_bytes()
 
     torrent_two_hash = '65f491bbdef45a26388a9337a91826a75c4c59fb'
-    torrent_two_data = read_file('torr_two.torrent')
+    torrent_two_data = (datafix_dir / 'torr_two.torrent').read_bytes()
 
     class DummyResponse(object):
 
