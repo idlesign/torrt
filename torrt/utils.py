@@ -489,9 +489,9 @@ class TorrtConfig:
 
         # Pick up settings entries added in new version
         # and put them into old user config.
-        for k, v in cls._basic_settings.items():
-            if k not in settings:
-                settings[k] = v
+        for key, val in cls._basic_settings.items():
+            if key not in settings:
+                settings[key] = val
 
         return settings
 

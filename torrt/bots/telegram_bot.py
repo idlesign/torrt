@@ -164,7 +164,7 @@ class TelegramBot(BaseBot):
 
             except Exception as e:
 
-                logging.error(f'Unable to add torrent: {e}')
+                LOGGER.error(f'Unable to add torrent: {e}')
 
                 update.message.reply_text(
                     'Error was occurred during registering torrent.',
@@ -222,7 +222,7 @@ class TelegramBot(BaseBot):
             if torrent_data:
                 remove_torrent(torrent_hash, with_data=bool(int(split_data[0])))
                 update.callback_query.message.reply_text(
-                    'Torrent `{}` was removed'.format(torrent_data['name']))
+                    f"Torrent `{torrent_data['name']}` was removed")
 
             else:
                 update.callback_query.message.reply_text(
@@ -263,7 +263,7 @@ class TelegramBot(BaseBot):
 
         except Exception as e:
 
-            logging.error('Unable to register the torrent: {}'.format(e))
+            LOGGER.error(f'Unable to register the torrent: {e}')
             bot.send_message(chat_id, text='Unable to register the torrent due to an error.')
 
         if len(get_registered_torrents()) > torrents_count:
@@ -277,12 +277,12 @@ class TelegramBot(BaseBot):
 
         torrents = []
 
-        for i, trnt in enumerate(get_registered_torrents().values(), 1):
-            if trnt.get('url'):
-                torrents.append('{}. {}\n{}'.format(i, trnt['name'], trnt['url']))
+        for idx, torrent in enumerate(get_registered_torrents().values(), 1):
+            if torrent.get('url'):
+                torrents.append(f"{idx}. {torrent['name']}\n{torrent['url']}")
 
             else:
-                torrents.append('{}. {}'.format(i, trnt['name']))
+                torrents.append(f"{idx}. {torrent['name']}")
 
         if torrents:
             update.message.reply_text('\n\n'.join(torrents))
@@ -295,8 +295,13 @@ class TelegramBot(BaseBot):
 
         buttons = []
 
-        for trnt in get_registered_torrents().values():
-            buttons.append([InlineKeyboardButton(text=trnt['name'], callback_data='hash:{hash}'.format(**trnt))])
+        for torrent in get_registered_torrents().values():
+            buttons.append([
+                InlineKeyboardButton(
+                    text=torrent['name'],
+                    callback_data=f"hash:{torrent['hash']}"
+                )
+            ])
 
         bot.send_message(
             update.message.chat_id,
