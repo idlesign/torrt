@@ -255,11 +255,11 @@ class TorrentData:
     ):
         self.url = url
         self.url_file = url_file
-        self.name = name
 
         self.raw = raw
         self.parsed = parsed
 
+        self._name = name
         self._hash = hash
 
     def _get_hash(self):
@@ -268,7 +268,14 @@ class TorrentData:
     def _set_hash(self, val: str):
         self._hash = val
 
+    def _get_name(self):
+        return self._name or self.parsed.name
+
+    def _set_name(self, val: str):
+        self._name = val
+
     hash = property(_get_hash, _set_hash)
+    name = property(_get_name, _set_name)
 
     def to_dict(self) -> dict:
         result = {
