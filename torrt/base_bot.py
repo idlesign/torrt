@@ -1,9 +1,13 @@
-from .utils import WithSettings, BotObjectsRegistry
+from .utils import WithSettings, BotObjectsRegistry, BotClassesRegistry
 
 
 class BaseBot(WithSettings):
 
     config_entry_name: str = 'bots'
+
+    def __init_subclass__(cls, **kwargs):
+        if cls.alias:
+            BotClassesRegistry.add(cls)
 
     def register(self):
         """Adds this object intoBotObjectsRegistry."""

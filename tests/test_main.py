@@ -68,9 +68,6 @@ class DummyRPC(BaseRPC):
         return '0.0.1'
 
 
-RPCClassesRegistry.add(DummyRPC)
-
-
 def test_fullcycle(monkeypatch, datafix_dir):
 
     # todo Dummy notifier

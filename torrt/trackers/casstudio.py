@@ -2,7 +2,6 @@ import logging
 from typing import List
 
 from ..base_tracker import GenericPrivateTracker
-from ..utils import TrackerClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +59,3 @@ class CasstudioTracker(GenericPrivateTracker):
             return self.expand_link(url, download_tag['href'])
 
         return ''
-
-
-TrackerClassesRegistry.add(CasstudioTracker)

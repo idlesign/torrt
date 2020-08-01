@@ -5,7 +5,6 @@ from smtplib import SMTP, SMTPAuthenticationError
 from typing import Union
 
 from ..base_notifier import BaseNotifier
-from ..utils import NotifierClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +94,3 @@ class EmailNotifier(BaseNotifier):
         LOGGER.info(f'Notification message was sent to user {self.email}')
 
         return msg.as_string()
-
-
-NotifierClassesRegistry.add(EmailNotifier)

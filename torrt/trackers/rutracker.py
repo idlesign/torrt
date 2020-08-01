@@ -4,7 +4,6 @@ from typing import List, Optional
 from bs4 import BeautifulSoup
 
 from ..base_tracker import GenericPrivateTracker
-from ..utils import TrackerClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +88,3 @@ class RuTrackerTracker(GenericPrivateTracker):
             return None
 
         return response.content
-
-
-# With that one we tell torrt to handle links to `rutracker.org` domain with RutrackerHandler class.
-TrackerClassesRegistry.add(RuTrackerTracker)

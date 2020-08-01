@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import List, Optional
 
 from ..base_tracker import GenericPrivateTracker
-from ..utils import TrackerClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +54,3 @@ class NNMClubTracker(GenericPrivateTracker):
                 download_link = self.get_download_link(url)
 
         return download_link or ''
-
-
-# With that one we tell torrt to handle links to `nnm-club.me` domain with NNMClubTracker class.
-TrackerClassesRegistry.add(NNMClubTracker)

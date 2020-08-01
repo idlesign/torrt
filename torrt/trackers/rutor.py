@@ -1,10 +1,7 @@
 import logging
 from typing import List
 
-from bs4 import BeautifulSoup
-
 from ..base_tracker import GenericPublicTracker
-from ..utils import TrackerClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +41,3 @@ class RutorTracker(GenericPublicTracker):
         download_link = self.find_links(url, page_soup, definite=expected_link)
 
         return download_link or ''
-
-
-TrackerClassesRegistry.add(RutorTracker)

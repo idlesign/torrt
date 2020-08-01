@@ -2,7 +2,6 @@ import logging
 from typing import List
 
 from ..base_tracker import GenericPrivateTracker
-from ..utils import TrackerClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +32,3 @@ class KinozalTracker(GenericPrivateTracker):
         download_link = self.find_links(url, page_soup, definite=expected_link)
 
         return download_link or ''
-
-
-TrackerClassesRegistry.add(KinozalTracker)

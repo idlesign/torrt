@@ -3,14 +3,16 @@ from typing import Optional
 
 from ..base_bot import BaseBot
 from ..toolbox import add_torrent_from_url, get_registered_torrents, remove_torrent
-from ..utils import BotClassesRegistry, get_torrent_from_url, RPCObjectsRegistry
+from ..utils import get_torrent_from_url, RPCObjectsRegistry
 
 try:
     import telegram
-    from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, Bot, \
-        Update
-    from telegram.ext import Filters, Updater, ConversationHandler, CommandHandler, MessageHandler, RegexHandler, \
-    CallbackQueryHandler
+    from telegram import (
+        ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, Bot, Update
+    )
+    from telegram.ext import (
+        Filters, Updater, ConversationHandler, CommandHandler, MessageHandler, RegexHandler, CallbackQueryHandler
+    )
 
 except ImportError:
     telegram = None
@@ -321,6 +323,3 @@ class TelegramBot(BaseBot):
         )
 
         update.message.reply_text(helptext)
-
-
-BotClassesRegistry.add(TelegramBot)

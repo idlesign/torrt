@@ -6,7 +6,7 @@ import requests
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import RPCClassesRegistry, make_soup, TorrentData
+from ..utils import make_soup, TorrentData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -172,6 +172,3 @@ class UTorrentRPC(BaseRPC):
 
 class UTorrentRPCException(TorrtRPCException):
     """"""
-
-
-RPCClassesRegistry.add(UTorrentRPC)

@@ -1,6 +1,6 @@
 from typing import Dict, List, Any
 
-from .utils import WithSettings, RPCObjectsRegistry, TorrentData
+from .utils import WithSettings, RPCObjectsRegistry, TorrentData, RPCClassesRegistry
 
 
 class BaseRPC(WithSettings):
@@ -12,6 +12,10 @@ class BaseRPC(WithSettings):
     """mapping from torrent fields names in terms of RPC to field names in term of torrt"""
 
     enabled: bool = False
+
+    def __init_subclass__(cls, **kwargs):
+        if cls.alias:
+            RPCClassesRegistry.add(cls)
 
     def register(self):
         """Adds this object into RPCObjectsRegistry."""

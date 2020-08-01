@@ -1,10 +1,7 @@
 import logging
 from typing import List
 
-from bs4 import BeautifulSoup
-
 from ..base_tracker import GenericPrivateTracker
-from ..utils import TrackerClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -98,6 +95,3 @@ class AniDUBTracker(GenericPrivateTracker):
                         LOGGER.debug(f'Unable to find a link for `{target_quality}` quality')
 
         return download_link
-
-
-TrackerClassesRegistry.add(AniDUBTracker)

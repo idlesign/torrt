@@ -4,7 +4,6 @@ import requests
 from requests import RequestException
 
 from ..base_notifier import BaseNotifier
-from ..utils import NotifierClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +62,3 @@ class TelegramNotifier(BaseNotifier):
                 LOGGER.error(
                     'Telegram notification not sent. '
                     f'Response code: {response.status_code} ({response.reason})')
-
-
-NotifierClassesRegistry.add(TelegramNotifier)

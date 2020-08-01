@@ -7,7 +7,7 @@ from requests import Response
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import RPCClassesRegistry, base64encode, TorrentData
+from ..utils import base64encode, TorrentData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -152,6 +152,3 @@ class DelugeRPC(BaseRPC):
 
 class DelugeRPCException(TorrtRPCException):
     """"""
-
-
-RPCClassesRegistry.add(DelugeRPC)

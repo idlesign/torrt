@@ -14,7 +14,7 @@ from requests import Response
 from .exceptions import TorrtTrackerException
 from .utils import (
     parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, dump_contents, TorrentData,
-    PageData
+    PageData, TrackerClassesRegistry
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -59,6 +59,10 @@ class BaseTracker(WithSettings):
         self._torrent_page: Optional[BeautifulSoup] = None
 
         super().__init__()
+
+    def __init_subclass__(cls, **kwargs):
+        if cls.alias:
+            TrackerClassesRegistry.add(cls)
 
     def get_query_string(self) -> str:
         return self.query_string

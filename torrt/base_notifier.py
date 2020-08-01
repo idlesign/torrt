@@ -1,6 +1,6 @@
 import logging
 
-from .utils import WithSettings, NotifierObjectsRegistry
+from .utils import WithSettings, NotifierObjectsRegistry, NotifierClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -9,6 +9,10 @@ class BaseNotifier(WithSettings):
     """Base Notifier class. All Notifier classes should inherit from this."""
 
     config_entry_name: str = 'notifiers'
+
+    def __init_subclass__(cls, **kwargs):
+        if cls.alias:
+            NotifierClassesRegistry.add(cls)
 
     def register(self):
         """Adds this object into NotificationObjectsRegistry."""

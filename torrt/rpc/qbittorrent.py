@@ -7,7 +7,7 @@ from requests import Response
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import RPCClassesRegistry, TorrentData
+from ..utils import TorrentData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -213,6 +213,3 @@ class QBittorrentRPC(BaseRPC):
 
 class QBittorrentRPCException(TorrtRPCException):
     """"""
-
-
-RPCClassesRegistry.add(QBittorrentRPC)

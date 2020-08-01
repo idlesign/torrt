@@ -4,7 +4,6 @@ from collections import defaultdict
 from typing import List, Dict, Optional, Tuple
 
 from ..base_tracker import GenericPublicTracker
-from ..utils import TrackerClassesRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -167,6 +166,3 @@ class AnilibriaTracker(GenericPublicTracker):
             return {}
 
         return response.json()
-
-
-TrackerClassesRegistry.add(AnilibriaTracker)
