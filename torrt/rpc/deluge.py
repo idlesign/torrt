@@ -1,5 +1,4 @@
 import json
-import logging
 from typing import Dict, Any, List
 
 import requests
@@ -8,8 +7,6 @@ from requests import Response
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
 from ..utils import base64encode, TorrentData
-
-LOGGER = logging.getLogger(__name__)
 
 
 class DelugeRPC(BaseRPC):
@@ -54,7 +51,7 @@ class DelugeRPC(BaseRPC):
 
     def method_login(self) -> bool:
 
-        LOGGER.debug('Logging in ...')
+        self.log_debug('Logging in ...')
 
         data = self.build_request_payload('auth.login', [self.password])
 
@@ -65,7 +62,7 @@ class DelugeRPC(BaseRPC):
             self.cookies = response.cookies
             return self.method_is_connected()
 
-        LOGGER.error('Login failed')
+        self.log_error('Login failed')
 
         return False
 
@@ -86,7 +83,7 @@ class DelugeRPC(BaseRPC):
 
         except requests.exceptions.RequestException as e:
 
-            LOGGER.error(f'Failed to query RPC `{self.url}`: {e}')
+            self.log_error(f'Failed to query RPC `{self.url}`: {e}')
             raise DelugeRPCException(str(e))
 
         return response
@@ -96,7 +93,7 @@ class DelugeRPC(BaseRPC):
         if not self.cookies:
             self.method_login()
 
-        LOGGER.debug(f"RPC method `{data['method']}` ...")
+        self.log_debug(f"RPC method `{data['method']}` ...")
 
         response = self.query_(data)
         response = response.json()

@@ -1,8 +1,4 @@
-import logging
-
 from .utils import WithSettings, NotifierObjectsRegistry, NotifierClassesRegistry
-
-LOGGER = logging.getLogger(__name__)
 
 
 class BaseNotifier(WithSettings):
@@ -19,21 +15,21 @@ class BaseNotifier(WithSettings):
 
         NotifierObjectsRegistry.add(self)
 
-    def send_message(self, msg: str):
+    def send_message(self, msg: str):  # pragma: nocover
         """Send prepared message
 
         :param msg: Prepared by notifier backend message
 
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError
 
-    def make_message(self, torrent_data: dict) -> str:
+    def make_message(self, torrent_data: dict) -> str:  # pragma: nocover
         """Creates message in format suitable for notifier backend
 
         :param: torrent_data: dictionary with updated torrents data during the walk operation
 
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError
 
     def test_configuration(self) -> bool:
         """This should implement a configuration test, for example check given credentials."""

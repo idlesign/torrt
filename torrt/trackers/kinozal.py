@@ -1,9 +1,6 @@
-import logging
 from typing import List
 
 from ..base_tracker import GenericPrivateTracker
-
-LOGGER = logging.getLogger(__name__)
 
 
 class KinozalTracker(GenericPrivateTracker):

@@ -3,12 +3,16 @@ import logging
 from os import path
 
 from torrt import VERSION
-from torrt.toolbox import add_torrent_from_url, remove_torrent, \
-    register_torrent, unregister_torrent, get_registered_torrents, \
-    walk, set_walk_interval, toggle_rpc, configure_logging, bootstrap, \
+from torrt.toolbox import (
+    add_torrent_from_url, remove_torrent,
+    register_torrent, unregister_torrent, get_registered_torrents,
+    walk, set_walk_interval, toggle_rpc, configure_logging, bootstrap,
     configure_rpc, configure_tracker, configure_notifier, remove_notifier, configure_bot, run_bots
-from torrt.utils import RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRegistry, NotifierClassesRegistry, \
+)
+from torrt.utils import (
+    RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRegistry, NotifierClassesRegistry,
     NotifierObjectsRegistry, GlobalParam
+)
 
 LOGGER = logging.getLogger(__name__)
 

@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 
 from ..base_bot import BaseBot
@@ -17,8 +16,6 @@ try:
 except ImportError:
     telegram = None
 
-LOGGER = logging.getLogger(__name__)
-
 
 class TelegramBot(BaseBot):
 
@@ -34,7 +31,7 @@ class TelegramBot(BaseBot):
 
         """
         if not telegram:
-            LOGGER.error('You have not installed python-telegram-bot library.')
+            self.log_error('You have not installed python-telegram-bot library.')
             return
 
         self.token = token
@@ -166,7 +163,7 @@ class TelegramBot(BaseBot):
 
             except Exception as e:
 
-                LOGGER.error(f'Unable to add torrent: {e}')
+                self.log_error(f'Unable to add torrent: {e}')
 
                 update.message.reply_text(
                     'Error was occurred during registering torrent.',
@@ -265,7 +262,7 @@ class TelegramBot(BaseBot):
 
         except Exception as e:
 
-            LOGGER.error(f'Unable to register the torrent: {e}')
+            self.log_error(f'Unable to register the torrent: {e}')
             bot.send_message(chat_id, text='Unable to register the torrent due to an error.')
 
         if len(get_registered_torrents()) > torrents_count:

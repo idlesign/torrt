@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, Any, Union, List
 
 import requests
@@ -7,8 +6,6 @@ from requests import Response
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
 from ..utils import base64encode, TorrentData
-
-LOGGER = logging.getLogger(__name__)
 
 
 class TransmissionRPC(BaseRPC):
@@ -60,14 +57,14 @@ class TransmissionRPC(BaseRPC):
 
         except requests.exceptions.RequestException as e:
 
-            LOGGER.error(f'Failed to query RPC `{self.url}`: {e}')
+            self.log_error(f'Failed to query RPC `{self.url}`: {e}')
             raise TransmissionRPCException(str(e))
 
         return response
 
     def query(self, data: dict) -> Any:
 
-        LOGGER.debug(f"RPC method `{data['method']}` ...")
+        self.log_debug(f"RPC method `{data['method']}` ...")
 
         response = self.query_(data)
 

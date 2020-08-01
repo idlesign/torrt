@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, List, Any
 from urllib.parse import urljoin
 
@@ -8,8 +7,6 @@ from requests import Response
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
 from ..utils import TorrentData
-
-LOGGER = logging.getLogger(__name__)
 
 
 class QBittorrentRPC(BaseRPC):
@@ -79,7 +76,7 @@ class QBittorrentRPC(BaseRPC):
 
         except Exception as e:
 
-            LOGGER.error(f'Failed to login using `{self.url}` RPC: {e}')
+            self.log_error(f'Failed to login using `{self.url}` RPC: {e}')
             raise QBittorrentRPCException(str(e))
 
     @staticmethod
@@ -106,7 +103,7 @@ class QBittorrentRPC(BaseRPC):
     def query(self, data: dict, files: dict = None) -> Response:
 
         action = data['action'] or 'list'
-        LOGGER.debug(f'RPC action `{action}` ...')
+        self.log_debug(f'RPC action `{action}` ...')
 
         try:
             url = self.get_request_url(data)
@@ -132,12 +129,12 @@ class QBittorrentRPC(BaseRPC):
 
             except Exception as e:
 
-                LOGGER.error(f'Failed to query RPC `{url}`: {e}')
+                self.log_error(f'Failed to query RPC `{url}`: {e}')
                 raise QBittorrentRPCException(e)
 
         except Exception as e:
 
-            LOGGER.error(f'Failed to query RPC `{action}`: {e}')
+            self.log_error(f'Failed to query RPC `{action}`: {e}')
             raise QBittorrentRPCException(str(e))
 
         return response

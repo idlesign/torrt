@@ -1,4 +1,3 @@
-import logging
 import re
 from datetime import datetime
 from functools import partial
@@ -16,8 +15,6 @@ from .utils import (
     parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, dump_contents, TorrentData,
     PageData, TrackerClassesRegistry
 )
-
-LOGGER = logging.getLogger(__name__)
 
 REQUEST_TIMEOUT = 10
 REQUEST_USER_AGENT = (
@@ -84,7 +81,7 @@ class BaseTracker(WithSettings):
         mirror_picked = self.mirror_picked
 
         if mirror_picked is None:
-            LOGGER.debug('Picking a mirror ...')
+            self.log_debug('Picking a mirror ...')
 
             original_domain = self.extract_domain(url)
             mirror_picked = original_domain
@@ -92,7 +89,7 @@ class BaseTracker(WithSettings):
             for mirror_domain in self.mirrors:
                 mirror_url = f'{self.extract_scheme(url)}://{mirror_domain}'
 
-                LOGGER.debug(f'Probing mirror: `{mirror_url}` ...')
+                self.log_debug(f'Probing mirror: `{mirror_url}` ...')
 
                 try:
                     response = requests.get(mirror_url)
@@ -198,7 +195,7 @@ class BaseTracker(WithSettings):
 
         url = self.get_mirrored_url(url)
 
-        LOGGER.debug(f'Fetching {url} ...')
+        self.log_debug(f'Fetching {url} ...')
 
         headers = {'User-agent': REQUEST_USER_AGENT}
 
@@ -232,7 +229,7 @@ class BaseTracker(WithSettings):
             return result
 
         except requests.exceptions.RequestException as e:
-            LOGGER.error(f"Failed to get resource from `{getattr(result, 'url', url)}`: {e}")
+            self.log_error(f"Failed to get resource from `{getattr(result, 'url', url)}`: {e}")
 
             if self.raise_on_error_response:
                 raise
@@ -386,17 +383,17 @@ class GenericTracker(BaseTracker):
         download_link = self.get_download_link(url)
 
         if not download_link:
-            LOGGER.error(f'Cannot find torrent file download link at {url}')
+            self.log_error(f'Cannot find torrent file download link at {url}')
             return None
 
         page_data = self.extract_page_data()
 
-        LOGGER.debug(f'Torrent download link found: {download_link}')
+        self.log_debug(f'Torrent download link found: {download_link}')
 
         torrent_contents = self.download_torrent(download_link, referer=url)
 
         if torrent_contents is None:
-            LOGGER.debug(f'Torrent download from `{download_link}` has failed')
+            self.log_debug(f'Torrent download from `{download_link}` has failed')
             return None
 
         parsed = parse_torrent(torrent_contents)
@@ -436,7 +433,7 @@ class GenericPublicTracker(GenericTracker):
         return url.split('/')[-1]
 
     def download_torrent(self, url: str, referer: str = None) -> Optional[bytes]:
-        LOGGER.debug(f'Downloading torrent file from {url} ...')
+        self.log_debug(f'Downloading torrent file from {url} ...')
         # That was a check that user himself visited torrent's page ;)
         response = self.get_response(url, referer=referer)
         return getattr(response, 'content', None)
@@ -502,7 +499,7 @@ class GenericPrivateTracker(GenericPublicTracker):
 
         login_url = self.login_url % {'domain': domain}
 
-        LOGGER.debug(f'Trying to login at {login_url} ...')
+        self.log_debug(f'Trying to login at {login_url} ...')
 
         if self.logged_in:
             raise TorrtTrackerException(f'Consecutive login attempt detected at `{self.__class__.__name__}`')
@@ -546,10 +543,10 @@ class GenericPrivateTracker(GenericPublicTracker):
 
             # Save auth info to config.
             self.save_settings()
-            LOGGER.debug('Login is successful')
+            self.log_debug('Login is successful')
 
         else:
-            LOGGER.warning('Login with given credentials failed')
+            self.log_warning('Login with given credentials failed')
 
         return self.logged_in
 
@@ -576,7 +573,7 @@ class GenericPrivateTracker(GenericPublicTracker):
         return query_string
 
     def download_torrent(self, url: str, referer: str = None) -> Optional[bytes]:
-        LOGGER.debug(f'Downloading torrent file from {url} ...')
+        self.log_debug(f'Downloading torrent file from {url} ...')
 
         self.before_download(url)
 

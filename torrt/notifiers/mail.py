@@ -1,12 +1,9 @@
-import logging
 import socket
 from email.mime.text import MIMEText
 from smtplib import SMTP, SMTPAuthenticationError
 from typing import Union
 
 from ..base_notifier import BaseNotifier
-
-LOGGER = logging.getLogger(__name__)
 
 
 class EmailNotifier(BaseNotifier):
@@ -44,7 +41,7 @@ class EmailNotifier(BaseNotifier):
             connection.ehlo()
 
         except socket.error as e:
-            LOGGER.error(f'Could not connect to SMTP server: {e}')
+            self.log_error(f'Could not connect to SMTP server: {e}')
             return
 
         if self.use_tls:
@@ -55,7 +52,7 @@ class EmailNotifier(BaseNotifier):
 
             except Exception as e:
 
-                LOGGER.error(e)
+                self.log_error(f'{e}')
                 return
 
         if self.user and self.password:
@@ -64,7 +61,7 @@ class EmailNotifier(BaseNotifier):
                 connection.login(self.user, self.password)
 
             except SMTPAuthenticationError as e:
-                LOGGER.error(e)
+                self.log_error(f'{e}')
                 return
 
         return connection
@@ -91,6 +88,6 @@ class EmailNotifier(BaseNotifier):
         msg['From'] = self.sender
         msg['To'] = self.email
 
-        LOGGER.info(f'Notification message was sent to user {self.email}')
+        self.log_info(f'Notification message was sent to user {self.email}')
 
         return msg.as_string()

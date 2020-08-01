@@ -1,11 +1,8 @@
-import logging
 from typing import List, Optional
 
 from bs4 import BeautifulSoup
 
 from ..base_tracker import GenericPrivateTracker
-
-LOGGER = logging.getLogger(__name__)
 
 
 class RuTrackerTracker(GenericPrivateTracker):
@@ -65,7 +62,7 @@ class RuTrackerTracker(GenericPrivateTracker):
 
     def download_torrent(self, url: str, referer: str = None) -> Optional[bytes]:
 
-        LOGGER.debug(f'Downloading torrent file from {url} ...')
+        self.log_debug(f'Downloading torrent file from {url} ...')
 
         self.before_download(url)
 

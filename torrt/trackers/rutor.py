@@ -1,9 +1,6 @@
-import logging
 from typing import List
 
 from ..base_tracker import GenericPublicTracker
-
-LOGGER = logging.getLogger(__name__)
 
 
 class RutorTracker(GenericPublicTracker):

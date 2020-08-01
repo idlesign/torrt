@@ -1,11 +1,7 @@
-import logging
-
 import requests
 from requests import RequestException
 
 from ..base_notifier import BaseNotifier
-
-LOGGER = logging.getLogger(__name__)
 
 
 class TelegramNotifier(BaseNotifier):
@@ -44,7 +40,7 @@ class TelegramNotifier(BaseNotifier):
             response = requests.post(url, data={'chat_id': self.chat_id, 'text': msg})
 
         except RequestException as e:
-            LOGGER.error(f'Failed to send Telegram message: {e}')
+            self.log_error(f'Failed to send Telegram message: {e}')
 
         else:
 
@@ -53,12 +49,12 @@ class TelegramNotifier(BaseNotifier):
                 json_data = response.json()
 
                 if json_data['ok']:
-                    LOGGER.debug(f'Telegram message was sent to user {self.chat_id}')
+                    self.log_debug(f'Telegram message was sent to user {self.chat_id}')
 
                 else:
-                    LOGGER.error(f"Telegram notification not send: {json_data['description']}")
+                    self.log_error(f"Telegram notification not send: {json_data['description']}")
 
             else:
-                LOGGER.error(
+                self.log_error(
                     'Telegram notification not sent. '
                     f'Response code: {response.status_code} ({response.reason})')

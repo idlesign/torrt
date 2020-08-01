@@ -22,7 +22,7 @@ if False:  # pragma: nocover
     from .base_notifier import BaseNotifier  # noqa
 
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger('torrt')
 
 _THREAD_LOCAL = threading.local()
 
@@ -423,6 +423,42 @@ class WithSettings:
         LOGGER.debug(f'Spawning `{cls.__name__}` object with the given settings ...')
 
         return cls(**settings)
+
+    @classmethod
+    def log_debug(cls, msg: str):
+        """Sends the message to debug log.
+
+        :param msg:
+
+        """
+        LOGGER.debug(f'{cls.__name__}: {msg}')
+
+    @classmethod
+    def log_info(cls, msg: str):
+        """Sends the message to info log.
+
+        :param msg:
+
+        """
+        LOGGER.info(f'{cls.__name__}: {msg}')
+
+    @classmethod
+    def log_warning(cls, msg: str):
+        """Sends the message to warning log.
+
+        :param msg:
+
+        """
+        LOGGER.warning(f'{cls.__name__}: {msg}')
+
+    @classmethod
+    def log_error(cls, msg: str):
+        """Sends the message to error log.
+
+        :param msg:
+
+        """
+        LOGGER.error(f'{cls.__name__}: {msg}')
 
     def save_settings(self):
         """Saves object settings into torrt configuration file."""

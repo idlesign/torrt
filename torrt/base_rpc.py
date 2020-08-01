@@ -34,16 +34,17 @@ class BaseRPC(WithSettings):
             if old_name in torrent_info:
                 torrent_info[new_name] = torrent_info[old_name]
 
-    def method_get_torrents(self, hashes: List[str] = None) -> List[dict]:
+    def method_get_torrents(self, hashes: List[str] = None) -> List[dict]:  # pragma: nocover
         """This should return a dictionary with torrents info from RPC.
         Each torrent info should be normalized (see normalize_field_names()).
 
         :param hashes: torrent hashes
 
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError
 
-    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(
+            self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:  # pragma: nocover
         """Adds torrent to torrent client using RPC.
 
         :param torrent: torrent info
@@ -51,21 +52,21 @@ class BaseRPC(WithSettings):
         :param params: optional information attached to torrent that should be saved
 
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError
 
-    def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
+    def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:  # pragma: nocover
         """Removes torrent from torrent client using RPC.
 
         :param hash_str: torrent identifying hash
         :param with_data: flag to also remove files from torrent
 
         """
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError
 
-    def method_get_version(self) -> str:
+    def method_get_version(self) -> str:  # pragma: nocover
         """Returns torrent client API version."""
 
-        raise NotImplementedError  # pragma: nocover
+        raise NotImplementedError
 
     def test_configuration(self) -> str:
         # This is to conform to common interface.
