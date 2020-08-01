@@ -14,7 +14,7 @@ class NNMClubTracker(GenericPrivateTracker):
     alias: str = 'nnm-club.me'
     login_url: str = 'https://%(domain)s/forum/login.php'
     auth_qs_param_name: str = 'sid'
-    mirrors: List[str] = ['nnm-club.name', 'nnmclub.to']
+    mirrors: List[str] = ['nnmclub.to', 'nnmclub.ro', 'nnm-club.name']
 
     test_urls: List[str] = [
         'https://nnmclub.to/forum/viewtopic.php?t=889443',
