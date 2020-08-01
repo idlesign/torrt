@@ -1,5 +1,5 @@
 
-VERSION = (0, 13, 1)
+VERSION = (0, 14, 0)
 """Application version number tuple."""
 
 VERSION_STR = '.'.join(map(str, VERSION))
