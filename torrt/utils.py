@@ -142,17 +142,9 @@ def configure_entity(
 def import_classes():
     """Dynamically imports RPC classes and tracker handlers from their directories."""
 
-    LOGGER.debug('Importing RPC classes ...')
-    import_from_path('rpc')
-
-    LOGGER.debug('Importing Tracker classes ...')
-    import_from_path('trackers')
-
-    LOGGER.debug('Importing Notifier classes ...')
-    import_from_path('notifiers')
-
-    LOGGER.debug('Importing Bot classes ...')
-    import_from_path('bots')
+    for package_name in ('rpc', 'trackers', 'notifiers', 'bots'):
+        LOGGER.debug(f'Importing {package_name} ...')
+        import_from_path(package_name)
 
 
 def import_from_path(path: str):
