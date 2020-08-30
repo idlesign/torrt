@@ -4,7 +4,7 @@ torrt changelog
 
 Unreleased
 ----------
-+ Support qBittorrent v4.1+ (previous API version support is dropped) (see #53).
++ Support qBittorrent v4.1+ (previous API version support is dropped) (see #53). Please reconfigure PRC.
 
 
 v0.14.1 [2020-08-30]
