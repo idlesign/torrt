@@ -2,8 +2,8 @@ torrt changelog
 ===============
 
 
-Unreleased
-----------
+v0.14.1 [2020-08-30]
+--------------------
 * Fix torrent page caching issue (see #56).
 
 
