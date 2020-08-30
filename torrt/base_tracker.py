@@ -51,7 +51,7 @@ class BaseTracker(WithSettings):
 
         self.client = HttpClient(
             silence_exceptions=not self.raise_on_error_response,
-            dump_fname_tpl=f'%(dt)s_{self.__class__.__name__}.html'
+            dump_fname_tpl=f'%(ts)s_{self.__class__.__name__}.html'
         )
 
         super().__init__()

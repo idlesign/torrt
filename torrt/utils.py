@@ -9,6 +9,7 @@ from datetime import datetime
 from inspect import getfullargspec
 from pathlib import Path
 from pkgutil import iter_modules
+from time import time
 from typing import Any, Optional, Union, Generator, Tuple, Callable
 
 from bs4 import BeautifulSoup
@@ -41,7 +42,7 @@ class HttpClient:
     def __init__(
             self,
             silence_exceptions: bool = False,
-            dump_fname_tpl: str = '%(dt)s.txt',
+            dump_fname_tpl: str = '%(ts)s.txt',
             json: bool = False,
             tunnel: bool = True,
     ):
@@ -209,7 +210,7 @@ def dump_contents(filename: str, contents: bytes):
         return
 
     filename = filename % {
-        'dt': datetime.now(),
+        'ts': time(),
     }
 
     with open(str(Path(dump_into) / filename), 'wb') as f:

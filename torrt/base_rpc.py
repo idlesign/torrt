@@ -18,7 +18,7 @@ class BaseRPC(WithSettings):
 
         self.client = HttpClient(
             silence_exceptions=True,
-            dump_fname_tpl=f'%(dt)s_{self.__class__.__name__}.json',
+            dump_fname_tpl=f'%(ts)s_{self.__class__.__name__}.json',
             tunnel=False,
             json=True,
         )

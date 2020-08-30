@@ -18,7 +18,7 @@ class TelegramNotifier(BaseNotifier):
         self.chat_id = chat_id
         self.client = HttpClient(
             silence_exceptions=True,
-            dump_fname_tpl=f'%(dt)s_{self.__class__.__name__}.json',
+            dump_fname_tpl=f'%(ts)s_{self.__class__.__name__}.json',
             json=True,
         )
         super().__init__()
