@@ -289,7 +289,7 @@ def walk(forced: bool = False, silent: bool = False, remove_outdated: bool = Tru
     """Performs updates check for the registered torrents.
 
     :param forced: flag to not to count walk interval setting
-    :param silent: flag to suppress possible exceptions
+    :param silent: flag to suppress possible torrt exceptions
     :param remove_outdated: flag to remove torrents that are superseded by a new ones
 
     """

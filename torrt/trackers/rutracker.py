@@ -64,7 +64,7 @@ class RuTrackerTracker(GenericPrivateTracker):
 
         self.before_download(url)
 
-        # rutracker require POST action to download torrent file
+        # rutracker requires POST action to download torrent file
         if self.form_token:
             form_data = {'form_token': self.form_token}
 

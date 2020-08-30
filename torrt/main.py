@@ -11,12 +11,8 @@ from torrt.toolbox import (
 )
 from torrt.utils import (
     RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRegistry, NotifierClassesRegistry,
-    NotifierObjectsRegistry, GlobalParam
+    NotifierObjectsRegistry, GlobalParam, LOGGER
 )
-
-LOGGER = logging.getLogger(__name__)
-
-# todo cipher passwords
 
 
 def process_commands():
