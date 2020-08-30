@@ -12,7 +12,7 @@ from pkgutil import iter_modules
 from typing import Any, Optional, Union, Generator, Tuple, Callable
 
 from bs4 import BeautifulSoup
-from requests import Response
+from requests import Response, Session, RequestException
 from torrentool.api import Torrent
 
 if False:  # pragma: nocover
@@ -28,6 +28,132 @@ _THREAD_LOCAL = threading.local()
 
 # This regex is used to get hyperlink from torrent comment.
 RE_LINK = re.compile(r'(?P<url>https?://[^\s]+)')
+
+
+class HttpClient:
+    """Common client to perform HTTP requests."""
+
+    timeout: int = 10
+
+    user_agent: str = (
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36')
+
+    def __init__(
+            self,
+            silence_exceptions: bool = False,
+            dump_fname_tpl: str = '%(dt)s.txt',
+            json: bool = False,
+            tunnel: bool = True,
+    ):
+        session = Session()
+
+        session.headers.update({
+            'User-agent': self.user_agent,
+        })
+
+        if not tunnel:
+            # Drop globally set tunnels settings. See toolbox.tunnel().
+            session.proxies = {'http': None, 'https': None}
+
+        self.session = session
+        self.silence_exceptions = silence_exceptions,
+        self.dump_fname_tpl = dump_fname_tpl
+        self.json = json
+        self.last_error: str = ''
+        self.last_response: Optional[Response] = None
+
+    def request(
+            self,
+            url: str,
+            *,
+            data: dict = None,
+            referer: str = '',
+            allow_redirects: bool = True,
+            cookies: dict = None,
+            headers: dict = None,
+            json: bool = None,
+            silence_exceptions: bool = None,
+            timeout: int = None,
+            **kwargs
+    ) -> Optional[Union[Response, dict]]:
+        """
+
+        :param url: URL to address
+        :param data: Data to send to URL
+        :param referer:
+        :param allow_redirects:
+        :param cookies:
+        :param headers: Additional headers
+        :param json: Send and receive data as JSON
+        :param silence_exceptions: Do not raise exceptions
+        :param timeout: Override timeout.
+        :param kwargs:
+
+        """
+        LOGGER.debug(f'Fetching {url} ...')
+
+        headers = {**(headers or {})}
+
+        r_kwargs = {
+            'timeout': timeout or self.timeout,
+            'cookies': cookies,
+            'headers': headers,
+            'allow_redirects': allow_redirects,
+            **kwargs,
+        }
+
+        if referer:
+            headers['Referer'] = referer
+
+        try:
+
+            if data or r_kwargs.get('files'):
+
+                if json:
+                    r_kwargs['json'] = data
+                else:
+                    r_kwargs['data'] = data
+
+                method = self.session.post
+
+            else:
+                method = self.session.get
+
+            response = method(url, **r_kwargs)
+
+            self.last_response = response
+
+        except RequestException as e:
+
+            self.last_error = f'{e}'
+            LOGGER.warning(f"Failed to get response from `{url}`: {e}")
+
+            if silence_exceptions is None:
+                silence_exceptions = self.silence_exceptions
+
+            if silence_exceptions:
+                return None
+
+            raise
+
+        else:
+
+            dump_contents(
+                self.dump_fname_tpl,
+                contents=response.content
+            )
+
+            if json is None:
+                json = self.json
+
+            if json:
+                try:
+                    response = response.json()
+
+                except:
+                    return None
+
+        return response
 
 
 def encode_value(value: str, encoding: str = None) -> Union[str, bytes]:
@@ -69,7 +195,7 @@ class GlobalParam:
         return getattr(_THREAD_LOCAL, name, None)
 
 
-def dump_contents(filename: str, contents: Union[bytes, Response]):
+def dump_contents(filename: str, contents: bytes):
     """Dumps contents into a file with a given name.
 
     :param filename:
@@ -81,16 +207,12 @@ def dump_contents(filename: str, contents: Union[bytes, Response]):
     if not dump_into:
         return
 
-    if hasattr(contents, 'encode_contents'):
-        # soup
-        text = contents.encode_contents()
-
-    else:
-        # requests lib response
-        text = contents.content
+    filename = filename % {
+        'dt': datetime.now(),
+    }
 
     with open(str(Path(dump_into) / filename), 'wb') as f:
-        f.write(text)
+        f.write(contents)
 
 
 def configure_entity(

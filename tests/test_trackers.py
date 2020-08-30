@@ -15,4 +15,4 @@ def test_trackers():
 
         for url in urls:
             torrent_data = get_torrent_from_url(url)
-            assert torrent_data, '%s: Unable to deal with test URL %s' % (tracker_alias, url)
+            assert torrent_data, f'{tracker_alias}: Unable to deal with test URL {url}'

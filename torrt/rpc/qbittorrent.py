@@ -1,12 +1,9 @@
 from typing import Dict, List, Any
 from urllib.parse import urljoin
 
-import requests
-from requests import Response
-
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import TorrentData
+from ..utils import TorrentData, Response
 
 
 class QBittorrentRPC(BaseRPC):
@@ -44,7 +41,6 @@ class QBittorrentRPC(BaseRPC):
             password: str = 'admin',
             enabled: bool = False
     ):
-        self.cookies = {}
         self.user = user
         self.password = password
         self.enabled = enabled
@@ -72,7 +68,7 @@ class QBittorrentRPC(BaseRPC):
             if result.text != 'Ok.' or result.cookies is None:
                 raise QBittorrentRPCException('Unable to auth credentials incorrect.')
 
-            self.cookies = result.cookies
+            self.logged_in = True
 
         except Exception as e:
 
@@ -109,21 +105,21 @@ class QBittorrentRPC(BaseRPC):
             url = self.get_request_url(data)
 
             request_kwargs = {}
-            if self.cookies is not None:
-                request_kwargs['cookies'] = self.cookies
-
-            method = requests.get
 
             if 'data' in data:
-                method = requests.post
                 request_kwargs['data'] = data['data']
 
             if files is not None:
-                method = requests.post
                 request_kwargs['files'] = files
 
             try:
-                response = method(url, **request_kwargs)
+                response = self.client.request(
+                    url=url,
+                    json=False,
+                    silence_exceptions=False,
+                    **request_kwargs
+                )
+
                 if response.status_code != 200:
                     raise QBittorrentRPCException(response.text.strip())
 
@@ -141,14 +137,14 @@ class QBittorrentRPC(BaseRPC):
 
     def auth_query(self, data: dict, files: dict = None):
 
-        if not self.cookies:
+        if not self.logged_in:
             self.login()
 
         return self.query(data, files)
 
     def auth_query_json(self, data: dict, files: dict = None) -> dict:
 
-        if not self.cookies:
+        if not self.logged_in:
             self.login()
 
         response = self.query(data, files)

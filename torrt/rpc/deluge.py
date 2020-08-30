@@ -1,8 +1,4 @@
-import json
 from typing import Dict, Any, List
-
-import requests
-from requests import Response
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
@@ -15,11 +11,6 @@ class DelugeRPC(BaseRPC):
 
     """
     alias: str = 'deluge'
-
-    headers: dict = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-    }
 
     torrent_fields_map: Dict[str, str] = {
         'save_path': 'download_to',
@@ -34,7 +25,6 @@ class DelugeRPC(BaseRPC):
             password: str = None,
             enabled: bool = False
     ):
-        self.cookies = {}
         self.user = user
         self.password = password
         self.enabled = enabled
@@ -56,10 +46,9 @@ class DelugeRPC(BaseRPC):
         data = self.build_request_payload('auth.login', [self.password])
 
         response = self.query_(data)
-        response_json = response.json()
 
-        if response_json['result']:
-            self.cookies = response.cookies
+        if response['result']:
+            self.logged_in = True
             return self.method_is_connected()
 
         self.log_error('Login failed')
@@ -75,28 +64,23 @@ class DelugeRPC(BaseRPC):
 
         return result
 
-    def query_(self, data: dict) -> Response:
+    def query_(self, data: dict) -> dict:
 
-        try:
-            response = requests.post(
-                self.url, data=json.dumps(data), cookies=self.cookies, headers=self.headers)
+        response = self.client.request(url=self.url, data=data)
 
-        except requests.exceptions.RequestException as e:
-
-            self.log_error(f'Failed to query RPC `{self.url}`: {e}')
-            raise DelugeRPCException(str(e))
+        if response is None:
+            raise DelugeRPCException(self.client.last_error)
 
         return response
 
     def query(self, data: dict) -> Any:
 
-        if not self.cookies:
+        if not self.logged_in:
             self.method_login()
 
         self.log_debug(f"RPC method `{data['method']}` ...")
 
         response = self.query_(data)
-        response = response.json()
 
         if response['error'] is not None:
             raise DelugeRPCException(response['error'])

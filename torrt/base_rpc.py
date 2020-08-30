@@ -1,6 +1,6 @@
 from typing import Dict, List, Any
 
-from .utils import WithSettings, RPCObjectsRegistry, TorrentData, RPCClassesRegistry
+from .utils import WithSettings, RPCObjectsRegistry, TorrentData, RPCClassesRegistry, HttpClient
 
 
 class BaseRPC(WithSettings):
@@ -12,6 +12,17 @@ class BaseRPC(WithSettings):
     """mapping from torrent fields names in terms of RPC to field names in term of torrt"""
 
     enabled: bool = False
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.client = HttpClient(
+            silence_exceptions=True,
+            dump_fname_tpl=f'%(dt)s_{self.__class__.__name__}.json',
+            tunnel=False,
+            json=True,
+        )
+        self.logged_in = False
 
     def __init_subclass__(cls, **kwargs):
         if cls.alias:
@@ -65,7 +76,6 @@ class BaseRPC(WithSettings):
 
     def method_get_version(self) -> str:  # pragma: nocover
         """Returns torrent client API version."""
-
         raise NotImplementedError
 
     def test_configuration(self) -> str:

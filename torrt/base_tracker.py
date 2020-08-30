@@ -1,24 +1,16 @@
 import re
 from datetime import datetime
-from functools import partial
+from http.cookiejar import CookieJar
 from itertools import chain
 from locale import getlocale, setlocale, LC_ALL
 from typing import List, Optional, Union
 from urllib.parse import urlparse, urljoin, parse_qs
 
-import requests
-from bs4 import BeautifulSoup
-from requests import Response
-
 from .exceptions import TorrtTrackerException
 from .utils import (
-    parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, dump_contents, TorrentData,
-    PageData, TrackerClassesRegistry
+    parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, TorrentData,
+    PageData, TrackerClassesRegistry, HttpClient, Response, BeautifulSoup
 )
-
-REQUEST_TIMEOUT = 10
-REQUEST_USER_AGENT = (
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36')
 
 
 class BaseTracker(WithSettings):
@@ -54,6 +46,11 @@ class BaseTracker(WithSettings):
         self.query_string = query_string
 
         self._torrent_page: Optional[BeautifulSoup] = None
+
+        self.client = HttpClient(
+            silence_exceptions=not self.raise_on_error_response,
+            dump_fname_tpl=f'%(dt)s_{self.__class__.__name__}.html'
+        )
 
         super().__init__()
 
@@ -91,10 +88,13 @@ class BaseTracker(WithSettings):
 
                 self.log_debug(f'Probing mirror: `{mirror_url}` ...')
 
-                try:
-                    response = requests.get(mirror_url)
+                response = self.client.request(
+                    mirror_url,
+                    timeout=4,
+                    silence_exceptions=True,
+                )
 
-                except requests.exceptions.RequestException as e:
+                if response is None:
                     continue
 
                 if response.url.startswith(mirror_url):
@@ -157,7 +157,7 @@ class BaseTracker(WithSettings):
             form_data: dict = None,
             allow_redirects: bool = True,
             referer: str = None,
-            cookies: dict = None,
+            cookies: Union[dict, CookieJar] = None,
             query_string: str = None,
             as_soup: bool = False
 
@@ -195,46 +195,18 @@ class BaseTracker(WithSettings):
 
         url = self.get_mirrored_url(url)
 
-        self.log_debug(f'Fetching {url} ...')
+        result = self.client.request(
+            url=url,
+            data=form_data,
+            referer=referer,
+            allow_redirects=allow_redirects,
+            cookies=cookies,
+        )
 
-        headers = {'User-agent': REQUEST_USER_AGENT}
+        if result is not None and as_soup:
+            result = self.make_page_soup(result.text)
 
-        if referer is not None:
-            headers['Referer'] = referer
-
-        r_kwargs = {
-            'allow_redirects': allow_redirects,
-            'headers': headers,
-            'timeout': REQUEST_TIMEOUT,
-        }
-
-        if cookies is not None:
-            r_kwargs['cookies'] = cookies
-
-        if form_data is not None:
-            method = partial(requests.post, data=form_data, **r_kwargs)
-
-        else:
-            method = partial(requests.get, **r_kwargs)
-
-        result = None
-        try:
-            result = method(url)
-
-            if as_soup:
-                result = self.make_page_soup(result.text)
-
-            dump_contents(f'{self.__class__.__name__}_{datetime.now()}.html', contents=result)
-
-            return result
-
-        except requests.exceptions.RequestException as e:
-            self.log_error(f"Failed to get resource from `{getattr(result, 'url', url)}`: {e}")
-
-            if self.raise_on_error_response:
-                raise
-
-            return None
+        return result
 
     @classmethod
     def make_page_soup(cls, html: str) -> BeautifulSoup:
@@ -523,7 +495,8 @@ class GenericPrivateTracker(GenericPublicTracker):
 
         response = self.get_response(
             login_url, form_data,
-            allow_redirects=allow_redirects, cookies=self.cookies
+            allow_redirects=allow_redirects,
+            cookies=self.cookies
         )
 
         if not response:  # e.g. Connection aborted.

@@ -1,8 +1,6 @@
 from typing import List, Any
 from urllib.parse import urljoin
 
-import requests
-
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
 from ..utils import make_soup, TorrentData
@@ -27,7 +25,6 @@ class UTorrentRPC(BaseRPC):
             password: str = None,
             enabled: bool = False
     ):
-        self.cookies = {}
         self.user = user
         self.password = password
         self.enabled = enabled
@@ -46,10 +43,11 @@ class UTorrentRPC(BaseRPC):
     def login(self):
 
         try:
-            response = requests.get(
+            response = self.client.request(
                 urljoin(self.url, self.token_page_path),
                 auth=(self.user, self.password),
-                cookies=self.cookies
+                json=False,
+                silence_exceptions=False,
             )
 
             self.csrf_token = make_soup(response.text).find(id='token').text
@@ -57,7 +55,7 @@ class UTorrentRPC(BaseRPC):
             if not self.csrf_token:
                 raise UTorrentRPCException('Unable to fetch CSRF token.')
 
-            self.cookies = response.cookies
+            self.logged_in = True
 
         except Exception as e:
 
@@ -92,38 +90,32 @@ class UTorrentRPC(BaseRPC):
 
         return f'{self.url}?token={self.csrf_token}&{join(rest)}'
 
-    def query(self, data: dict, files: dict = None):
+    def query(self, data: dict, files: dict = None) -> dict:
 
         action = data['action'] or 'list'
         self.log_debug(f'RPC action `{action}` ...', )
 
-        if not self.cookies:
+        if not self.logged_in:
             self.login()
 
         url = self.get_request_url(data)
 
-        request_kwargs = {
-            'cookies': self.cookies
-        }
-
-        method = requests.get
+        request_kwargs = {}
 
         if files is not None:
-            method = requests.post
             request_kwargs['files'] = files
 
         try:
-            response = method(url, auth=(self.user, self.password), **request_kwargs)
+            response = self.client.request(
+                url=url, auth=(self.user, self.password), **request_kwargs)
 
-            if response.status_code != 200:
+            if self.client.last_response.status_code != 200:
                 raise UTorrentRPCException(response.text.strip())
 
         except Exception as e:
 
             self.log_error(f'Failed to query RPC `{url}`: {e}')
             raise UTorrentRPCException(str(e))
-
-        response = response.json()
 
         return response
 

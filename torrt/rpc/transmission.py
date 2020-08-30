@@ -1,8 +1,5 @@
 from typing import Dict, Any, Union, List
 
-import requests
-from requests import Response
-
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
 from ..utils import base64encode, TorrentData
@@ -12,7 +9,6 @@ class TransmissionRPC(BaseRPC):
     """See https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt for protocol spec details"""
 
     csrf_header: str = 'X-Transmission-Session-Id'
-    session_id: str = ''
 
     alias: str = 'transmission'
 
@@ -35,6 +31,7 @@ class TransmissionRPC(BaseRPC):
         self.enabled = enabled
         self.host = host
         self.port = port
+        self.session_id: str = ''
 
         if url is not None:
             self.url = url
@@ -44,21 +41,17 @@ class TransmissionRPC(BaseRPC):
 
         super().__init__()
 
-    def query_(self, data: dict) -> Response:
+    def query_(self, data: dict) -> dict:
 
-        try:
-            response = requests.post(
-                self.url,
-                auth=(self.user, self.password),
-                json=data,
-                headers={self.csrf_header: self.session_id},
-                proxies={'http': None, 'https': None},  # todo factor out httpclient
-            )
+        response = self.client.request(
+            url=self.url,
+            data=data,
+            auth=(self.user, self.password),
+            headers={self.csrf_header: self.session_id},
+        )
 
-        except requests.exceptions.RequestException as e:
-
-            self.log_error(f'Failed to query RPC `{self.url}`: {e}')
-            raise TransmissionRPCException(str(e))
+        if response is None:
+            raise TransmissionRPCException(self.client.last_error)
 
         return response
 
@@ -66,18 +59,18 @@ class TransmissionRPC(BaseRPC):
 
         self.log_debug(f"RPC method `{data['method']}` ...")
 
-        response = self.query_(data)
+        json_data = self.query_(data)
+
+        response = self.client.last_response
 
         if response.status_code == 409:
             self.session_id = response.headers[self.csrf_header]
-            response = self.query_(data)
+            json_data = self.query_(data)
 
-        response = response.json()
+        if json_data['result'] != 'success':
+            raise TransmissionRPCException(json_data['result'])
 
-        if response['result'] != 'success':
-            raise TransmissionRPCException(response['result'])
-
-        return response['arguments']
+        return json_data['arguments']
 
     @staticmethod
     def build_request_payload(method: str, arguments: Union[dict, list] = None, tag: str = None) -> dict:

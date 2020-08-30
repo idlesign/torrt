@@ -92,7 +92,7 @@ def test_fullcycle(monkeypatch, datafix_dir):
             cls.cfg = settings_dict
 
     def patch_requests(response_contents):
-        monkeypatch.setattr('requests.get', lambda url, **kwargs: DummyResponse(url, response_contents))
+        monkeypatch.setattr('torrt.utils.Session.get', lambda self, url, **kwargs: DummyResponse(url, response_contents))
 
     torrent_one_hash = 'c815be93f20bf8b12fed14bee35c14b19b1d1984'
     torrent_one_data = (datafix_dir / 'torr_one.torrent').read_bytes()
