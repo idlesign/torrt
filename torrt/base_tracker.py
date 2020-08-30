@@ -45,6 +45,8 @@ class BaseTracker(WithSettings):
         self.cookies = cookies
         self.query_string = query_string
 
+        # Cached data for currently processed torrent.
+        self._torrent_page_url: str = ''
         self._torrent_page: Optional[BeautifulSoup] = None
 
         self.client = HttpClient(
@@ -321,6 +323,9 @@ class BaseTracker(WithSettings):
         """
         torrent_page = self._torrent_page
 
+        if url != self._torrent_page_url:
+            drop_cache = True
+
         if drop_cache or not torrent_page:
             torrent_page = self.get_response(
                 url,
@@ -330,6 +335,7 @@ class BaseTracker(WithSettings):
                 as_soup=True
             )
             self._torrent_page = torrent_page
+            self._torrent_page_url = url
 
         return torrent_page
 
