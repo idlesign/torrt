@@ -57,7 +57,7 @@ Torrent clients
 * Transmission (using built-in JSON RPC)
 * Deluge (using `deluge-webapi` plugin - https://github.com/idlesign/deluge-webapi)
 * uTorrent (using built-in RPC)
-* qBittorrent (using built-in RPC)
+* qBittorrent (using built-in RPC) v4.1+
 
 
 Notifications

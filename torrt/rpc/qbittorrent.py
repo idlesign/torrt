@@ -7,25 +7,19 @@ from ..utils import TorrentData, Response
 
 
 class QBittorrentRPC(BaseRPC):
-    """See https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-Documentation
+    """See https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)
     for protocol spec details
 
     """
     alias: str = 'qbittorrent'
 
     api_map: dict = {
-        'login': 'login',
-        'api_version_path': 'version/api',
-        'add_torrent': 'command/upload',
-        'rem_torrent': 'command/delete',
-        'rem_torrent_with_data': 'command/deletePerm',
-        'get_torrent': 'query/propertiesGeneral/%s',
-        'get_torrents': 'query/torrents'
-    }
-
-    headers: dict = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
+        'login': 'auth/login',
+        'api_version_path': 'app/webapiVersion',
+        'add_torrent': 'torrents/add',
+        'rem_torrent': 'torrents/delete',
+        'get_torrent': 'torrents/properties',
+        'get_torrents': 'torrents/info'
     }
 
     torrent_fields_map: Dict[str, str] = {
@@ -51,7 +45,7 @@ class QBittorrentRPC(BaseRPC):
             self.url = url
 
         else:
-            self.url = f'http://{host}:{port}/'
+            self.url = f'http://{host}:{port}/api/v2/'
 
         super().__init__()
 
@@ -121,17 +115,17 @@ class QBittorrentRPC(BaseRPC):
                 )
 
                 if response.status_code != 200:
-                    raise QBittorrentRPCException(response.text.strip())
+                    raise QBittorrentRPCException(response.text.strip() or response.reason)
 
             except Exception as e:
 
                 self.log_error(f'Failed to query RPC `{url}`: {e}')
-                raise QBittorrentRPCException(e)
+                raise QBittorrentRPCException(f'{e}')
 
         except Exception as e:
 
             self.log_error(f'Failed to query RPC `{action}`: {e}')
-            raise QBittorrentRPCException(str(e))
+            raise QBittorrentRPCException(f'{e}')
 
         return response
 
@@ -164,9 +158,8 @@ class QBittorrentRPC(BaseRPC):
 
             if hashes is None or torrent_data_hash in hashes:
 
-                # TODO: because query/torrents not return `comment` field
                 addition_data = self.auth_query_json(
-                    self.build_params('get_torrent', {'action_params': torrent_data_hash})
+                    self.build_params('get_torrent', {'data': {'hash': torrent_data_hash}}),
                 )
                 self.normalize_field_names(addition_data)
 
@@ -190,14 +183,12 @@ class QBittorrentRPC(BaseRPC):
 
     def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
 
-        action = 'rem_torrent'
-
-        if with_data:
-            action = 'rem_torrent_with_data'
-
         data = {'hashes': hash_str}
 
-        return self.auth_query(self.build_params(action, {'data': data}))
+        if with_data:
+            data['deleteFiles'] = 'true'
+
+        return self.auth_query(self.build_params('rem_torrent', {'data': data}))
 
     def method_get_version(self) -> str:
         result = self.auth_query(self.build_params(action='api_version_path'))
