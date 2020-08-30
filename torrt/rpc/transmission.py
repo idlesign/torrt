@@ -55,7 +55,7 @@ class TransmissionRPC(BaseRPC):
 
         return response
 
-    def query(self, data: dict) -> Any:
+    def query(self, data: dict) -> dict:
 
         self.log_debug(f"RPC method `{data['method']}` ...")
 

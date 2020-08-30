@@ -51,16 +51,13 @@ class HttpClient:
             'User-agent': self.user_agent,
         })
 
-        if not tunnel:
-            # Drop globally set tunnels settings. See toolbox.tunnel().
-            session.proxies = {'http': None, 'https': None}
-
         self.session = session
         self.silence_exceptions = silence_exceptions,
         self.dump_fname_tpl = dump_fname_tpl
         self.json = json
         self.last_error: str = ''
         self.last_response: Optional[Response] = None
+        self.tunnel = tunnel
 
     def request(
             self,
@@ -105,6 +102,13 @@ class HttpClient:
         if referer:
             headers['Referer'] = referer
 
+        if not self.tunnel:
+            # Drop globally set tunnels settings. See toolbox.tunnel().
+            r_kwargs['proxies'] = {'http': None, 'https': None}
+
+        if json is None:
+            json = self.json
+
         try:
 
             if data or r_kwargs.get('files'):
@@ -143,15 +147,12 @@ class HttpClient:
                 contents=response.content
             )
 
-            if json is None:
-                json = self.json
-
             if json:
                 try:
                     response = response.json()
 
                 except:
-                    return None
+                    return {}
 
         return response
 
