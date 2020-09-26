@@ -30,12 +30,13 @@ class TelegramBot(BaseBot):
         :param allowed_users: comma-joined list of users allowed to add new torrents.
 
         """
+        self.token = token
+        self.allowed_users = allowed_users or ''
+
         if not telegram:
             self.log_error('You have not installed python-telegram-bot library.')
             return
 
-        self.token = token
-        self.allowed_users = allowed_users or ''
         self.handler_kwargs = {}
         self.updater = Updater(token=self.token)
         self.dispatcher = self.updater.dispatcher
