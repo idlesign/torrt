@@ -12,7 +12,6 @@ CURRENT_DIR = dirname(realpath(__file__))
 
 
 def test_basic():
-    bootstrap()
     assert TrackerClassesRegistry.get()
     assert NotifierClassesRegistry.get()
     assert RPCClassesRegistry.get()

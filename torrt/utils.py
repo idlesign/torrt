@@ -398,19 +398,19 @@ class TorrentData:
         self._hash = hash
 
     def _get_hash(self):
-        return self._hash or self.parsed.info_hash
+        return self._hash or getattr(self.parsed, 'info_hash', '') or ''
 
     def _set_hash(self, val: str):
         self._hash = val
 
     def _get_name(self):
-        return self._name or self.parsed.name
+        return self._name or getattr(self.parsed, 'name', '') or ''
 
     def _set_name(self, val: str):
         self._name = val
 
-    hash = property(_get_hash, _set_hash)
-    name = property(_get_name, _set_name)
+    hash: str = property(_get_hash, _set_hash)
+    name: str = property(_get_name, _set_name)
 
     def to_dict(self) -> dict:
         page = self.page

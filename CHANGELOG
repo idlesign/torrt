@@ -5,6 +5,7 @@ torrt changelog
 Unreleased
 ----------
 + Support qBittorrent v4.1+ (previous API version support is dropped) (see #53). Please reconfigure PRC.
+* Fix regression in 'register_torrent' (see #57).
 
 
 v0.14.1 [2020-08-30]

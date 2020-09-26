@@ -1,10 +1,7 @@
-from torrt.main import bootstrap
 from torrt.utils import get_torrent_from_url, TrackerObjectsRegistry
 
 
 def test_trackers():
-    bootstrap()
-
     tracker_objects = TrackerObjectsRegistry.get()
 
     assert tracker_objects
