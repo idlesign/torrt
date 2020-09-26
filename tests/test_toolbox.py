@@ -25,7 +25,8 @@ def test_configure_logging():
 
 def test_bots(mock_config, monkeypatch):
 
-    monkeypatch.setattr('torrt.bots.telegram_bot.Updater', MagicMock())
+    monkeypatch.setattr('torrt.bots.telegram_bot.Updater', MagicMock(), raising=False)
+    monkeypatch.setattr('torrt.bots.telegram_bot.TelegramBot.test_configuration', lambda *args: True)
 
     configure_bot('telegram', {'token': 'xxx'})
     assert mock_config['bots']['telegram']
