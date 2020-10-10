@@ -87,9 +87,14 @@ class AnilibriaTracker(GenericPublicTracker):
         available_qualities = {}
         torrents = json['data']['torrents']
         series2torrents = defaultdict(list)
-
+        # a release can consist of several torrents:
+        #   1. episode ranges (different qualities),
+        #   2. single episodes (different qualities) - a release is just aired,
+        #   3. trailers,
+        #   4. OVAs
+        # we are trying to recognize `1` and `2`.
         for torrent in torrents:
-            if REGEX_RANGE.match(torrent['series']):  # filter out single-file torrents like trailers,...
+            if REGEX_RANGE.match(torrent['series']) or torrent['series'] == json['data']['series']:
                 series2torrents[torrent['series']].append(torrent)
 
         # some releases can be broken into several .torrent files, e.g. 1-20 and 21-41 - take the last one
