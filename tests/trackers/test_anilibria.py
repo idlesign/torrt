@@ -53,9 +53,9 @@ def test_get_download_link_preserve_priorities(monkeypatch):
     assert actual == expected
 
 
-def test_find_available_qualities_handle_no_results(monkeypatch):
+def test_find_available_qualities_handle_first_episode_available(monkeypatch):
     """
-    Test that `find_available_qualities` doesn't fail if there are no acceptable results available.
+    Test that `find_available_qualities` returns single-episode torrent if only the first episode is available.
     """
 
     # given
@@ -90,4 +90,4 @@ def test_find_available_qualities_handle_no_results(monkeypatch):
     # when
     actual = testable.find_available_qualities('https://anilibria.tv/release/dummy_release.html')
     # then
-    assert not actual
+    assert actual == {"webrip1080p": "https://www.anilibria.tv/upload/torrents/11113.torrent"}
