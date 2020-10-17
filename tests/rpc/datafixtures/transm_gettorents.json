@@ -1,0 +1,48 @@
+{
+  "arguments": {
+    "torrents": [
+      {
+        "comment": "somecomment",
+        "downloadDir": "/home/idle",
+        "fileStats": [
+          {
+            "bytesCompleted": 0,
+            "priority": 0,
+            "wanted": false
+          },
+          {
+            "bytesCompleted": 0,
+            "priority": 0,
+            "wanted": true
+          },
+          {
+            "bytesCompleted": 0,
+            "priority": 0,
+            "wanted": false
+          }
+        ],
+        "files": [
+          {
+            "bytesCompleted": 0,
+            "length": 10,
+            "name": "mytorr/one.avi"
+          },
+          {
+            "bytesCompleted": 0,
+            "length": 20,
+            "name": "mytorr/two.avi"
+          },
+          {
+            "bytesCompleted": 0,
+            "length": 30,
+            "name": "mytorr/three.avi"
+          }
+        ],
+        "hashString": "xxxxx",
+        "id": 1,
+        "name": "mytorr"
+      }
+    ]
+  },
+  "result": "success"
+}

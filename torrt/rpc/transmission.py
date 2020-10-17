@@ -6,8 +6,10 @@ from ..utils import base64encode, TorrentData
 
 
 class TransmissionRPC(BaseRPC):
-    """See https://trac.transmissionbt.com/browser/trunk/extras/rpc-spec.txt for protocol spec details"""
+    """See https://github.com/transmission/transmission/blob/master/extras/rpc-spec.txt
+    for protocol spec details.
 
+    """
     csrf_header: str = 'X-Transmission-Session-Id'
 
     alias: str = 'transmission'
@@ -43,17 +45,30 @@ class TransmissionRPC(BaseRPC):
 
     def query_(self, data: dict) -> dict:
 
-        response = self.client.request(
+        json_data = self.client.request(
             url=self.url,
             data=data,
             auth=(self.user, self.password),
             headers={self.csrf_header: self.session_id},
+            json=True,
+            silence_exceptions=True,
         )
 
-        if response is None:
+        if json_data is None:
             raise TransmissionRPCException(self.client.last_error)
 
-        return response
+        response = self.client.last_response
+        status_code = response.status_code
+
+        if status_code == 409:
+            self.session_id = response.headers[self.csrf_header]
+            json_data = self.query_(data)
+
+        else:
+            if not json_data and not response.ok:
+                raise TransmissionRPCException(response.text)
+
+        return json_data
 
     def query(self, data: dict) -> dict:
 
@@ -61,14 +76,8 @@ class TransmissionRPC(BaseRPC):
 
         json_data = self.query_(data)
 
-        response = self.client.last_response
-
-        if response.status_code == 409:
-            self.session_id = response.headers[self.csrf_header]
-            json_data = self.query_(data)
-
-        if json_data['result'] != 'success':
-            raise TransmissionRPCException(json_data['result'])
+        if json_data.get('result', '') != 'success':
+            raise TransmissionRPCException(json_data)
 
         return json_data['arguments']
 
@@ -155,7 +164,7 @@ class TransmissionRPC(BaseRPC):
 
     def method_get_version(self) -> str:
         result = self.query(self.build_request_payload('session-get', ['rpc-version-minimum']))
-        return result['rpc-version-minimum']
+        return result['rpc-version']
 
 
 class TransmissionRPCException(TorrtRPCException):
