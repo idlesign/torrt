@@ -25,8 +25,9 @@ class RutorTracker(GenericPublicTracker):
         result = splitted[-1]
 
         if not result.isdigit():  # URL contains SEO name in the last chunk
-            result = splitted[-2]
-
+            for result in splitted:
+                if result.isdigit():
+                    break
         return result
 
     def get_download_link(self, url: str) -> str:
