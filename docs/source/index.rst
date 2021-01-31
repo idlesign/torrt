@@ -62,15 +62,9 @@ Bots
 Requirements
 ------------
 
-.. image:: https://idlesign.github.io/lbc/py2-lbc.svg
-   :target: https://idlesign.github.io/lbc/
-   :alt: LBC Python 2
-
-----
-
 1. Python 3.6+
-2. `deluge-webapi` plugin (to work with Deluge)
-3. `python-telegram-bot` (to run Telegram bot)
+2. ``deluge-webapi`` plugin (to work with Deluge)
+3. ``python-telegram-bot`` (to run Telegram bot)
 
 
 Table of Contents
