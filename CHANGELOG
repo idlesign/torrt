@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
+* Rutor. Fixed seo-URLs handling.
+
+
 v0.15.1 [2020-10-12]
 --------------------
 * Anilibria. Fixed single-episode shows handling.
