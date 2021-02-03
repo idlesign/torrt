@@ -7,10 +7,10 @@ from ..base_tracker import GenericPrivateTracker
 class EniaHDTracker(GenericPrivateTracker):
     """This class implements .torrent files downloads for https://eniahd.com tracker."""
 
-    alias: str = 'eniatv.com'
+    alias: str = 'eniahd.com'
     login_url: str = 'https://%(domain)s/login.php'
     auth_cookie_name: str = 'bb_data'
-    mirrors: List[str] = ['eniahd.com']
+    mirrors: List[str] = ['eniahd.com', 'eniatv.com']
 
     test_urls: List[str] = [
         'https://eniatv.com/viewtopic.php?t=1558',

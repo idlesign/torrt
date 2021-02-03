@@ -9,8 +9,8 @@ def test_get_torrent(response_mock, datafix_read, datafix_dir):
     test_torrent = (datafix_dir / 'test.torrent').read_bytes()
 
     with response_mock([
-        f"GET https://eniatv.com/viewtopic.php?t=1558&sid=None -> 200: {datafix_read('eniahd.html')}",
-        b"GET https://eniatv.com/dl.php?id=5669&sid=None -> 200:" + test_torrent,
+        f"GET https://eniatv.com/viewtopic.php?t=1558 -> 200: {datafix_read('eniahd.html')}",
+        b"GET https://eniatv.com/dl.php?id=5669 -> 200:" + test_torrent,
 
     ]) as _:
         torr = tracker.get_torrent('https://eniatv.com/viewtopic.php?t=1558')
