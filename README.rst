@@ -36,6 +36,7 @@ Automatic updates are available for:
 * AniDUB - http://tr.anidub.com/
 * AniLibria - https://www.anilibria.tv/
 * CasStudio - https://casstudio.tv
+* EniaHD - https://eniahd.com
 * Kinozal - http://kinozal.tv/
 * NNM-Club - http://nnm-club.me/
 * RUTOR - http://rutor.org/
