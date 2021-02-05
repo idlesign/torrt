@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
++ Added EniaHD tracker support.
+
+
 v0.15.2 [2021-01-31]
 --------------------
 * Rutor. Fixed seo-URLs handling.
