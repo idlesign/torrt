@@ -15,6 +15,7 @@ from typing import Any, Optional, Union, Generator, Tuple, Callable
 from bs4 import BeautifulSoup
 from requests import Response, Session, RequestException
 from torrentool.api import Torrent
+from torrentool.exceptions import BencodeDecodingError
 
 if False:  # pragma: nocover
     from .base_tracker import GenericTracker  # noqa
@@ -282,13 +283,18 @@ def import_from_path(path: str):
         __import__(f'torrt.{path}.{pname}')
 
 
-def parse_torrent(torrent: bytes) -> Torrent:
+def parse_torrent(torrent: bytes) -> Optional[Torrent]:
     """Returns Torrent object from torrent contents.
 
     :param torrent: Torrent file contents.
 
     """
-    return Torrent.from_string(torrent)
+    try:
+        return Torrent.from_string(torrent)
+
+    except BencodeDecodingError as e:
+        LOGGER.error(f'Unable to parse torrent: {e}')
+        return None
 
 
 def parse_torrent_file(filepath: str) -> Torrent:
@@ -449,7 +455,7 @@ def get_torrent_from_url(url: Optional[str]) -> Optional[TorrentData]:
     """
     LOGGER.debug(f'Downloading torrent file from `{url}` ...')
 
-    tracker = TrackerObjectsRegistry.get_for_string(url)  # type: GenericTracker
+    tracker: 'GenericTracker' = TrackerObjectsRegistry.get_for_string(url)
 
     if tracker:
         torrent_info = tracker.get_torrent(url)

@@ -376,6 +376,9 @@ class GenericTracker(BaseTracker):
 
         parsed = parse_torrent(torrent_contents)
 
+        if not parsed:
+            return None
+
         return TorrentData(
             url=url,
             url_file=download_link,
