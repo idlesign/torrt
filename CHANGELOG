@@ -2,8 +2,8 @@ torrt changelog
 ===============
 
 
-Unreleased
-----------
+v0.16.1 [2021-04-20]
+--------------------
 * Now bogus torrent files errors are logged.
 
 
