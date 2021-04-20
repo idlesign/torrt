@@ -297,18 +297,6 @@ def parse_torrent(torrent: bytes) -> Optional[Torrent]:
         return None
 
 
-def parse_torrent_file(filepath: str) -> Torrent:
-    """Reads a torrent file from filesystem and returns information about it.
-
-    :param filepath:
-
-    """
-    with open(filepath, 'rb') as f:
-        contents = f.read()
-
-    return parse_torrent(contents)
-
-
 def make_soup(html: str) -> BeautifulSoup:
     """Returns BeautifulSoup object from a html.
 
