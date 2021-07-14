@@ -143,7 +143,7 @@ class UTorrentRPC(BaseRPC):
         # NB: `download_to` is ignored, as existing API approach to it is crippled.
         file_data = {'torrent_file': ('from_torrt.torrent', torrent.raw)}
 
-        return self.query(self.build_params(action='add-file'), file_data)
+        return self.query(self.build_params(action='add-file', params={'path': download_to}), file_data)
 
     def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
 
