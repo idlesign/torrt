@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
+* uTorrent. Now supports download location setting.
+
+
 v0.16.1 [2021-04-20]
 --------------------
 * Now bogus torrent files errors are logged.
