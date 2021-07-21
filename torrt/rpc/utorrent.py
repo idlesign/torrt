@@ -126,14 +126,15 @@ class UTorrentRPC(BaseRPC):
         torrents_info = []
 
         for torrent_data in result['torrents']:
-            hash_ = torrent_data[0]
+            hash_ = torrent_data[0].lower()
 
             if hashes is None or hash_ in hashes:
 
                 torrents_info.append({
                     'hash': hash_,
                     'name': torrent_data[2],
-                    'download_to': torrent_data[26]
+                    'download_to': torrent_data[26],
+                    'comment': ''
                 })
 
         return torrents_info
