@@ -380,6 +380,7 @@ class TorrentData:
             raw: bytes = b'',
             page: PageData = None,
             parsed: Torrent = None,
+            download_to: str = None,
     ):
         self.url = url
         self.url_file = url_file
@@ -387,6 +388,7 @@ class TorrentData:
         self.raw = raw
         self.parsed = parsed
         self.page = page
+        self.download_to = download_to
 
         self._name = name
         self._hash = hash
@@ -415,6 +417,7 @@ class TorrentData:
             'url': self.url,
             'url_file': self.url_file,
             'page': page.to_dict() if page else {},
+            'download_to': self.download_to,
         }
         return result
 

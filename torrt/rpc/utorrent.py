@@ -139,12 +139,16 @@ class UTorrentRPC(BaseRPC):
 
         return torrents_info
 
-    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(self, torrent: TorrentData, params: dict = None) -> Any:
 
+        args = {}
         # NB: `download_to` is ignored, as existing API approach to it is crippled.
         file_data = {'torrent_file': ('from_torrt.torrent', torrent.raw)}
 
-        return self.query(self.build_params(action='add-file', params={'path': download_to}), file_data)
+        if torrent.download_to is not None:
+            args['path'] = torrent.download_to
+
+        return self.query(self.build_params(action='add-file', params=args), file_data)
 
     def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
 

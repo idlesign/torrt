@@ -186,7 +186,7 @@ def bootstrap():
     init_object_registries()
 
 
-def register_torrent(hash_str: str, torrent_data: TorrentData = None, url: str = None):
+def register_torrent(hash_str: str, torrent_data: TorrentData = None, url: str = None, download_to: str = None):
     """Registers torrent within torrt. Used to register torrents that already exists
     in torrent clients.
 
@@ -199,6 +199,9 @@ def register_torrent(hash_str: str, torrent_data: TorrentData = None, url: str =
 
     if torrent_data is None:
         torrent_data = TorrentData()
+
+    if download_to:
+        torrent_data.download_to = download_to
 
     if url:
         torrent_data.url = url
@@ -235,8 +238,11 @@ def add_torrent_from_url(url: str, download_to: str = None):
         LOGGER.error(f'Unable to add torrent from `{url}`')
         return
 
+    if download_to:
+        torrent_data.download_to = download_to
+
     for rpc_alias, rpc_object in iter_rpc():
-        rpc_object.method_add_torrent(torrent_data, download_to=download_to)
+        rpc_object.method_add_torrent(torrent_data)
         register_torrent(torrent_data.hash, torrent_data)
 
         LOGGER.info(f'Torrent from `{url}` is added within `{rpc_alias}`')
@@ -400,7 +406,6 @@ def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> 
             try:
                 rpc_object.method_add_torrent(
                     tracker_torrent,
-                    rpc_torrent['download_to'],
                     params=rpc_torrent.get('params', None)
                 )
                 tracker_torrent.url = page_url

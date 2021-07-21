@@ -129,7 +129,7 @@ class TransmissionRPC(BaseRPC):
 
         return result['torrents']
 
-    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(self, torrent: TorrentData, params: dict = None) -> Any:
 
         args = {
             'metainfo': base64encode(torrent.raw).decode(),
@@ -148,8 +148,8 @@ class TransmissionRPC(BaseRPC):
             if excluded_indices:
                 args['files-unwanted'] = excluded_indices
 
-        if download_to is not None:
-            args['download-dir'] = download_to
+        if torrent.download_to is not None:
+            args['download-dir'] = torrent.download_to
 
         return self.query(self.build_request_payload('torrent-add', args))
 

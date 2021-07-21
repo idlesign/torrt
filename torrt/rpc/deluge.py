@@ -114,13 +114,13 @@ class DelugeRPC(BaseRPC):
 
         return result['torrents']
 
-    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(self, torrent: TorrentData, params: dict = None) -> Any:
 
         torrent_dump = base64encode(torrent.raw).decode()
 
         return self.query(
             self.build_request_payload(
-                'webapi.add_torrent', [torrent_dump, {'download_location': download_to}]
+                'webapi.add_torrent', [torrent_dump, {'download_location': torrent.download_to}]
             )
         )
 
