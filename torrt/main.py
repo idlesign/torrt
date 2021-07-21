@@ -130,6 +130,10 @@ def process_commands():
         'hash', help='Torrent identifying hash')
     parser_register_torrent.add_argument(
         '-u', dest='url', default=None, help='URL to download torrent from')
+    parser_register_torrent.add_argument(
+        '-d',
+        help='Destination path to download torrent contents into (in filesystem where torrent client daemon works)',
+        dest='download_to', default=None)
 
     parser_unregister_torrent = subp_main.add_parser(
         'unregister_torrent', help='Unregisters torrent from torrt by its hash')
@@ -206,7 +210,7 @@ def process_commands():
         remove_torrent(args['hash'], args['delete_data'])
 
     elif args['command'] == 'register_torrent':
-        register_torrent(args['hash'], url=args['url'])
+        register_torrent(args['hash'], url=args['url'], download_to=args['download_to'])
 
     elif args['command'] == 'unregister_torrent':
         unregister_torrent(args['hash'])

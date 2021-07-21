@@ -193,6 +193,7 @@ def register_torrent(hash_str: str, torrent_data: TorrentData = None, url: str =
     :param hash_str: torrent identifying hash
     :param torrent_data:
     :param url: fallback url that will be used in case torrent comment doesn't contain url
+    :param download_to: path to download files from torrent into (in terms of torrent client filesystem)
 
     """
     LOGGER.debug(f'Registering `{hash_str}` torrent ...')
