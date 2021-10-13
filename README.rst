@@ -9,9 +9,6 @@ https://github.com/idlesign/torrt
 .. image:: https://img.shields.io/pypi/l/torrt.svg
     :target: https://pypi.python.org/pypi/torrt
 
-.. image:: https://img.shields.io/travis/idlesign/torrt/master.svg
-    :target: https://travis-ci.org/idlesign/torrt
-
 .. image:: https://img.shields.io/coveralls/idlesign/torrt/master.svg
     :target: https://coveralls.io/r/idlesign/torrt
 
