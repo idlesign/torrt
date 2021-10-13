@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
+* Fixed qbittorrent 'savepath' is not a valid torrent file (fix #71).
+
+
 v0.16.2 [2021-07-14]
 --------------------
 * uTorrent. Now supports download location setting.

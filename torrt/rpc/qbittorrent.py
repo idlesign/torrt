@@ -175,11 +175,12 @@ class QBittorrentRPC(BaseRPC):
     def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
 
         file_data = {'torrents': torrent.raw}
+        params = None
 
         if download_to is not None:
-            file_data.update({'savepath': download_to})
+            params = {'data':{'savepath': download_to}}
 
-        return self.auth_query(self.build_params(action='add_torrent'), file_data)
+        return self.auth_query(self.build_params(action='add_torrent', params=params), file_data)
 
     def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
 
