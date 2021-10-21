@@ -88,7 +88,7 @@ class QBittorrentRPC(BaseRPC):
         if 'action_params' in params:
             url_segment = url_segment % params['action_params']
 
-        return urljoin(self.url, url_segment )
+        return urljoin(self.url, url_segment)
 
     def query(self, data: dict, files: dict = None) -> Response:
 
@@ -178,18 +178,18 @@ class QBittorrentRPC(BaseRPC):
         params = None
 
         if download_to is not None:
-            params = {'data':{'savepath': download_to}}
+            params = {'data': {'savepath': download_to}}
 
         return self.auth_query(self.build_params(action='add_torrent', params=params), file_data)
 
     def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
 
-        data = {'hashes': hash_str}
+        data = {
+            'hashes': hash_str,
+            'deleteFiles': 'true' if with_data else 'false',
+        }
 
-        if with_data:
-            data['deleteFiles'] = 'true'
-
-        return self.auth_query(self.build_params('rem_torrent', {'data': data}))
+        return self.auth_query(self.build_params(action='rem_torrent', params={'data': data}))
 
     def method_get_version(self) -> str:
         result = self.auth_query(self.build_params(action='api_version_path'))

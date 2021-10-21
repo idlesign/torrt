@@ -5,7 +5,7 @@ from torrt.rpc.qbittorrent import QBittorrentRPC
 
 @pytest.fixture
 def qbit():
-    rpc = QBittorrentRPC()
+    rpc = QBittorrentRPC(password='adminadmin')
     return rpc
 
 
@@ -41,3 +41,30 @@ def test_add_torrent(response_mock, qbit, torrent_params, torrent_data):
             params=torrent_params,
         )
         assert response.ok
+
+
+def test_remove_torrent(response_mock, qbit, torrent_params, torrent_data):
+
+    with response_mock([
+            f'POST {qbit.url}auth/login -> 200:Ok.',
+            f'POST {qbit.url}torrents/delete -> 200:',
+        ],
+        bypass=False
+    ):
+        response = qbit.method_remove_torrent(
+            hash_str='3dc61b1936e55d983ad774bf59b932b0a31eedd3',
+            with_data=True,
+        )
+        assert response.ok
+
+
+def test_get_version(response_mock, qbit, torrent_params, torrent_data):
+
+    with response_mock([
+            f'POST {qbit.url}auth/login -> 200:Ok.',
+            f'GET {qbit.url}app/webapiVersion -> 200:2.2',
+        ],
+        bypass=False
+    ):
+        response = qbit.method_get_version()
+        assert response == '2.2'

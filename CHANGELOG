@@ -2,6 +2,11 @@ torrt changelog
 ===============
 
 
+Unreleased
+----------
+* Fixed qbittorrent torren removal (fix #72).
+
+
 v0.16.3 [2021-10-13]
 --------------------
 * Fixed qbittorrent 'savepath' is not a valid torrent file (fix #71).
