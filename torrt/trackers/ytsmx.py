@@ -8,7 +8,7 @@ from ..exceptions import TorrtTrackerException
 from ..base_tracker import GenericPublicTracker
 
 
-API_BASE = "https://yts.mx/api/v2/"
+API_BASE = 'https://yts.mx/api/v2/'
 QualityLinks = Dict[str, str]
 QualityLink = Tuple[str, str]
 
@@ -51,7 +51,7 @@ class YtsmxTracker(GenericPublicTracker):
 
         soup = self.get_torrent_page(url)
         if not soup:
-            raise YtsmxTrackerException("main torrent page loading failed")
+            raise YtsmxTrackerException('main torrent page loading failed')
 
         return soup
 
@@ -72,7 +72,7 @@ class YtsmxTracker(GenericPublicTracker):
     def _get_movie_details(self, movie_id: str) -> dict:
         """returns dict with movie info by calling API"""
 
-        response = self.get_response(API_BASE + f"movie_details.json?movie_id={movie_id}")
+        response = self.get_response(f'{API_BASE}movie_details.json?movie_id={movie_id}')
         if not response:
             raise YtsmxTrackerException("API didn't respond")
 
@@ -90,7 +90,7 @@ class YtsmxTracker(GenericPublicTracker):
                 for torrent in movie_details['data']['movie']['torrents']
             }
         except KeyError:
-            raise YtsmxTrackerException("API movie details response is not parser. API changed")
+            raise YtsmxTrackerException('API movie details response is not parser. API changed')
 
         return qualities
 
@@ -135,7 +135,7 @@ class YtsmxTracker(GenericPublicTracker):
         else:
             self.log_info(
                 'Torrent is not available in preferred qualities: '
-                f"{', '.join(self.quality_prefs)}" or "(empty)"
+                f"{', '.join(self.quality_prefs)}" or '(empty)'
             )
 
             quality, link = next(iter(available_qualities.items()))
