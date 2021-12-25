@@ -60,12 +60,12 @@ class YtsmxTracker(GenericPublicTracker):
 
         movie_info_tag = root.find("div", {"id": "movie-info"})
         if not movie_info_tag:
-            raise YtsmxTrackerException("div#movie-info not found on page")
+            raise YtsmxTrackerException('div#movie-info not found on page')
 
         movie_info_tag: Tag
         movie_id = movie_info_tag.attrs['data-movie-id']
         if not movie_id.isdigit():
-            raise YtsmxTrackerException("movie-id is not a digit. Markup is changed")
+            raise YtsmxTrackerException('movie-id is not a digit. Markup is changed')
 
         return movie_id
 
