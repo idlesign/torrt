@@ -4,6 +4,7 @@ torrt changelog
 
 Unreleased
 ----------
++ Added support for yts.mx tracker.
 * Fixed qbittorrent torren removal (fix #72).
 
 
