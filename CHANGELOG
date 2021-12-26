@@ -7,6 +7,7 @@ Unreleased
 ! Celebrating 1.0.0.
 + Added support for yts.mx tracker.
 * Fixed qbittorrent torrent removal (fix #72).
+* Now Python 3.10 compatible.
 
 
 v0.16.3 [2021-10-13]
