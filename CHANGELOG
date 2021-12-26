@@ -2,8 +2,8 @@ torrt changelog
 ===============
 
 
-Unreleased
-----------
+v1.0.0 [2021-12-26]
+-------------------
 ! Celebrating 1.0.0.
 + Added support for yts.mx tracker.
 * Fixed qbittorrent torrent removal (fix #72).
