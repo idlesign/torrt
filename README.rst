@@ -38,6 +38,7 @@ Automatic updates are available for:
 * NNM-Club - http://nnm-club.me/
 * RUTOR - http://rutor.org/
 * RuTracker (ex torrents.ru) - http://rutracker.org/
+* YTS.MX - https://yts.mx/
 
 
 Torrent clients
