@@ -4,7 +4,13 @@ import logging
 import os
 import re
 import threading
-from collections import Mapping
+try:
+    from collections.abc import Mapping
+
+except ImportError:
+    # Python < 3.10
+    from collections import Mapping
+
 from datetime import datetime
 from inspect import getfullargspec
 from pathlib import Path
