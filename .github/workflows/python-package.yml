@@ -20,7 +20,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install locale
       run: |
-        sudo apt install locales -y && sudo locale-gen ru_RU.UTF-8
+        sudo apt install libxslt-dev libxml2-dev locales -y && sudo locale-gen ru_RU.UTF-8
         sudo update-locale
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
