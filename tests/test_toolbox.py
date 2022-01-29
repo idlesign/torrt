@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import MagicMock
 
 from torrt.toolbox import *
@@ -23,12 +24,14 @@ def test_configure_logging():
     configure_logging(show_logger_names=True)
 
 
-def test_bots(mock_config, monkeypatch):
-
+@pytest.mark.skip_no_module("telegram", 'python-telegram-bot not installed')
+def test_bot_telegram(mock_config, monkeypatch):
     monkeypatch.setattr('torrt.bots.telegram_bot.Updater', MagicMock(), raising=False)
     monkeypatch.setattr('torrt.bots.telegram_bot.TelegramBot.test_configuration', lambda *args: True)
 
-    configure_bot('telegram', {'token': 'xxx'})
+    bot = configure_bot('telegram', {'token': 'xxx'})
+    bot.register()
+
     assert mock_config['bots']['telegram']
 
     run_bots(['telegram'])

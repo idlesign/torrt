@@ -442,14 +442,16 @@ def run_bots(aliases: List[str] = None):
 
     """
     aliases = aliases or []
+    bot_hit = False
 
     for alias, bot_object in iter_bots():
+        bot_hit = True
 
         if aliases and alias not in aliases:
             continue
 
         bot_object.run()
 
-    else:
+    if not bot_hit:
         # if there is no bots to run - just exit
         sys.exit(1)
