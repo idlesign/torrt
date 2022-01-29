@@ -1,6 +1,6 @@
 from typing import Optional
 
-from ..base_bot import BaseBot
+from ..base_bot import BaseBot, BotRegistrationFailed
 from ..toolbox import add_torrent_from_url, get_registered_torrents, remove_torrent
 from ..utils import get_torrent_from_url, RPCObjectsRegistry
 
@@ -34,8 +34,7 @@ class TelegramBot(BaseBot):
         self.allowed_users = allowed_users or ''
 
         if not telegram:
-            self.log_error('You have not installed python-telegram-bot library.')
-            return
+            raise BotRegistrationFailed("You have not installed python-telegram-bot library.")
 
         self.handler_kwargs = {}
         self.updater = Updater(token=self.token)
