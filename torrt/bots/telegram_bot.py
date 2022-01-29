@@ -103,7 +103,7 @@ class TelegramBot(BaseBot):
         add_handler(CommandHandler("remove", self.command_remove_torrents, **kwargs))
         add_handler(CommandHandler("help", self.command_help, **kwargs))
 
-    def handle_callbacks(self, update: Update, context: CallbackContext):
+    def handle_callbacks(self, update: "Update", context: "CallbackContext"):
         """Handler to process all callbacks from buttons"""
 
         handlers = {
@@ -119,7 +119,7 @@ class TelegramBot(BaseBot):
         elif update.callback_query.data.startswith("hash:"):
             self.handle_remove_torrents(update, context)
 
-    def handle_ask_url(self, update: Update, context: CallbackContext):
+    def handle_ask_url(self, update: "Update", context: "CallbackContext"):
         message = update.callback_query.message
         message.reply_text(
             text="Give me a URL and I'll do the rest.",
@@ -127,7 +127,7 @@ class TelegramBot(BaseBot):
         )
         return self.URL
 
-    def handle_process_url(self, update: Update, context: CallbackContext):
+    def handle_process_url(self, update: "Update", context: "CallbackContext"):
 
         torrent_url = update.message.text
         torrent_data = get_torrent_from_url(torrent_url)
@@ -171,7 +171,7 @@ class TelegramBot(BaseBot):
 
         return self.PATH
 
-    def handle_ask_download_path(self, update: Update, context: CallbackContext):
+    def handle_ask_download_path(self, update: "Update", context: "CallbackContext"):
 
         torrent_url = context.user_data.get("url")
 
@@ -211,7 +211,7 @@ class TelegramBot(BaseBot):
 
         return ConversationHandler.END
 
-    def cancel_handler(self, update: Update, context: CallbackContext):
+    def cancel_handler(self, update: "Update", context: "CallbackContext"):
 
         update.message.reply_text(
             "Bye! I hope to see you again.", reply_markup=ReplyKeyboardRemove()
@@ -219,7 +219,7 @@ class TelegramBot(BaseBot):
 
         return ConversationHandler.END
 
-    def handle_remove_torrents(self, update: Update, context: CallbackContext):
+    def handle_remove_torrents(self, update: "Update", context: "CallbackContext"):
         """
         Handler for torrent remove action.
         data is colon-joined string which is contains:
@@ -261,7 +261,7 @@ class TelegramBot(BaseBot):
 
         return
 
-    def command_start(self, update: Update, context: CallbackContext):
+    def command_start(self, update: "Update", context: "CallbackContext"):
         """Start dialog handler"""
 
         kb = InlineKeyboardMarkup(
@@ -285,7 +285,7 @@ class TelegramBot(BaseBot):
 
         return self.URL
 
-    def command_add_torrent(self, update: Update, context: CallbackContext):
+    def command_add_torrent(self, update: "Update", context: "CallbackContext"):
         """Stand-alone handler to add torrent"""
 
         torrent_url = update.message.text.lstrip("/add ")
@@ -320,7 +320,7 @@ class TelegramBot(BaseBot):
         else:
             context.bot.send_message(chat_id, text="Unable to register the torrent.")
 
-    def command_list_torrents(self, update: Update, context: CallbackContext):
+    def command_list_torrents(self, update: "Update", context: "CallbackContext"):
         """Command to list all monitored torrents"""
 
         torrents = []
@@ -339,7 +339,7 @@ class TelegramBot(BaseBot):
         else:
             message.reply_text("No torrents yet.")
 
-    def command_remove_torrents(self, update: Update, context: CallbackContext):
+    def command_remove_torrents(self, update: "Update", context: "CallbackContext"):
         """Command to remove torrent"""
 
         buttons = []
@@ -364,7 +364,7 @@ class TelegramBot(BaseBot):
             reply_markup=InlineKeyboardMarkup(buttons),
         )
 
-    def command_help(self, update: Update, context: CallbackContext):
+    def command_help(self, update: "Update", context: "CallbackContext"):
         """Command for help"""
 
         helptext = (
