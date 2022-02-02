@@ -34,7 +34,7 @@ class TelegramBot(BaseBot):
         self.allowed_users = allowed_users or ''
 
         if not telegram:
-            raise BotRegistrationFailed("You have not installed python-telegram-bot library.")
+            raise BotRegistrationFailed('You have not installed python-telegram-bot library.')
 
         self.handler_kwargs = {}
         self.updater = Updater(token=self.token)
