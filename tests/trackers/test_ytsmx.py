@@ -41,7 +41,7 @@ def test_extract_movie_id(tracker: YtsmxTracker):
     <head></head>
     <body><div id="movie-info" data-movie-id="123"></body></html>
     '''
-    soup = BeautifulSoup(stub_html)
+    soup = BeautifulSoup(stub_html, features="lxml")
 
     movie_id = tracker._extract_movie_id(soup)
     assert movie_id == '123'
