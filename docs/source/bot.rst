@@ -54,7 +54,7 @@ Now your bot is ready to accept messages and fully functional.
 
 .. note::
 
-    It is recommended to start ``run_bots`` process using a process management system (see ``supervisord`` configuration example below).
+    It is recommended to start ``run_bots`` process using a process management system (see ``supervisord`` or ``systemd`` configuration example below).
 
 
 Talking to the bot
@@ -117,3 +117,45 @@ Here described how to configure and start torrt's Telegram bot with ``supervisor
         # supervisorctl reload
         # supervisorctl start torrt
 
+Systemd user service
+--------------------
+
+If you are running basically any modern Linux distribution you can run Telegram bot under your user with ``systemd``,
+without having to deal with global system configuration.
+
+1. Mark your user as the one allowed to 'linger'
+
+    .. code-block:: shell
+
+        # loginctl enable-linger `whoami`
+
+2. Create service definition in your home directory:
+
+    .. code-block:: shell
+
+        $ mkdir -p ~/.config/systemd/user/
+        $ echo << "EOF" > ~/.config/systemd/user/torrt.service
+        [Unit]
+        Description=torrt bot
+
+        [Install]
+        WantedBy=default.target
+
+        [Service]
+        ExecStart=PATH_TO_TORRT_SCRIPT run_bots
+        EOF
+
+    Replace ``PATH_TO_TORRT_SCRIPT`` with a location of **torrt** executable file
+
+3. Start Service
+
+    .. code-block:: shell
+
+        $ systemctl --user daemon-reload
+        $ systemctl --user start torrt
+
+4. (Optional) Enable service autostart
+
+    .. code-block:: shell
+
+        $ systemctl --user enable torrt

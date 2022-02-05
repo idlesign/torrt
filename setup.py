@@ -48,7 +48,7 @@ setup(
     setup_requires=[] + (['pytest-runner'] if 'test' in sys.argv else []) + [],
 
     extras_require={
-        'telegram': ['python-telegram-bot >=11.1.0, <12.0.0a0']
+        'telegram': ['python-telegram-bot >=13.10, <14.0.0a0']
     },
     test_suite='tests',
     tests_require=[

@@ -21,7 +21,7 @@ class YtsmxTracker(GenericPublicTracker):
     alias: str = 'yts.mx'
 
     test_urls: List[str] = [
-        'https://yts.mx/movies/the-matrix-resurrections-2021',
+        'https://yts.mx/movies/the-matrix-1999',
     ]
 
     def __init__(self, quality_prefs: List[str] = None):
