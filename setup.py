@@ -54,7 +54,7 @@ setup(
     tests_require=[
         'pytest',
         'pytest-datafixtures',
-        'pytest-responsemock>=1.0.0',
+        'pytest-responsemock>=1.1.0',
     ],
 
     entry_points={
@@ -67,7 +67,6 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',

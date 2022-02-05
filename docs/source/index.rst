@@ -62,7 +62,7 @@ Bots
 Requirements
 ------------
 
-1. Python 3.6+
+1. Python 3.7+
 2. ``deluge-webapi`` plugin (to work with Deluge)
 3. ``python-telegram-bot`` (to run Telegram bot)
 
