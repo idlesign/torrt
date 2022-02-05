@@ -1,5 +1,3 @@
-from importlib import import_module
-
 import pytest
 
 from torrt.toolbox import bootstrap
@@ -40,29 +38,3 @@ def mock_config(monkeypatch):
     monkeypatch.setattr('torrt.utils.TorrtConfig', MockConfig)
 
     return settings
-
-
-def pytest_configure(config):
-    config.addinivalue_line(
-        "markers", "skip_no_module(module, reason): mark test to run only with this module installed"
-    )
-
-@pytest.fixture(autouse=True)
-def skip_without_module(request):
-    """global fixture, that automatically skips tests marked with
-
-    `@pytest.mark.skip_no_module(module: str, reason: Optional[str] = '')`
-
-    if the requested `module` is unable to be imported
-
-    """
-
-    marker = request.node.get_closest_marker('skip_no_module')
-    if marker:
-        modulename = marker.args[0]
-        reason = marker.args[1] if len(marker.args) > 1 else ''
-
-        try:
-            import_module(modulename)
-        except ImportError:
-            pytest.skip(f"skipped without module: {modulename} {reason}")
