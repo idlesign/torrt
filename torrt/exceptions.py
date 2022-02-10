@@ -20,3 +20,11 @@ class TorrtRPCException(TorrtException):
     All other RPC related exception should inherit from that.
 
     """
+
+
+class TorrtBotException(TorrtException):
+    """Base torrt bot exception
+
+    All other bot related exception should inherit from that.
+
+    """

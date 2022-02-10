@@ -1,3 +1,4 @@
+from .exceptions import TorrtBotException
 from .utils import WithSettings, BotObjectsRegistry, BotClassesRegistry
 
 
@@ -20,3 +21,11 @@ class BaseBot(WithSettings):
 
     def run(self):
         """Run bot to receive incoming commands."""
+
+class BotRegistrationFailed(TorrtBotException):
+
+    """Bot is failed to register (missing dependency or precondition)
+
+    This exception must be raised during bot class construction
+
+    """

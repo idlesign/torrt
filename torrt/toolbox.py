@@ -1,7 +1,9 @@
 import logging
+import sys
 from time import time
 from typing import Optional, List, Dict
 
+from .base_bot import BotRegistrationFailed
 from .base_tracker import GenericPrivateTracker
 from .exceptions import TorrtException, TorrtRPCException
 from .utils import (
@@ -142,7 +144,6 @@ def init_object_registries():
     settings_to_registry_map = {
         'rpc': RPCClassesRegistry,
         'notifiers': NotifierClassesRegistry,
-        'bots': BotClassesRegistry,
     }
 
     for settings_entry, registry_cls in settings_to_registry_map.items():
@@ -150,6 +151,19 @@ def init_object_registries():
         for alias, settings in cfg[settings_entry].items():
             registry_obj = registry_cls.get(alias)
             registry_obj and registry_obj.spawn_with_settings(settings).register()
+
+    # Special treatment for bots, as they may require additional dependencies
+    for alias, settings in cfg['bots'].items():
+        registry_obj = BotClassesRegistry.get(alias)
+
+        try:
+            bot_obj = registry_obj.spawn_with_settings(settings)
+
+        except BotRegistrationFailed as e:
+            LOGGER.warn(f'`{alias}` bot is configured, but failed to register: {e}')
+
+        else:
+            bot_obj.register()
 
     # Special case for trackers to initialize public trackers automatically.
     for alias, tracker_cls in TrackerClassesRegistry.get().items():
@@ -428,10 +442,16 @@ def run_bots(aliases: List[str] = None):
 
     """
     aliases = aliases or []
+    bot_hit = False
 
     for alias, bot_object in iter_bots():
+        bot_hit = True
 
         if aliases and alias not in aliases:
             continue
 
         bot_object.run()
+
+    if not bot_hit:
+        # if there is no bots to run - just exit
+        sys.exit(1)
