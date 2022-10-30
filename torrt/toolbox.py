@@ -1,6 +1,7 @@
 import logging
 import sys
 from time import time
+from datetime import datetime
 from typing import Optional, List, Dict
 
 from .base_bot import BotRegistrationFailed
@@ -10,7 +11,7 @@ from .utils import (
     RPCClassesRegistry, TrackerClassesRegistry, config, get_url_from_string,
     get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc,
     NotifierClassesRegistry, iter_notifiers, BotClassesRegistry, iter_bots, configure_entity,
-    TorrentData
+    TorrentData, DATETIME_FORMAT
 )
 
 try:
@@ -398,7 +399,9 @@ def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> 
                 tracker_torrent = download_cache[page_url]
 
             else:
-                tracker_torrent = get_torrent_from_url(page_url)
+                date_updated_ = torrents[rpc_torrent['hash']]['page']['date_updated']
+                last_updated_date = datetime.strptime(date_updated_, DATETIME_FORMAT) if date_updated_ else None
+                tracker_torrent = get_torrent_from_url(page_url, last_updated_date)
                 download_cache[page_url] = tracker_torrent
 
             if tracker_torrent is None:

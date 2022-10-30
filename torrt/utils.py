@@ -37,6 +37,7 @@ _THREAD_LOCAL = threading.local()
 # This regex is used to get hyperlink from torrent comment.
 RE_LINK = re.compile(r'(?P<url>https?://[^\s]+)')
 
+DATETIME_FORMAT='%Y-%m-%d %H:%M:%S'
 
 class HttpClient:
     """Common client to perform HTTP requests."""
@@ -359,7 +360,7 @@ def update_dict(old_dict: dict, new_dict: dict) -> dict:
 class PageData:
     """Represents data extracted from torrent page."""
 
-    def __init__(self, title: str, cover: str, date_updated: str):
+    def __init__(self, title: str, cover: str, date_updated: datetime):
         self.title = title
         self.cover = cover
         self.date_updated = date_updated
@@ -368,7 +369,7 @@ class PageData:
         data = {
             'title': self.title,
             'cover': self.cover,
-            'date_updated': self.date_updated,
+            'date_updated': self.date_updated.strftime(DATETIME_FORMAT) if self.date_updated else None
         }
         return data
 
@@ -441,10 +442,11 @@ def structure_torrent_data(target_dict: dict, hash_str: str, data: TorrentData):
     target_dict[hash_str] = data.to_dict()
 
 
-def get_torrent_from_url(url: Optional[str]) -> Optional[TorrentData]:
+def get_torrent_from_url(url: Optional[str], last_updated_date: Optional[datetime] = None) -> Optional[TorrentData]:
     """Downloads torrent from a given URL and returns torrent data.
 
-    :param url:
+    :param url: URL to download torrent file from
+    :param last_updated_date: torrent last updated datetime
 
     """
     LOGGER.debug(f'Downloading torrent file from `{url}` ...')
@@ -452,7 +454,7 @@ def get_torrent_from_url(url: Optional[str]) -> Optional[TorrentData]:
     tracker: 'GenericTracker' = TrackerObjectsRegistry.get_for_string(url)
 
     if tracker:
-        torrent_info = tracker.get_torrent(url)
+        torrent_info = tracker.get_torrent(url, last_updated_date)
 
         if torrent_info is None:
             LOGGER.warning(f'Unable to get torrent from `{url}`')
