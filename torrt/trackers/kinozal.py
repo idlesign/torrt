@@ -34,11 +34,11 @@ class KinozalTracker(GenericPrivateTracker):
                 return self.parse_datetime(date_val, '%d %B %Y', locale='ru')
 
         dt_val = getattr(self._torrent_page.find(refresh_in_text).find('span'), 'text', '').strip()
-        parts = dt_val.split(' в ')
-        if len(parts) != 2:
+        parts = dt_val.partition(' в ')
+        if len(parts) != 3:
             return None
         else:
-            time_val = time.fromisoformat(parts[1])
+            time_val = time.fromisoformat(parts[2])
             return parse_date(parts[0]).replace(hour=time_val.hour, minute=time_val.minute, second=0, microsecond=0)
 
     def get_download_link(self, url: str) -> str:

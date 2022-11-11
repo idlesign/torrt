@@ -399,9 +399,9 @@ def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> 
                 tracker_torrent = download_cache[page_url]
 
             else:
-                date_updated_ = torrents[rpc_torrent['hash']]['page']['date_updated']
-                last_updated_date = datetime.strptime(date_updated_, DATETIME_FORMAT) if date_updated_ else None
-                tracker_torrent = get_torrent_from_url(page_url, last_updated_date)
+                raw_last_updated = torrents[rpc_torrent['hash']]['page']['date_updated']
+                last_updated = datetime.strptime(raw_last_updated, DATETIME_FORMAT) if raw_last_updated else None
+                tracker_torrent = get_torrent_from_url(page_url, last_updated)
                 download_cache[page_url] = tracker_torrent
 
             if tracker_torrent is None:

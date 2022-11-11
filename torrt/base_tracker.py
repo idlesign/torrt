@@ -268,12 +268,12 @@ class BaseTracker(WithSettings):
         """This should implement a configuration test, e.g. make test login and report success."""
         return True
 
-    def get_torrent(self, url: str, last_updated_date: Optional[datetime]) -> Optional[TorrentData]:
+    def get_torrent(self, url: str, *, last_updated: Optional[datetime] = None) -> Optional[TorrentData]:
         """This method should be implemented in torrent tracker handler class
         and must return .torrent file contents.
 
         :param url: URL to download torrent file from
-        :param last_updated_date: torrent last updated datetime
+        :param last_updated: torrent last updated datetime
 
         """
         raise NotImplementedError  # pragma: nocover
@@ -352,12 +352,12 @@ class GenericTracker(BaseTracker):
         """
         return url.split('=')[1]
 
-    def get_torrent(self, url: str, last_updated_date: Optional[datetime]) -> Optional[TorrentData]:
+    def get_torrent(self, url: str, last_updated: Optional[datetime]) -> Optional[TorrentData]:
         """This is the main method which returns torrent file contents
         of file located at URL.
 
         :param url: URL to find and get torrent from
-        :param last_updated_date: torrent last updated datetime
+        :param last_updated: torrent last updated datetime
 
         """
         download_link = self.get_download_link(url)
@@ -370,8 +370,8 @@ class GenericTracker(BaseTracker):
 
         self.log_debug(f'Torrent download link found: {download_link}')
 
-        if last_updated_date and last_updated_date >= page_data.date_updated:
-            self.log_info(f'Skip torrent download from {download_link} due to missing update')
+        if last_updated and last_updated >= page_data.date_updated:
+            self.log_debug('Skipped as up to date')
             return None
         else:
             torrent_contents = self.download_torrent(download_link, referer=url)

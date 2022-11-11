@@ -442,11 +442,11 @@ def structure_torrent_data(target_dict: dict, hash_str: str, data: TorrentData):
     target_dict[hash_str] = data.to_dict()
 
 
-def get_torrent_from_url(url: Optional[str], last_updated_date: Optional[datetime] = None) -> Optional[TorrentData]:
+def get_torrent_from_url(url: Optional[str], last_updated: Optional[datetime] = None) -> Optional[TorrentData]:
     """Downloads torrent from a given URL and returns torrent data.
 
     :param url: URL to download torrent file from
-    :param last_updated_date: torrent last updated datetime
+    :param last_updated: torrent last updated datetime
 
     """
     LOGGER.debug(f'Downloading torrent file from `{url}` ...')
@@ -454,7 +454,7 @@ def get_torrent_from_url(url: Optional[str], last_updated_date: Optional[datetim
     tracker: 'GenericTracker' = TrackerObjectsRegistry.get_for_string(url)
 
     if tracker:
-        torrent_info = tracker.get_torrent(url, last_updated_date)
+        torrent_info = tracker.get_torrent(url, last_updated)
 
         if torrent_info is None:
             LOGGER.warning(f'Unable to get torrent from `{url}`')
