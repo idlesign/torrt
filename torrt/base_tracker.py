@@ -352,7 +352,7 @@ class GenericTracker(BaseTracker):
         """
         return url.split('=')[1]
 
-    def get_torrent(self, url: str, last_updated: Optional[datetime]) -> Optional[TorrentData]:
+    def get_torrent(self, url: str, last_updated: Optional[datetime] = None) -> Optional[TorrentData]:
         """This is the main method which returns torrent file contents
         of file located at URL.
 
