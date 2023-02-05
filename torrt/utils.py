@@ -77,6 +77,7 @@ class HttpClient:
             allow_redirects: bool = True,
             cookies: dict = None,
             headers: dict = None,
+            proxies: dict = None,
             json: bool = None,
             silence_exceptions: bool = None,
             timeout: int = None,
@@ -90,6 +91,7 @@ class HttpClient:
         :param allow_redirects:
         :param cookies:
         :param headers: Additional headers
+        :param proxies: Proxies to specific request
         :param json: Send and receive data as JSON
         :param silence_exceptions: Do not raise exceptions
         :param timeout: Override timeout.
@@ -111,9 +113,13 @@ class HttpClient:
         if referer:
             headers['Referer'] = referer
 
-        if not self.tunnel:
-            # Drop globally set tunnels settings. See toolbox.tunnel().
-            r_kwargs['proxies'] = {'http': None, 'https': None}
+        # For using proxy exactly in a specific request
+        if not proxies:
+            if not self.tunnel:
+                # Drop globally set tunnels settings. See toolbox.tunnel().
+                r_kwargs['proxies'] = {'http': None, 'https': None}
+        else:
+            r_kwargs['proxies'] = proxies
 
         if json is None:
             json = self.json

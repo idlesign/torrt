@@ -28,19 +28,19 @@ class RuTrackerTracker(GenericPrivateTracker):
         """Used to perform some required actions right before .torrent download."""
         self.cookies['bb_dl'] = self.get_id_from_link(url)  # A check that user himself have visited torrent's page ;)
 
-    def get_download_link(self, url: str) -> str:
+    def get_download_link(self, url: str, proxies: dict = None) -> str:
         """Tries to find .torrent file download link at forum thread page and return that one."""
 
-        page_soup = self.get_torrent_page(url)
+        page_soup = self.get_torrent_page(url, proxies=proxies)
 
         domain = self.extract_domain(url)
 
         is_anonymous = self.find_links(url, page_soup, 'register') is not None
 
         if is_anonymous:
-            self.login(domain)
+            self.login(domain, proxies=proxies)
 
-            page_soup = self.get_torrent_page(url, drop_cache=True)
+            page_soup = self.get_torrent_page(url, proxies=proxies, drop_cache=True)
 
         download_link = self.find_links(url, page_soup, r'dl\.php')
 
@@ -58,7 +58,7 @@ class RuTrackerTracker(GenericPrivateTracker):
         except IndexError:
             return
 
-    def download_torrent(self, url: str, referer: str = None) -> Optional[bytes]:
+    def download_torrent(self, url: str, proxies: dict = None, referer: str = None) -> Optional[bytes]:
 
         self.log_debug(f'Downloading torrent file from {url} ...')
 
@@ -75,6 +75,7 @@ class RuTrackerTracker(GenericPrivateTracker):
             url,
             form_data=form_data,
             cookies=self.cookies,
+            proxies=proxies,
             query_string=self.get_query_string(),
             referer=referer,
         )
