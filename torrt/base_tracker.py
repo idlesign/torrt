@@ -96,10 +96,7 @@ class BaseTracker(WithSettings):
                     silence_exceptions=True,
                 )
 
-                if response is None:
-                    continue
-
-                if response.url.startswith(mirror_url):
+                if response and response.ok and response.url.startswith(mirror_url):
                     mirror_picked = mirror_domain
                     break
 
