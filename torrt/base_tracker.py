@@ -193,9 +193,9 @@ class BaseTracker(WithSettings):
 
             url = f'{url}{delim}{query_string}'
 
-        self.pick_mirror(url)
+        #self.pick_mirror(url)
 
-        url = self.get_mirrored_url(url)
+        #url = self.get_mirrored_url(url)
 
         result = self.client.request(
             url=url,
