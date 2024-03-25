@@ -10,7 +10,7 @@ REGEX_NON_WORD = re.compile(r'[\W_]')
 REGEX_RANGE = re.compile(r'\d+-\d+')
 
 HOST: str = 'https://www.anilibria.tv'
-API_URL: str = HOST + '/public/api/index.php'
+API_URL: str ='https://api.anilibria.tv/v3/title'
 
 
 class AnilibriaTracker(GenericPublicTracker):
@@ -85,7 +85,7 @@ class AnilibriaTracker(GenericPublicTracker):
             return {}
 
         available_qualities = {}
-        torrents = json['data']['torrents']
+        torrents = json['torrents']['list']
         series2torrents = defaultdict(list)
         # a release can consist of several torrents:
         #   1. episode ranges (different qualities),
@@ -94,8 +94,8 @@ class AnilibriaTracker(GenericPublicTracker):
         #   4. OVAs
         # we are trying to recognize `1` and `2`.
         for torrent in torrents:
-            if REGEX_RANGE.match(torrent['series']) or torrent['series'] == json['data']['series']:
-                series2torrents[torrent['series']].append(torrent)
+            if REGEX_RANGE.match(torrent['episodes']['string']) or torrent['episodes']['string'] ==
+                series2torrents[torrent['episodes']['string']].append(torrent)
 
         # some releases can be broken into several .torrent files, e.g. 1-20 and 21-41 - take the last one
         sorted_series = sorted(series2torrents.keys(), key=self.to_tuple, reverse=True)
@@ -104,7 +104,7 @@ class AnilibriaTracker(GenericPublicTracker):
             return {}
 
         for torrent in series2torrents[sorted_series[0]]:
-            quality = self.sanitize_quality(torrent['quality'])
+            quality = self.sanitize_quality(torrent['quality']['string'])
             available_qualities[quality] = HOST + torrent['url']
 
         return available_qualities
@@ -162,7 +162,7 @@ class AnilibriaTracker(GenericPublicTracker):
         :param code: release code
 
         """
-        response = self.get_response(API_URL, {'query': 'release', 'code': code}, as_soup=False)
+        response = self.get_response(API_URL + '?code=' + code, as_soup=False)
 
         if not response:
             return {}
