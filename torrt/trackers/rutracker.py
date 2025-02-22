@@ -22,7 +22,7 @@ class RuTrackerTracker(GenericPrivateTracker):
 
     def get_login_form_data(self, login: str, password: str) -> dict:
         """Returns a dictionary with data to be pushed to authorization form."""
-        return {'login_username': login, 'login_password': password, 'login': 'pushed', 'redirect': 'index.php'}
+        return {'login_username': login, 'login_password': password, 'login': '%E2%F5%EE%E4'}
 
     def before_download(self, url: str):
         """Used to perform some required actions right before .torrent download."""
