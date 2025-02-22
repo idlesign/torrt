@@ -1,6 +1,8 @@
-from os.path import dirname, realpath, join
+from os.path import dirname, realpath
 
 from torrentool.torrent import Torrent
+
+import cloudscraper
 
 from torrt.base_rpc import BaseRPC
 from torrt.base_tracker import GenericPublicTracker
@@ -90,8 +92,11 @@ def test_fullcycle(monkeypatch, datafix_dir):
         def save(cls, settings_dict):
             cls.cfg = settings_dict
 
+    scraper = cloudscraper.create_scraper()
+    monkeypatch.setattr('torrt.utils.create_scraper', lambda: scraper)
+
     def patch_requests(response_contents):
-        monkeypatch.setattr('torrt.utils.Session.get', lambda self, url, **kwargs: DummyResponse(url, response_contents))
+        monkeypatch.setattr(scraper, "get", lambda url, **kwargs: DummyResponse(url, response_contents))
 
     torrent_one_hash = 'c815be93f20bf8b12fed14bee35c14b19b1d1984'
     torrent_one_data = (datafix_dir / 'torr_one.torrent').read_bytes()

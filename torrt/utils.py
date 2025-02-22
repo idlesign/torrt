@@ -19,7 +19,8 @@ from time import time
 from typing import Any, Optional, Union, Generator, Tuple, Callable
 
 from bs4 import BeautifulSoup
-from requests import Response, Session, RequestException
+from requests import Response, RequestException
+from cloudscraper import create_scraper
 from torrentool.api import Torrent
 from torrentool.exceptions import BencodeDecodingError
 
@@ -44,9 +45,6 @@ class HttpClient:
 
     timeout: int = 10
 
-    user_agent: str = (
-        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36')
-
     def __init__(
             self,
             silence_exceptions: bool = False,
@@ -54,11 +52,7 @@ class HttpClient:
             json: bool = False,
             tunnel: bool = True,
     ):
-        session = Session()
-
-        session.headers.update({
-            'User-agent': self.user_agent,
-        })
+        session = create_scraper()
 
         self.session = session
         self.silence_exceptions = silence_exceptions,

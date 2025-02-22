@@ -1,0 +1,4 @@
+pytest
+pytest-cov
+pytest-datafixtures
+pytest-responsemock>=1.1.0
