@@ -4,7 +4,9 @@ torrt changelog
 
 Unreleased
 ----------
+* Added QA for Py 3.11.
 * Anilibria support suspended.
+* Dropped QA for Py 3.7, 3.8.
 
 
 v1.0.0 [2021-12-26]
