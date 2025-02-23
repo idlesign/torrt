@@ -16,6 +16,14 @@ API_URL: str = HOST + '/public/api/index.php'
 class AnilibriaTracker(GenericPublicTracker):
     """This class implements .torrent files downloads for https://www.anilibria.tv tracker."""
 
+    active: bool = False
+    """Seems to be moved for another domain, and changed here and there.
+    See:
+        * https://anilibria.top/api/docs/v1
+        * https://anilibria.top/anime/releases/release/sword-art-online-alicization
+        * https://anilibria.top/anime/releases/release/kabukichou-sherlock/episodes
+    """
+
     alias: str = 'anilibria.tv'
 
     test_urls: List[str] = [

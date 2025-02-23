@@ -3,6 +3,9 @@ import pytest
 from torrt.trackers.anilibria import AnilibriaTracker
 
 
+pytest.skip("Inactive", allow_module_level=True)
+
+
 @pytest.mark.parametrize("test_input,expected", [
     ('https://www.anilibria.tv/release/kabukichou-sherlock.html', 'kabukichou-sherlock'),
     ('https://www.anilibria.tv/release/mairimashita-iruma-kun.html', 'mairimashita-iruma-kun'),

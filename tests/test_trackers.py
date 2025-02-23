@@ -8,6 +8,9 @@ def test_trackers():
 
     for tracker_alias, tracker_obj in tracker_objects.items():
 
+        if not tracker_obj.active:
+            continue
+
         urls = tracker_obj.test_urls
 
         for url in urls:

@@ -18,6 +18,9 @@ class BaseTracker(WithSettings):
 
     config_entry_name: str = 'trackers'
 
+    active: bool = True
+    """Tracker support flag. Can be used to skip initialization for currently unavailable trackers."""
+
     alias: str = None
     """Tracker alias. Usually main tracker domain. See also `mirrors` attribute."""
 
@@ -57,7 +60,7 @@ class BaseTracker(WithSettings):
         super().__init__()
 
     def __init_subclass__(cls, **kwargs):
-        if cls.alias:
+        if cls.alias and cls.active:
             TrackerClassesRegistry.add(cls)
 
     def get_query_string(self) -> str:
