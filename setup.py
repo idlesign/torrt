@@ -1,7 +1,6 @@
 import io
 import os
 import re
-import sys
 
 from setuptools import setup, find_packages
 
@@ -44,18 +43,12 @@ setup(
         'beautifulsoup4',
         'torrentool',
         'lxml',
+        'cloudscraper',
     ],
-    setup_requires=[] + (['pytest-runner'] if 'test' in sys.argv else []) + [],
 
     extras_require={
         'telegram': ['python-telegram-bot >=13.10, <14.0.0a0']
     },
-    test_suite='tests',
-    tests_require=[
-        'pytest',
-        'pytest-datafixtures',
-        'pytest-responsemock>=1.1.0',
-    ],
 
     entry_points={
         'console_scripts': ['torrt = torrt.main:process_commands'],
