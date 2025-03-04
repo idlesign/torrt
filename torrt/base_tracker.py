@@ -163,6 +163,7 @@ class BaseTracker(WithSettings):
             allow_redirects: bool = True,
             referer: str = None,
             cookies: Union[dict, CookieJar] = None,
+            proxies: dict = None,
             query_string: str = None,
             as_soup: bool = False
 
@@ -181,6 +182,8 @@ class BaseTracker(WithSettings):
         :param referer: data to put into Referer header
 
         :param cookies: cookies to use
+
+        :param proxies: proxies to specific request
 
         :param query_string:  query string (GET parameters) to add to URL
 
@@ -206,6 +209,7 @@ class BaseTracker(WithSettings):
             referer=referer,
             allow_redirects=allow_redirects,
             cookies=cookies,
+            proxies=proxies,
         )
 
         if result is not None and as_soup:
@@ -318,10 +322,11 @@ class BaseTracker(WithSettings):
         finally:
             setlocale(LC_ALL, old_locale)
 
-    def get_torrent_page(self, url: str, *, drop_cache: bool = False) -> BeautifulSoup:
+    def get_torrent_page(self, url: str, *, proxies: dict = None, drop_cache: bool = False) -> BeautifulSoup:
         """Get torrent page as soup for further data extraction.
 
         :param url:
+        :param proxies: Proxies to use
         :param drop_cache: Do not use cached version if any.
 
         """
@@ -335,6 +340,7 @@ class BaseTracker(WithSettings):
                 url,
                 referer=url,
                 cookies=self.cookies,
+                proxies=proxies,
                 query_string=self.get_query_string(),
                 as_soup=True
             )
@@ -484,7 +490,7 @@ class GenericPrivateTracker(GenericPublicTracker):
     def test_configuration(self) -> bool:
         return self.login(self.alias)
 
-    def login(self, domain: str) -> bool:
+    def login(self, domain: str, proxies: dict = None) -> bool:
         """Implements tracker login procedure. Returns success bool."""
 
         login_url = self.login_url % {'domain': domain}
@@ -514,7 +520,8 @@ class GenericPrivateTracker(GenericPublicTracker):
         response = self.get_response(
             login_url, form_data,
             allow_redirects=allow_redirects,
-            cookies=self.cookies
+            cookies=self.cookies,
+            proxies=proxies,
         )
 
         if not response:  # e.g. Connection aborted.
