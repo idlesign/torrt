@@ -1,3 +1,0 @@
-[run]
-source = torrt/
-omit = torrt/main.py, torrt/compat.py

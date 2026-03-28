@@ -1,0 +1,110 @@
+[project]
+name = "torrt"
+dynamic = ["version"]
+description = "Automates torrent updates for you."
+authors = [
+    { name = "Igor `idle sign` Starikov", email = "idlesign@yandex.ru" }
+]
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+keywords = ["torrent", "bittorrent", "automation"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: BSD License",
+]
+dependencies = [
+    "requests",
+    "beautifulsoup4",
+    "torrentool",
+    "lxml",
+]
+
+[project.urls]
+Homepage = "https://github.com/idlesign/torrt"
+Documentation = "https://torrt.readthedocs.io/"
+
+[project.scripts]
+torrt = "torrt.main:process_commands"
+
+[project.optional-dependencies]
+telegram = [
+    "python-telegram-bot >=13.10, <14.0.0a0",
+]
+
+[dependency-groups]
+dev = [
+    { include-group = "docs" },
+    { include-group = "linters" },
+    { include-group = "tests" },
+]
+docs = [
+    "mkdocs-material",
+    "mkdocs-navsorted-plugin",
+    "mkdocs-apidescribed-plugin",
+]
+linters = [
+    "ruff==0.13.1",
+]
+tests = [
+    "pytest",
+    "pytest-datafixtures",
+    "pytest-responsemock>=1.1.0",
+    "coverage",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/torrt/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/torrt"]
+
+[tool.hatch.build.targets.sdist]
+packages = ["src/"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+
+[tool.coverage.run]
+source = [
+    "src/torrt",
+]
+omit = [
+    "src/torrt/main.py",
+    "src/torrt/compat.py",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+
+[tool.tox]
+skip_missing_interpreters = true
+env_list = [
+    "py310",
+    "py311",
+    "py312",
+    "py313",
+]
+
+[tool.tox.env_run_base]
+dependency_groups = ["tests"]
+commands = [
+    ["pytest", { replace = "posargs", default = ["tests"], extend = true }],
+]

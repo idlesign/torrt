@@ -25,7 +25,7 @@ def process_commands():
         return settings_dict
 
     arg_parser = argparse.ArgumentParser('torrt', description='Automates torrent updates for you.')
-    arg_parser.add_argument('--version', action='version', version='%(prog)s ' + '.'.join(map(str, VERSION)))
+    arg_parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
 
     subp_main = arg_parser.add_subparsers(title='Supported commands', dest='command')
 

@@ -1,30 +1,25 @@
-torrt authors
-=============
+# torrt authors
 
 Created by Igor `idle sign` Starikov.
 
+## Contributors
 
-Contributors
-------------
+* Anton Bazhanov — https://github.com/toshka
+* dmzkrsk — https://github.com/dmzkrsk
+* Denis Tolstov — https://github.com/ALTracer
+* theonedemon — https://github.com/theonedemon
+* Mikalai Kukhta — https://github.com/NecroKote
+* Alexander Litvinenko — https://github.com/alexlitvinenko
+* Mikhail Tatyushev — https://github.com/tatyushev-ms
+* st7105 — https://github.com/st7105
+* Alexandr Kolosov — https://github.com/a8t3r
 
-Anton Bazhanov <https://github.com/toshka>
-dmzkrsk <https://github.com/dmzkrsk>
-Denis Tolstov <https://github.com/ALTracer>
-theonedemon <https://github.com/theonedemon>
-Mikalai Kukhta <https://github.com/NecroKote>
-Alexander Litvinenko <https://github.com/alexlitvinenko>
-Mikhail Tatyushev <https://github.com/tatyushev-ms>
-st7105 <https://github.com/st7105>
-Alexandr Kolosov <https://github.com/a8t3r>
-
-
-deluge-updatorr project
------------------------
+## deluge-updatorr project
 
 torrt is based on `deluge-updatorr` code and ideas, here are those who made it:
 
-Igor `idle sign` Starikov <https://github.com/idlesign>
-dredkin <https://github.com/dredkin>
-LuckyRu <https://github.com/LuckyRu>
-endoscient <https://github.com/endoscient>
-Gleb Sturov <https://github.com/gsturov>
+* Igor `idle sign` Starikov — https://github.com/idlesign
+* dredkin — https://github.com/dredkin
+* LuckyRu — https://github.com/LuckyRu
+* endoscient — https://github.com/endoscient
+* Gleb Sturov — https://github.com/gsturov

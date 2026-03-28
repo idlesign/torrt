@@ -1,61 +1,39 @@
-API
-===
-
+# API
 
 **torrt** exposes API so it can be used as an ordinary Python module.
 
+## Toolbox
 
-Toolbox
--------
+Most commonly used functions are located in toolbox.
 
-Most commonly used functions are locate in toolbox.
+::: apidescribed: torrt.toolbox
 
-
-.. automodule:: torrt.toolbox
-   :members:
-
-
-Utils
------
+## Utils
 
 Utility function and methods are also available.
 
-.. automodule:: torrt.utils
-   :members:
+::: apidescribed: torrt.utils
 
-
-Base RPC class
---------------
+## Base RPC class
 
 RPC classes should be implemented using this.
 
-.. automodule:: torrt.base_rpc
-   :members:
+::: apidescribed: torrt.base_rpc
 
-
-Base Tracker classes
---------------------
+## Base Tracker classes
 
 Torrent tracker classes should be implemented using this.
 
-.. automodule:: torrt.base_tracker
-   :members:
+::: apidescribed: torrt.base_tracker
 
-
-Base Notification class
------------------------
+## Base Notification class
 
 Notifier classes should be implemented using this.
 
-.. automodule:: torrt.base_notifier
-   :members:
+::: apidescribed: torrt.base_notifier
 
-
-Base Bots class
----------------
+## Base Bots class
 
 Bot classes should be implemented using this.
 
-.. automodule:: torrt.base_bot
-   :members:
-
+::: apidescribed: torrt.base_bot

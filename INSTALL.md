@@ -1,31 +1,31 @@
-torrt installation
-==================
+# torrt installation
 
+Python `pip` package is required to install `torrt`.
 
-Python ``pip`` package is required to install ``torrt``.
+## From sources
 
+Use the following command line to install `torrt` from sources directory (containing `pyproject.toml`):
 
-From sources
-------------
+```shell
+pip install .
+```
 
-Use the following command line to install ``torrt`` from sources directory (containing setup.py):
+or with [uv](https://github.com/astral-sh/uv):
 
-    pip install .
+```shell
+uv pip install .
+```
 
-or
+## From PyPI
 
-    python setup.py install
+Alternatively you can install `torrt` from PyPI:
 
-
-From PyPI
----------
-
-Alternatively you can install ``torrt`` from PyPI:
-
-    pip install torrt
-
+```shell
+pip install torrt
+```
 
 Use `-U` flag for upgrade:
 
-    pip install -U torrt
-
+```shell
+pip install -U torrt
+```

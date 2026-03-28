@@ -8,7 +8,7 @@ from ..exceptions import TorrtTrackerException
 from ..base_tracker import GenericPublicTracker
 
 
-API_BASE = 'https://yts.mx/api/v2/'
+API_BASE = 'https://yts.bz/api/v2/'
 QualityLinks = Dict[str, str]
 QualityLink = Tuple[str, str]
 
@@ -19,6 +19,7 @@ class YtsmxTracker(GenericPublicTracker):
     """This class implements .torrent files downloads for https://yts.mx tracker."""
 
     alias: str = 'yts.mx'
+    mirrors: List[str] = ['yts.mx', 'yts.bz', 'yts.lt']
 
     test_urls: List[str] = [
         'https://yts.mx/movies/the-matrix-1999',
@@ -72,6 +73,7 @@ class YtsmxTracker(GenericPublicTracker):
     def _get_movie_details(self, movie_id: str) -> dict:
         """returns dict with movie info by calling API"""
 
+        # todo api url needs to respect mirror domain
         response = self.get_response(f'{API_BASE}movie_details.json?movie_id={movie_id}')
         if not response:
             raise YtsmxTrackerException("API didn't respond")
