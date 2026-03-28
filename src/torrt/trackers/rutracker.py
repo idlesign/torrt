@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import ClassVar
 
-from ..base_tracker import GenericPrivateTracker, BeautifulSoup
+from ..base_tracker import BeautifulSoup, GenericPrivateTracker
 
 
 class RuTrackerTracker(GenericPrivateTracker):
@@ -9,10 +9,10 @@ class RuTrackerTracker(GenericPrivateTracker):
     alias: str = 'rutracker.org'
     login_url: str = 'https://%(domain)s/forum/login.php'
     auth_cookie_name: str = 'bb_session'
-    mirrors: List[str] = ['rutracker.org', 'rutracker.net', 'maintracker.org']
+    mirrors: ClassVar[list[str]] = ['rutracker.org', 'rutracker.net', 'maintracker.org']
     encoding: str = 'cp1251'
 
-    test_urls: List[str] = [
+    test_urls: ClassVar[list[str]] = [
         'https://rutracker.org/forum/viewtopic.php?t=4430338',
     ]
 
@@ -48,7 +48,7 @@ class RuTrackerTracker(GenericPrivateTracker):
 
         return download_link or ''
 
-    def get_form_token(self, page_soup: BeautifulSoup) -> Optional[str]:
+    def get_form_token(self, page_soup: BeautifulSoup) -> str | None:
 
         form_token_lines = [line for line in page_soup.text.split('\n\t') if line.startswith('form_token')]
 
@@ -58,7 +58,7 @@ class RuTrackerTracker(GenericPrivateTracker):
         except IndexError:
             return
 
-    def download_torrent(self, url: str, referer: str = None) -> Optional[bytes]:
+    def download_torrent(self, url: str, *, referer: str = '') -> bytes | None:
 
         self.log_debug(f'Downloading torrent file from {url} ...')
 

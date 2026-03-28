@@ -1,4 +1,4 @@
-from .utils import WithSettings, NotifierObjectsRegistry, NotifierClassesRegistry
+from .utils import NotifierClassesRegistry, NotifierObjectsRegistry, WithSettings
 
 
 class BaseNotifier(WithSettings):

@@ -1,6 +1,6 @@
 import re
 from collections import defaultdict
-from typing import List, Dict, Optional, Tuple
+from typing import ClassVar
 
 from ..base_tracker import GenericPublicTracker
 
@@ -26,13 +26,13 @@ class AnilibriaTracker(GenericPublicTracker):
 
     alias: str = 'anilibria.tv'
 
-    test_urls: List[str] = [
+    test_urls: ClassVar[list[str]] = [
         'https://www.anilibria.tv/release/sword-art-online-alicization.html',
     ]
 
-    def __init__(self, quality_prefs: List[str] = None):
+    def __init__(self, *, quality_prefs: list[str] | None = None):
 
-        super(AnilibriaTracker, self).__init__()
+        super().__init__()
 
         if quality_prefs is None:
             quality_prefs = ['HDTVRip 1080p', 'HDTVRip 720p', 'WEBRip 720p']
@@ -77,7 +77,7 @@ class AnilibriaTracker(GenericPublicTracker):
 
         return ''
 
-    def find_available_qualities(self, url: str) -> Dict[str, str]:
+    def find_available_qualities(self, url: str) -> dict[str, str]:
         """Tries to find .torrent download links in `Release` model
         Returns a dict where key is quality and value is .torrent download link.
 
@@ -131,7 +131,7 @@ class AnilibriaTracker(GenericPublicTracker):
         return url.replace(HOST + '/release/', '').replace('.html', '')
 
     @staticmethod
-    def sanitize_quality(quality_str: Optional[str]) -> str:
+    def sanitize_quality(quality_str: str | None) -> str:
         """Turn passed quality_str into common format in order to simplify comparison.
 
         Examples:
@@ -151,7 +151,7 @@ class AnilibriaTracker(GenericPublicTracker):
         return ''
 
     @staticmethod
-    def to_tuple(range_str: str) -> Tuple[int, ...]:
+    def to_tuple(range_str: str) -> tuple[int, ...]:
         """ Turn passed range_str into tuple of integers.
 
         Examples:
@@ -170,7 +170,7 @@ class AnilibriaTracker(GenericPublicTracker):
         :param code: release code
 
         """
-        response = self.get_response(API_URL, {'query': 'release', 'code': code}, as_soup=False)
+        response = self.get_response(API_URL, form_data={'query': 'release', 'code': code}, as_soup=False)
 
         if not response:
             return {}

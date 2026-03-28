@@ -2,7 +2,6 @@ import pytest
 
 from torrt.trackers.anilibria import AnilibriaTracker
 
-
 pytest.skip("Inactive", allow_module_level=True)
 
 

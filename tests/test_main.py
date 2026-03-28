@@ -1,14 +1,26 @@
-from os.path import dirname, realpath, join
+from pathlib import Path
+from typing import ClassVar
 
 from torrentool.torrent import Torrent
 
 from torrt.base_rpc import BaseRPC
 from torrt.base_tracker import GenericPublicTracker
-from torrt.toolbox import bootstrap, TrackerClassesRegistry, NotifierClassesRegistry, RPCClassesRegistry, \
-    configure_rpc, configure_tracker, add_torrent_from_url, get_registered_torrents, walk, remove_torrent, toggle_rpc
-from torrt.utils import RPCObjectsRegistry, TorrentData
+from torrt.toolbox import (
+    NotifierClassesRegistry,
+    RPCClassesRegistry,
+    TrackerClassesRegistry,
+    add_torrent_from_url,
+    bootstrap,
+    configure_rpc,
+    configure_tracker,
+    get_registered_torrents,
+    remove_torrent,
+    toggle_rpc,
+    walk,
+)
+from torrt.utils import RPCObjectsRegistry, TorrentData, TorrtConfig
 
-CURRENT_DIR = dirname(realpath(__file__))
+CURRENT_DIR = Path(__file__).parent
 
 
 def test_basic():
@@ -20,7 +32,7 @@ def test_basic():
 class DummyTracker(GenericPublicTracker):
 
     alias = 'dummy.local'
-    mirrors = ['dummy-a.local']
+    mirrors: ClassVar[list[str]] = ['dummy-a.local']
 
     def get_download_link(self, url):
         return url
@@ -33,19 +45,19 @@ class DummyRPC(BaseRPC):
 
     alias = 'dummy'
 
-    def __init__(self, enabled=False):
+    def __init__(self, *, enabled=False):
         self.enabled = enabled
         self.torrents = {}
         super().__init__()
 
-    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None):
+    def method_add_torrent(self, torrent: TorrentData, *, download_to: str = '', params: dict | None = None):
         parsed = Torrent.from_string(torrent.raw)
         self.torrents[parsed.info_hash] = parsed
 
-    def method_remove_torrent(self, hash_str, with_data=False):
+    def method_remove_torrent(self, hash_str, *, with_data=False):
         self.torrents.pop(hash_str)
 
-    def method_get_torrents(self, hashes=None):
+    def method_get_torrents(self, hashes: list[str] | None = None):
         results = []
 
         for hash_str, parsed in self.torrents.items():
@@ -72,8 +84,6 @@ def test_fullcycle(monkeypatch, datafix_dir):
     # todo Dummy notifier
     # todo Dummy bot
 
-    from torrt.utils import TorrtConfig
-
     class DummyConfig(TorrtConfig):
 
         cfg = TorrtConfig._basic_settings
@@ -91,7 +101,8 @@ def test_fullcycle(monkeypatch, datafix_dir):
             cls.cfg = settings_dict
 
     def patch_requests(response_contents):
-        monkeypatch.setattr('torrt.utils.Session.get', lambda self, url, **kwargs: DummyResponse(url, response_contents))
+        monkeypatch.setattr(
+            'torrt.utils.Session.get', lambda self, url, **kwargs: DummyResponse(url, response_contents))
 
     torrent_one_hash = 'c815be93f20bf8b12fed14bee35c14b19b1d1984'
     torrent_one_data = (datafix_dir / 'torr_one.torrent').read_bytes()
@@ -99,7 +110,7 @@ def test_fullcycle(monkeypatch, datafix_dir):
     torrent_two_hash = '65f491bbdef45a26388a9337a91826a75c4c59fb'
     torrent_two_data = (datafix_dir / 'torr_two.torrent').read_bytes()
 
-    class DummyResponse(object):
+    class DummyResponse:
 
         def __init__(self, url, data):
             self.url = url

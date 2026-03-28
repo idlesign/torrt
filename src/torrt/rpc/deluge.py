@@ -1,8 +1,8 @@
-from typing import Dict, Any, List
+from typing import Any, ClassVar
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import base64encode, TorrentData
+from ..utils import TorrentData, base64encode
 
 
 class DelugeRPC(BaseRPC):
@@ -12,17 +12,18 @@ class DelugeRPC(BaseRPC):
     """
     alias: str = 'deluge'
 
-    torrent_fields_map: Dict[str, str] = {
+    torrent_fields_map: ClassVar[dict[str, str]] = {
         'save_path': 'download_to',
     }
 
     def __init__(
             self,
-            url: str = None,
+            *,
+            url: str = '',
             host: str = 'localhost',
             port: int = 8112,
-            user: str = None,
-            password: str = None,
+            user: str = '',
+            password: str = '',
             enabled: bool = False
     ):
         self.user = user
@@ -30,12 +31,7 @@ class DelugeRPC(BaseRPC):
         self.enabled = enabled
         self.host = host
         self.port = port
-
-        if url is not None:
-            self.url = url
-
-        else:
-            self.url = f'http://{host}:{port}/json'
+        self.url = url or f'http://{host}:{port}/json'
 
         super().__init__()
 
@@ -88,7 +84,7 @@ class DelugeRPC(BaseRPC):
         return response['result']
 
     @staticmethod
-    def build_request_payload(method: str, params: list = None) -> dict:
+    def build_request_payload(method: str, *, params: list | None = None) -> dict:
 
         document = {
             'id': 1,
@@ -102,7 +98,7 @@ class DelugeRPC(BaseRPC):
 
         return document
 
-    def method_get_torrents(self, hashes: List[str] = None) -> List[dict]:
+    def method_get_torrents(self, hashes: list[str] | None = None) -> list[dict]:
 
         fields = ['name', 'comment', 'hash', 'save_path']
 
@@ -114,17 +110,17 @@ class DelugeRPC(BaseRPC):
 
         return result['torrents']
 
-    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(self, torrent: TorrentData, *, download_to: str = '', params: dict | None = None) -> Any:
 
         torrent_dump = base64encode(torrent.raw).decode()
 
         return self.query(
             self.build_request_payload(
-                'webapi.add_torrent', [torrent_dump, {'download_location': download_to}]
+                'webapi.add_torrent', [torrent_dump, {'download_location': download_to or None}]
             )
         )
 
-    def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
+    def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:
         return self.query(self.build_request_payload('webapi.remove_torrent', [hash_str, with_data]))
 
     def method_get_version(self) -> str:

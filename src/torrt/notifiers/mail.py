@@ -1,7 +1,5 @@
-import socket
 from email.mime.text import MIMEText
 from smtplib import SMTP, SMTPAuthenticationError
-from typing import Union
 
 from ..base_notifier import BaseNotifier
 
@@ -12,13 +10,14 @@ class EmailNotifier(BaseNotifier):
 
     def __init__(
             self,
+            *,
             email: str,
             host: str = 'localhost',
-            port: Union[str, int] = 25,
-            user: str = None,
-            password: str = None,
-            use_tls: Union[str, bool] = False,
-            sender: str = None
+            port: str | int = 25,
+            user: str = '',
+            password: str = '',
+            use_tls: str | bool = False,
+            sender: str = ''
     ):
 
         self.email = email
@@ -28,21 +27,21 @@ class EmailNotifier(BaseNotifier):
         self.port = int(port)
         self.user = user
         self.password = password
-        self.use_tls = str(use_tls) == 'True'
+        self.use_tls = f'{use_tls}' == 'True'
 
         self.connection = self.get_connection()
 
         super().__init__()
 
-    def get_connection(self):
+    def get_connection(self) -> SMTP | None:
 
         try:
             connection = SMTP(self.host, self.port)
             connection.ehlo()
 
-        except socket.error as e:
+        except OSError as e:
             self.log_error(f'Could not connect to SMTP server: {e}')
-            return
+            return None
 
         if self.use_tls:
 
@@ -50,10 +49,10 @@ class EmailNotifier(BaseNotifier):
                 connection.starttls()
                 connection.ehlo()
 
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
 
                 self.log_error(f'{e}')
-                return
+                return None
 
         if self.user and self.password:
 
@@ -62,7 +61,7 @@ class EmailNotifier(BaseNotifier):
 
             except SMTPAuthenticationError as e:
                 self.log_error(f'{e}')
-                return
+                return None
 
         return connection
 
@@ -75,11 +74,11 @@ class EmailNotifier(BaseNotifier):
     def make_message(self, torrent_data: dict) -> str:
 
         text = (
-            'The following torrents were updated:\n'
+            'The following torrents were updated:\n'  # noqa: UP031
             '%s\n\n'
             'Best regards,\n'
             'torrt.' %
-            '\n'.join(map(lambda torrent: torrent['name'], torrent_data.values()))
+            '\n'.join(torr['name'] for torr in torrent_data.values())
         )
 
         msg = MIMEText(text)

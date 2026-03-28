@@ -1,4 +1,3 @@
-from typing import Dict
 
 import pytest
 from bs4 import BeautifulSoup
@@ -6,7 +5,7 @@ from bs4 import BeautifulSoup
 from torrt.trackers.ytsmx import YtsmxTracker
 
 
-@pytest.fixture()
+@pytest.fixture
 def tracker():
     return YtsmxTracker()
 
@@ -23,7 +22,7 @@ def stub_links():
     ({'type': 'web', 'quality': '720p'}, '720P.WEB'),
     ({'type': 'web', 'quality': '1080p'}, '1080P.WEB'),
 ])
-def test_quality_from_torrent(given: Dict[str, str], expected: str):
+def test_quality_from_torrent(given: dict[str, str], expected: str):
     assert YtsmxTracker._get_quality_from_torrent(given) == expected
 
 

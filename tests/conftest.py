@@ -1,6 +1,7 @@
 import pytest
 
 from torrt.toolbox import bootstrap
+from torrt.utils import TorrtConfig
 
 
 @pytest.fixture(autouse=True)
@@ -13,8 +14,6 @@ def tmp_config(tmp_path, monkeypatch):
 @pytest.fixture
 def mock_config(monkeypatch):
     """Allows an easy access to config."""
-
-    from torrt.utils import TorrtConfig
 
     settings = {}
 

@@ -1,4 +1,3 @@
-from typing import List
 
 from ..base_tracker import GenericPrivateTracker
 
@@ -13,13 +12,15 @@ class AniDUBTracker(GenericPrivateTracker):
 
     def __init__(
             self,
-            username: str = None,
-            password: str = None,
-            cookies: dict = None,
-            query_string: str = None,
-            quality_prefs: List[str] = None
+            *,
+            username: str = '',
+            password: str = '',
+            cookies: dict[str, str] | None = None,
+            query_string: str = '',
+            quality_prefs: list[str] | None = None,
+            **kwargs
     ):
-        super(AniDUBTracker, self).__init__(
+        super().__init__(
             username=username, password=password, cookies=cookies, query_string=query_string
         )
 
@@ -48,12 +49,11 @@ class AniDUBTracker(GenericPrivateTracker):
 
         else:
 
-            available_qualities = []
+
 
             quality_divs = page_soup.select('div.torrent > div.torrent_c > div')
 
-            for quality_div in quality_divs:
-                available_qualities.append(quality_div['id'])
+            available_qualities = [quality_div['id'] for quality_div in quality_divs]
 
             self.log_debug(f"Available in qualities: {', '.join(available_qualities)}")
 

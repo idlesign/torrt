@@ -25,8 +25,8 @@ class TelegramNotifier(BaseNotifier):
 
     def make_message(self, torrent_data: dict) -> str:
         return (
-            'The following torrents were updated:\n%s' %
-            '\n'.join(map(lambda t: t['name'], torrent_data.values())))
+            'The following torrents were updated:\n%s' %  # noqa: UP031
+            '\n'.join(torr['name'] for torr in torrent_data.values()))
 
     def test_configuration(self) -> bool:
         response = self.client.request(f'{self.url}{self.token}/getMe')

@@ -1,4 +1,4 @@
-from typing import List
+from typing import ClassVar
 
 from ..base_tracker import GenericPublicTracker
 
@@ -7,11 +7,11 @@ class RutorTracker(GenericPublicTracker):
     """This class implements .torrent files downloads for http://rutor.info tracker."""
 
     alias: str = 'rutor.org'
-    mirrors: List[str] = ['rutor.is', 'rutor.info', 'new-rutor.org']
+    mirrors: ClassVar[list[str]] = ['rutor.is', 'rutor.info', 'new-rutor.org']
 
-    def __init__(self, cookies: dict = None):
+    def __init__(self, *, cookies: dict[str, str] | None = None):
 
-        super(RutorTracker, self).__init__()
+        super().__init__()
 
         if cookies is None:
             cookies = {}

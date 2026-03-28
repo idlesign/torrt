@@ -44,6 +44,11 @@ ignore = []
 
 
 [lint.extend-per-file-ignores]
+"src/*" = [
+    "G004",
+]
 "tests/*" = [
-    "PLC0415",
+    "PT006",
+    "DTZ001",
+    "RUF001",
 ]

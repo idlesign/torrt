@@ -1,4 +1,4 @@
-from typing import List
+from typing import ClassVar
 
 from ..base_tracker import GenericPrivateTracker
 
@@ -10,9 +10,9 @@ class CasstudioTracker(GenericPrivateTracker):
     login_url: str = 'https://%(domain)s/ucp.php?mode=login'
     auth_cookie_name: str = 'phpbb3_lawmj_sid'
     auth_qs_param_name: str = 'mode'
-    mirrors = ['casstudio.tk']
+    mirrors: ClassVar[list[str]] = ['casstudio.tk']
 
-    test_urls: List[str] = ['https://casstudio.tv/viewtopic.php?t=1222']
+    test_urls: ClassVar[list[str]] = ['https://casstudio.tv/viewtopic.php?t=1222']
 
     def get_login_form_data(self, login: str, password: str) -> dict:
 

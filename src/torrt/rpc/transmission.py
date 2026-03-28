@@ -1,8 +1,8 @@
-from typing import Dict, Any, Union, List
+from typing import Any, ClassVar
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import base64encode, TorrentData
+from ..utils import TorrentData, base64encode
 
 
 class TransmissionRPC(BaseRPC):
@@ -14,18 +14,19 @@ class TransmissionRPC(BaseRPC):
 
     alias: str = 'transmission'
 
-    torrent_fields_map: Dict[str, str] = {
+    torrent_fields_map: ClassVar[dict[str, str]] = {
         'hashString': 'hash',
         'downloadDir': 'download_to',
     }
 
     def __init__(
             self,
-            url: str = None,
+            *,
+            url: str = '',
             host: str = 'localhost',
             port: int = 9091,
-            user: str = None,
-            password: str = None,
+            user: str = '',
+            password: str = '',
             enabled: bool = False
     ):
         self.user = user
@@ -34,12 +35,7 @@ class TransmissionRPC(BaseRPC):
         self.host = host
         self.port = port
         self.session_id: str = ''
-
-        if url is not None:
-            self.url = url
-
-        else:
-            self.url = f'http://{host}:{port}/transmission/rpc'
+        self.url = url or f'http://{host}:{port}/transmission/rpc'
 
         super().__init__()
 
@@ -82,19 +78,19 @@ class TransmissionRPC(BaseRPC):
         return json_data['arguments']
 
     @staticmethod
-    def build_request_payload(method: str, arguments: Union[dict, list] = None, tag: str = None) -> dict:
+    def build_request_payload(method: str, *, arguments: dict | list | None = None, tag: str = '') -> dict:
 
         document = {'method': method}
 
         if arguments is not None:
             document.update({'arguments': arguments})
 
-        if tag is not None:
+        if tag:
             document.update({'tag': tag})
 
         return document
 
-    def method_get_torrents(self, hashes: List[str] = None) -> List[dict]:
+    def method_get_torrents(self, hashes: list[str] | None = None) -> list[dict]:
 
         fields = [
             'id',
@@ -111,7 +107,7 @@ class TransmissionRPC(BaseRPC):
         if hashes is not None:
             args.update({'ids': hashes})
 
-        result = self.query(self.build_request_payload('torrent-get', args))
+        result = self.query(self.build_request_payload('torrent-get', arguments=args))
 
         for torrent_info in result['torrents']:
             self.normalize_field_names(torrent_info)
@@ -129,7 +125,7 @@ class TransmissionRPC(BaseRPC):
 
         return result['torrents']
 
-    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(self, torrent: TorrentData, *, download_to: str = '', params: dict | None = None) -> Any:
 
         args = {
             'metainfo': base64encode(torrent.raw).decode(),
@@ -148,22 +144,22 @@ class TransmissionRPC(BaseRPC):
             if excluded_indices:
                 args['files-unwanted'] = excluded_indices
 
-        if download_to is not None:
+        if download_to:
             args['download-dir'] = download_to
 
-        return self.query(self.build_request_payload('torrent-add', args))
+        return self.query(self.build_request_payload('torrent-add', arguments=args))
 
-    def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
+    def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:
 
         args = {
             'ids': [hash_str],
             'delete-local-data': with_data
         }
 
-        return self.query(self.build_request_payload('torrent-remove', args))
+        return self.query(self.build_request_payload('torrent-remove', arguments=args))
 
     def method_get_version(self) -> str:
-        result = self.query(self.build_request_payload('session-get', ['rpc-version-minimum']))
+        result = self.query(self.build_request_payload('session-get', arguments=['rpc-version-minimum']))
         return result['rpc-version']
 
 

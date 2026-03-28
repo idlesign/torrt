@@ -1,6 +1,6 @@
-from typing import Dict, List, Any
+from typing import Any, ClassVar
 
-from .utils import WithSettings, RPCObjectsRegistry, TorrentData, RPCClassesRegistry, HttpClient
+from .utils import HttpClient, RPCClassesRegistry, RPCObjectsRegistry, TorrentData, WithSettings
 
 
 class BaseRPC(WithSettings):
@@ -8,7 +8,7 @@ class BaseRPC(WithSettings):
 
     config_entry_name: str = 'rpc'
 
-    torrent_fields_map: Dict[str, str] = {}
+    torrent_fields_map: ClassVar[dict[str, str]] = {}
     """mapping from torrent fields names in terms of RPC to field names in term of torrt"""
 
     enabled: bool = False
@@ -45,7 +45,7 @@ class BaseRPC(WithSettings):
             if old_name in torrent_info:
                 torrent_info[new_name] = torrent_info[old_name]
 
-    def method_get_torrents(self, hashes: List[str] = None) -> List[dict]:  # pragma: nocover
+    def method_get_torrents(self, hashes: list[str] | None = None) -> list[dict]:  # pragma: nocover
         """This should return a dictionary with torrents info from RPC.
         Each torrent info should be normalized (see normalize_field_names()).
 
@@ -55,7 +55,7 @@ class BaseRPC(WithSettings):
         raise NotImplementedError
 
     def method_add_torrent(
-            self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:  # pragma: nocover
+            self, torrent: TorrentData, *, download_to: str = '', params: dict | None = None) -> Any:  # pragma: nocover
         """Adds torrent to torrent client using RPC.
 
         :param torrent: torrent info
@@ -65,7 +65,7 @@ class BaseRPC(WithSettings):
         """
         raise NotImplementedError
 
-    def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:  # pragma: nocover
+    def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:  # pragma: nocover
         """Removes torrent from torrent client using RPC.
 
         :param hash_str: torrent identifying hash

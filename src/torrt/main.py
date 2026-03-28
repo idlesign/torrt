@@ -1,17 +1,34 @@
 import argparse
 import logging
-from os import path
+from pathlib import Path
 
 from torrt import VERSION
 from torrt.toolbox import (
-    add_torrent_from_url, remove_torrent,
-    register_torrent, unregister_torrent, get_registered_torrents,
-    walk, set_walk_interval, toggle_rpc, configure_logging, bootstrap,
-    configure_rpc, configure_tracker, configure_notifier, remove_notifier, configure_bot, run_bots
+    add_torrent_from_url,
+    bootstrap,
+    configure_bot,
+    configure_logging,
+    configure_notifier,
+    configure_rpc,
+    configure_tracker,
+    get_registered_torrents,
+    register_torrent,
+    remove_notifier,
+    remove_torrent,
+    run_bots,
+    set_walk_interval,
+    toggle_rpc,
+    unregister_torrent,
+    walk,
 )
 from torrt.utils import (
-    RPCClassesRegistry, RPCObjectsRegistry, TrackerClassesRegistry, NotifierClassesRegistry,
-    NotifierObjectsRegistry, GlobalParam, LOGGER
+    LOGGER,
+    GlobalParam,
+    NotifierClassesRegistry,
+    NotifierObjectsRegistry,
+    RPCClassesRegistry,
+    RPCObjectsRegistry,
+    TrackerClassesRegistry,
 )
 
 
@@ -153,23 +170,23 @@ def process_commands():
     dump_into = args.get('dump')
 
     if dump_into:
-        GlobalParam.set('dump_into', path.abspath(dump_into))
+        GlobalParam.set('dump_into', Path(dump_into).resolve())
 
     if args['command'] == 'enable_rpc':
-        toggle_rpc(args['alias'], True)
+        toggle_rpc(args['alias'], enabled=True)
 
     elif args['command'] == 'disable_rpc':
-        toggle_rpc(args['alias'], False)
+        toggle_rpc(args['alias'], enabled=False)
 
     elif args['command'] == 'list_trackers':
 
-        for tracker_alias, _ in TrackerClassesRegistry.get().items():
+        for tracker_alias in TrackerClassesRegistry.get().keys():
             LOGGER.info(tracker_alias)
 
     elif args['command'] == 'list_rpc':
         rpc_statuses = {}
 
-        for rpc_alias, rpc in RPCClassesRegistry.get().items():
+        for rpc_alias in RPCClassesRegistry.get().keys():
             rpc_statuses[rpc_alias] = 'unconfigured'
 
         for rpc_alias, rpc in RPCObjectsRegistry.get().items():

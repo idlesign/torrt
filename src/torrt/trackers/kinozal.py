@@ -1,5 +1,5 @@
 from datetime import datetime, time, timedelta
-from typing import List, Optional
+from typing import ClassVar
 
 from ..base_tracker import GenericPrivateTracker
 
@@ -10,7 +10,7 @@ class KinozalTracker(GenericPrivateTracker):
     alias: str = 'kinozal.tv'
     login_url: str = 'https://%(domain)s/takelogin.php'
     auth_cookie_name: str = 'uid'
-    mirrors: List[str] = ['kinozal-tv.appspot.com', 'kinozal.me']
+    mirrors: ClassVar[list[str]] = ['kinozal-tv.appspot.com', 'kinozal.me']
     encoding: str = 'cp1251'
 
     def get_login_form_data(self, login: str, password: str) -> dict:
@@ -21,15 +21,17 @@ class KinozalTracker(GenericPrivateTracker):
         """Returns forum thread identifier from full thread URL."""
         return url.split('=')[1]
 
-    def extract_page_date_updated(self) -> Optional[datetime]:
+    def extract_page_date_updated(self) -> datetime | None:
         def refresh_in_text(tag):
             return tag.name == 'li' and tag.get_text().startswith('Обновлен')
 
         def parse_date(date_val):
             if date_val == 'сегодня':
-                return datetime.today()
+                return datetime.today()  # noqa: DTZ002
+
             elif date_val == 'вчера':
-                return datetime.today() - timedelta(days=1)
+                return datetime.today() - timedelta(days=1)  # noqa: DTZ002
+
             else:
                 return self.parse_datetime(date_val, '%d %B %Y', locale='ru')
 

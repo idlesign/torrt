@@ -1,16 +1,19 @@
-from typing import Optional
 
 from ..base_bot import BaseBot, BotRegistrationFailed
 from ..toolbox import add_torrent_from_url, get_registered_torrents, remove_torrent
-from ..utils import get_torrent_from_url, RPCObjectsRegistry
+from ..utils import RPCObjectsRegistry, get_torrent_from_url
 
 try:
     import telegram
-    from telegram import (
-        ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, Update
-    )
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
     from telegram.ext import (
-        Filters, Updater, ConversationHandler, CommandHandler, MessageHandler, CallbackContext, CallbackQueryHandler
+        CallbackContext,
+        CallbackQueryHandler,
+        CommandHandler,
+        ConversationHandler,
+        Filters,
+        MessageHandler,
+        Updater,
     )
 
 except ImportError:
@@ -24,7 +27,7 @@ class TelegramBot(BaseBot):
     alias: str = 'telegram'
     url: str = 'https://api.telegram.org/bot'
 
-    def __init__(self, token: str, allowed_users: str = None):
+    def __init__(self, token: str, *, allowed_users: str = ''):
         """
         :param token: str Telegram's bot token
         :param allowed_users: comma-joined list of users allowed to add new torrents.
@@ -63,8 +66,16 @@ class TelegramBot(BaseBot):
             entry_points=[CommandHandler('start', self.command_start, **kwargs)],
 
             states={
-                self.URL: [MessageHandler(Filters.regex(r'http[s]?://'), self.handle_process_url, pass_user_data=True)],
-                self.PATH: [MessageHandler(Filters.regex(path_handler_regex), self.handle_ask_download_path, pass_user_data=True)],
+                self.URL: [
+                    MessageHandler(Filters.regex(r'http[s]?://'), self.handle_process_url, pass_user_data=True)
+                ],
+                self.PATH: [
+                    MessageHandler(
+                        Filters.regex(path_handler_regex),
+                        self.handle_ask_download_path,
+                        pass_user_data=True
+                    )
+                ],
             },
 
             fallbacks=[CommandHandler('cancel', self.cancel_handler)],
@@ -129,7 +140,7 @@ class TelegramBot(BaseBot):
         context.user_data['url'] = torrent_url
         download_dirs = set()
 
-        for rpc_alias, rpc in RPCObjectsRegistry.get().items():
+        for rpc in RPCObjectsRegistry.get().values():
 
             if not rpc.enabled:
                 continue
@@ -164,7 +175,7 @@ class TelegramBot(BaseBot):
         try:
             add_torrent_from_url(torrent_url, download_to=path)
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
 
             self.log_error(f'Unable to add torrent: {e}')
 
@@ -248,7 +259,7 @@ class TelegramBot(BaseBot):
     def command_add_torrent(self, update: 'Update', context: 'CallbackContext'):
         """Stand-alone handler to add torrent"""
 
-        torrent_url = update.message.text.lstrip('/add ')
+        torrent_url = update.message.text.removeprefix('/add ')
 
         if not torrent_url:
 
@@ -264,7 +275,7 @@ class TelegramBot(BaseBot):
         try:
             add_torrent_from_url(torrent_url)
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
 
             self.log_error(f'Unable to register the torrent: {e}')
             context.bot.send_message(chat_id, text='Unable to register the torrent due to an error.')
@@ -297,15 +308,15 @@ class TelegramBot(BaseBot):
     def command_remove_torrents(self, update: 'Update', context: 'CallbackContext'):
         """Command to remove torrent"""
 
-        buttons = []
-
-        for torrent in get_registered_torrents().values():
-            buttons.append([
-                    InlineKeyboardButton(
-                        text=torrent['name'],
-                        callback_data=f"hash:{torrent['hash']}"
-                    )
-            ])
+        buttons = [
+            [
+                InlineKeyboardButton(
+                    text=torrent['name'],
+                    callback_data=f"hash:{torrent['hash']}"
+                )
+            ]
+            for torrent in get_registered_torrents().values()
+        ]
 
         message = update.callback_query.message
         if not buttons:

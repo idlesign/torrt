@@ -1,9 +1,9 @@
-from typing import Dict, List, Any
+from typing import Any, ClassVar
 from urllib.parse import urljoin
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
-from ..utils import TorrentData, Response
+from ..utils import Response, TorrentData
 
 
 class QBittorrentRPC(BaseRPC):
@@ -13,7 +13,7 @@ class QBittorrentRPC(BaseRPC):
     """
     alias: str = 'qbittorrent'
 
-    api_map: dict = {
+    api_map: ClassVar[dict[str, str]] = {
         'login': 'auth/login',
         'api_version_path': 'app/webapiVersion',
         'add_torrent': 'torrents/add',
@@ -22,13 +22,14 @@ class QBittorrentRPC(BaseRPC):
         'get_torrents': 'torrents/info'
     }
 
-    torrent_fields_map: Dict[str, str] = {
+    torrent_fields_map: ClassVar[dict[str, str]] = {
         'save_path': 'download_to',
     }
 
     def __init__(
             self,
-            url: str = None,
+            *,
+            url: str = '',
             host: str = 'localhost',
             port: int = 8080,
             user: str = 'admin',
@@ -40,12 +41,7 @@ class QBittorrentRPC(BaseRPC):
         self.enabled = enabled
         self.host = host
         self.port = port
-
-        if url is not None:
-            self.url = url
-
-        else:
-            self.url = f'http://{host}:{port}/api/v2/'
+        self.url = url or f'http://{host}:{port}/api/v2/'
 
         super().__init__()
 
@@ -67,12 +63,12 @@ class QBittorrentRPC(BaseRPC):
         except Exception as e:
 
             self.log_error(f'Failed to login using `{self.url}` RPC: {e}')
-            raise QBittorrentRPCException(str(e))
+            raise QBittorrentRPCException(f'{e}') from e
 
     @staticmethod
-    def build_params(action: str = None, params: dict = None) -> dict:
+    def build_params(action: str = '', params: dict | None = None) -> dict:
 
-        document = {'action': action}
+        document = {'action': action or None}
 
         if params is not None:
             document.update(params)
@@ -90,7 +86,7 @@ class QBittorrentRPC(BaseRPC):
 
         return urljoin(self.url, url_segment)
 
-    def query(self, data: dict, files: dict = None) -> Response:
+    def query(self, data: dict, *, files: dict | None = None) -> Response:
 
         action = data['action'] or 'list'
         self.log_debug(f'RPC action `{action}` ...')
@@ -120,32 +116,32 @@ class QBittorrentRPC(BaseRPC):
             except Exception as e:
 
                 self.log_error(f'Failed to query RPC `{url}`: {e}')
-                raise QBittorrentRPCException(f'{e}')
+                raise QBittorrentRPCException(f'{e}') from e
 
         except Exception as e:
 
             self.log_error(f'Failed to query RPC `{action}`: {e}')
-            raise QBittorrentRPCException(f'{e}')
+            raise QBittorrentRPCException(f'{e}') from e
 
         return response
 
-    def auth_query(self, data: dict, files: dict = None):
+    def auth_query(self, data: dict, *, files: dict | None = None):
 
         if not self.logged_in:
             self.login()
 
-        return self.query(data, files)
+        return self.query(data, files=files)
 
-    def auth_query_json(self, data: dict, files: dict = None) -> dict:
+    def auth_query_json(self, data: dict, *, files: dict | None = None) -> dict:
 
         if not self.logged_in:
             self.login()
 
-        response = self.query(data, files)
+        response = self.query(data, files=files)
 
         return response.json()
 
-    def method_get_torrents(self, hashes: List[str] = None) -> List[dict]:
+    def method_get_torrents(self, hashes: list[str] | None = None) -> list[dict]:
 
         result = self.auth_query_json(self.build_params('get_torrents', {'reverse': 'true'}))
 
@@ -172,17 +168,17 @@ class QBittorrentRPC(BaseRPC):
 
         return torrents_info
 
-    def method_add_torrent(self, torrent: TorrentData, download_to: str = None, params: dict = None) -> Any:
+    def method_add_torrent(self, torrent: TorrentData, *, download_to: str = '', params: dict | None = None) -> Any:
 
         file_data = {'torrents': torrent.raw}
         params = None
 
         if download_to is not None:
-            params = {'data': {'savepath': download_to}}
+            params = {'data': {'savepath': download_to or None}}
 
-        return self.auth_query(self.build_params(action='add_torrent', params=params), file_data)
+        return self.auth_query(self.build_params(action='add_torrent', params=params), files=file_data)
 
-    def method_remove_torrent(self, hash_str: str, with_data: bool = False) -> Any:
+    def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:
 
         data = {
             'hashes': hash_str,

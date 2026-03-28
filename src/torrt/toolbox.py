@@ -1,17 +1,29 @@
 import logging
 import sys
-from time import time
 from datetime import datetime
-from typing import Optional, List, Dict
+from time import time
+from typing import Optional
 
 from .base_bot import BotRegistrationFailed
 from .base_tracker import GenericPrivateTracker
 from .exceptions import TorrtException, TorrtRPCException
 from .utils import (
-    RPCClassesRegistry, TrackerClassesRegistry, config, get_url_from_string,
-    get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc,
-    NotifierClassesRegistry, iter_notifiers, BotClassesRegistry, iter_bots, configure_entity,
-    TorrentData, DATETIME_FORMAT
+    DATETIME_FORMAT,
+    BotClassesRegistry,
+    NotifierClassesRegistry,
+    RPCClassesRegistry,
+    TorrentData,
+    TrackerClassesRegistry,
+    config,
+    configure_entity,
+    get_iso_from_timestamp,
+    get_torrent_from_url,
+    get_url_from_string,
+    import_classes,
+    iter_bots,
+    iter_notifiers,
+    iter_rpc,
+    structure_torrent_data,
 )
 
 try:
@@ -24,9 +36,9 @@ except ImportError:
 
 if False:  # pragma: nocover
     from .base_rpc import BaseRPC  # noqa
-    from .base_tracker import BaseTracker  # noqa
+    from .base_tracker import BaseTracker
     from .base_notifier import BaseNotifier  # noqa
-    from .base_bot import BaseBot  # noqa
+    from .base_bot import BaseBot
 
 LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +61,7 @@ def tunnel():
 tunnel()
 
 
-def configure_logging(log_level: int = logging.INFO, show_logger_names: bool = False):
+def configure_logging(log_level: int = logging.INFO, *, show_logger_names: bool = False):
     """Performs basic logging configuration.
 
     :param log_level: logging level, e.g. logging.DEBUG
@@ -161,7 +173,7 @@ def init_object_registries():
             bot_obj = registry_obj.spawn_with_settings(settings)
 
         except BotRegistrationFailed as e:
-            LOGGER.warn(f'`{alias}` bot is configured, but failed to register: {e}')
+            LOGGER.warning(f'`{alias}` bot is configured, but failed to register: {e}')
 
         else:
             bot_obj.register()
@@ -201,7 +213,7 @@ def bootstrap():
     init_object_registries()
 
 
-def register_torrent(hash_str: str, torrent_data: TorrentData = None, url: str = None):
+def register_torrent(hash_str: str, *, torrent_data: TorrentData = None, url: str = ''):
     """Registers torrent within torrt. Used to register torrents that already exists
     in torrent clients.
 
@@ -235,7 +247,7 @@ def unregister_torrent(hash_str: str):
     config.drop_section('torrents', hash_str)
 
 
-def add_torrent_from_url(url: str, download_to: str = None):
+def add_torrent_from_url(url: str, *, download_to: str = ''):
     """Adds torrent from a given URL to torrt and torrent clients,
 
     :param url: torrent URL
@@ -252,12 +264,12 @@ def add_torrent_from_url(url: str, download_to: str = None):
 
     for rpc_alias, rpc_object in iter_rpc():
         rpc_object.method_add_torrent(torrent_data, download_to=download_to)
-        register_torrent(torrent_data.hash, torrent_data)
+        register_torrent(torrent_data.hash, torrent_data=torrent_data)
 
         LOGGER.info(f'Torrent from `{url}` is added within `{rpc_alias}`')
 
 
-def remove_torrent(hash_str: str, with_data: bool = False):
+def remove_torrent(hash_str: str, *, with_data: bool = False):
     """Removes torrent by its hash from torrt and torrent clients,
 
     :param hash_str: torrent identifying hash
@@ -282,7 +294,7 @@ def set_walk_interval(interval_hours: int):
     config.update({'walk_interval_hours': int(interval_hours)})
 
 
-def toggle_rpc(alias: str, enabled: bool = True):
+def toggle_rpc(alias: str, *, enabled: bool = True):
     """Enables or disables a given RPC.
 
     :param alias: PRC alias
@@ -300,10 +312,10 @@ def toggle_rpc(alias: str, enabled: bool = True):
         LOGGER.info(f'RPC `{alias}` class is not registered')
 
 
-def walk(forced: bool = False, silent: bool = False, remove_outdated: bool = True):
+def walk(*, forced: bool = False, silent: bool = False, remove_outdated: bool = True):
     """Performs updates check for the registered torrents.
 
-    :param forced: flag to not to count walk interval setting
+    :param forced: flag not to count walk interval setting
     :param silent: flag to suppress possible torrt exceptions
     :param remove_outdated: flag to remove torrents that are superseded by a new ones
 
@@ -364,7 +376,7 @@ def walk(forced: bool = False, silent: bool = False, remove_outdated: bool = Tru
         )
 
 
-def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> Dict[str, dict]:
+def update_torrents(torrents: dict[str, dict], *, remove_outdated: bool = True) -> dict[str, dict]:
     """Performs torrent updates.
     Returns hash-indexed dictionary with information on updated torrents
 
@@ -373,7 +385,7 @@ def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> 
 
     """
     updated_by_hashes = {}
-    download_cache: Dict[str, TorrentData] = {}
+    download_cache: dict[str, TorrentData] = {}
     hashes = list(torrents)
 
     for _, rpc_object in iter_rpc():
@@ -400,7 +412,11 @@ def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> 
 
             else:
                 raw_last_updated = torrents[rpc_torrent['hash']]['page'].get('date_updated')
-                last_updated = datetime.strptime(raw_last_updated, DATETIME_FORMAT) if raw_last_updated else None
+                last_updated = (
+                    datetime.strptime(raw_last_updated, DATETIME_FORMAT)  # noqa: DTZ007
+                    if raw_last_updated
+                    else None
+                )
                 tracker_torrent = get_torrent_from_url(page_url, last_updated)
                 download_cache[page_url] = tracker_torrent
 
@@ -417,7 +433,7 @@ def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> 
             try:
                 rpc_object.method_add_torrent(
                     tracker_torrent,
-                    rpc_torrent['download_to'],
+                    download_to=rpc_torrent['download_to'],
                     params=rpc_torrent.get('params', None)
                 )
                 tracker_torrent.url = page_url
@@ -438,7 +454,7 @@ def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> 
     return updated_by_hashes
 
 
-def run_bots(aliases: List[str] = None):
+def run_bots(aliases: list[str] | None = None):
     """Run aliased bots one after another.
 
     :param aliases:

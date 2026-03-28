@@ -1,16 +1,13 @@
-from typing import List, Dict, Tuple, Optional
+from typing import ClassVar
 
 from bs4 import BeautifulSoup
-from bs4.element import Tag
-from requests.models import Response
 
-from ..exceptions import TorrtTrackerException
 from ..base_tracker import GenericPublicTracker
-
+from ..exceptions import TorrtTrackerException
 
 API_BASE = 'https://yts.bz/api/v2/'
-QualityLinks = Dict[str, str]
-QualityLink = Tuple[str, str]
+QualityLinks = dict[str, str]
+QualityLink = tuple[str, str]
 
 class YtsmxTrackerException(TorrtTrackerException):
     """Yts.mx specific exceptions"""
@@ -19,13 +16,13 @@ class YtsmxTracker(GenericPublicTracker):
     """This class implements .torrent files downloads for https://yts.mx tracker."""
 
     alias: str = 'yts.mx'
-    mirrors: List[str] = ['yts.mx', 'yts.bz', 'yts.lt']
+    mirrors: ClassVar[list[str]] = ['yts.mx', 'yts.bz', 'yts.lt']
 
-    test_urls: List[str] = [
+    test_urls: ClassVar[list[str]] = [
         'https://yts.mx/movies/the-matrix-1999',
     ]
 
-    def __init__(self, quality_prefs: List[str] = None):
+    def __init__(self, *, quality_prefs: list[str] | None = None, **kwargs):
         super().__init__()
 
         if quality_prefs is None:
@@ -63,7 +60,6 @@ class YtsmxTracker(GenericPublicTracker):
         if not movie_info_tag:
             raise YtsmxTrackerException('div#movie-info not found on page')
 
-        movie_info_tag: Tag
         movie_id = movie_info_tag.attrs['data-movie-id']
         if not movie_id.isdigit():
             raise YtsmxTrackerException('movie-id is not a digit. Markup is changed')
@@ -78,7 +74,6 @@ class YtsmxTracker(GenericPublicTracker):
         if not response:
             raise YtsmxTrackerException("API didn't respond")
 
-        response: Response
         movie_info_json = response.json()
 
         return movie_info_json
@@ -91,12 +86,12 @@ class YtsmxTracker(GenericPublicTracker):
                 self._get_quality_from_torrent(torrent): torrent['url']
                 for torrent in movie_details['data']['movie']['torrents']
             }
-        except KeyError:
-            raise YtsmxTrackerException('API movie details response is not parser. API changed')
+        except KeyError as e:
+            raise YtsmxTrackerException('API movie details response is not parser. API changed') from e
 
         return qualities
 
-    def _get_preffered_link(self, links: QualityLinks) -> Optional[QualityLink]:
+    def _get_preffered_link(self, links: QualityLinks) -> QualityLink | None:
         """returns most preffered `QualityLink` of all `links` or `None`"""
 
         preferred_qualities = [q for q in self.quality_prefs if q in links]

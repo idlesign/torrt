@@ -1,33 +1,26 @@
 import base64
-import json
 import logging
-import os
 import re
 import threading
-try:
-    from collections.abc import Mapping
-
-except ImportError:
-    # Python < 3.10
-    from collections import Mapping
-
-from datetime import datetime
+from collections.abc import Callable, Generator, Mapping
+from datetime import UTC, datetime
 from inspect import getfullargspec
+from json import JSONDecodeError, dump, load
 from pathlib import Path
 from pkgutil import iter_modules
 from time import time
-from typing import Any, Optional, Union, Generator, Tuple, Callable
+from typing import TYPE_CHECKING, Any, ClassVar, Optional
 
 from bs4 import BeautifulSoup
-from requests import Response, Session, RequestException
+from requests import RequestException, Response, Session
 from torrentool.api import Torrent
 from torrentool.exceptions import BencodeDecodingError
 
-if False:  # pragma: nocover
+if TYPE_CHECKING:  # pragma: nocover
     from .base_tracker import GenericTracker  # noqa
-    from .base_rpc import BaseRPC  # noqa
-    from .base_bot import BaseBot  # noqa
-    from .base_notifier import BaseNotifier  # noqa
+    from .base_rpc import BaseRPC
+    from .base_bot import BaseBot
+    from .base_notifier import BaseNotifier
 
 
 LOGGER = logging.getLogger('torrt')
@@ -49,6 +42,7 @@ class HttpClient:
 
     def __init__(
             self,
+            *,
             silence_exceptions: bool = False,
             dump_fname_tpl: str = '%(ts)s.txt',
             json: bool = False,
@@ -65,23 +59,23 @@ class HttpClient:
         self.dump_fname_tpl = dump_fname_tpl
         self.json = json
         self.last_error: str = ''
-        self.last_response: Optional[Response] = None
+        self.last_response: Response | None = None
         self.tunnel = tunnel
 
     def request(
             self,
             url: str,
             *,
-            data: dict = None,
+            data: dict[str, Any] | None = None,
             referer: str = '',
             allow_redirects: bool = True,
-            cookies: dict = None,
-            headers: dict = None,
-            json: bool = None,
-            silence_exceptions: bool = None,
-            timeout: int = None,
+            cookies: dict[str, str] | None = None,
+            headers: dict[str, str] | None = None,
+            json: bool | None = None,
+            silence_exceptions: bool | None = None,
+            timeout: int = 0,
             **kwargs
-    ) -> Optional[Union[Response, dict]]:
+    ) -> Response | dict | None:
         """
 
         :param url: URL to address
@@ -160,26 +154,26 @@ class HttpClient:
                 try:
                     response = response.json()
 
-                except:
+                except JSONDecodeError:
                     return {}
 
         return response
 
 
-def encode_value(value: str, encoding: str = None) -> Union[str, bytes]:
+def encode_value(value: str, *, encoding: str = "") -> str | bytes:
     """Encodes a value.
 
     :param value:
     :param encoding: Encoding charset.
 
     """
-    if encoding is None:
+    if not encoding:
         return value
 
     return value.encode(encoding)
 
 
-def base64encode(string_or_bytes: Union[str, bytes]) -> bytes:
+def base64encode(string_or_bytes: str | bytes) -> bytes:
     """Return base64 encoded input
 
     :param string_or_bytes:
@@ -221,16 +215,17 @@ def dump_contents(filename: str, contents: bytes):
         'ts': time(),
     }
 
-    with open(str(Path(dump_into) / filename), 'wb') as f:
+    with (Path(dump_into) / filename).open('wb') as f:
         f.write(contents)
 
 
 def configure_entity(
         type_name: str,
-        registry, alias: str,
-        settings_dict: dict = None,
+        registry,
+        alias: str,
+        settings_dict: dict[str, Any] | None = None,
         *,
-        before_save: Callable = None
+        before_save: Callable | None = None
 ) -> Optional['WithSettings']:
     """Configures and spawns objects using given settings.
 
@@ -286,11 +281,11 @@ def import_from_path(path: str):
     :param path: path under torrt
 
     """
-    for _, pname, ispkg in iter_modules([str(Path(__file__).parent / path)]):
+    for _, pname, _ in iter_modules([f'{Path(__file__).parent / path}']):
         __import__(f'torrt.{path}.{pname}')
 
 
-def parse_torrent(torrent: bytes) -> Optional[Torrent]:
+def parse_torrent(torrent: bytes) -> Torrent | None:
     """Returns Torrent object from torrent contents.
 
     :param torrent: Torrent file contents.
@@ -336,7 +331,7 @@ def get_iso_from_timestamp(ts: int) -> str:
     :param ts: timestamp
 
     """
-    return datetime.fromtimestamp(ts).isoformat(' ')
+    return datetime.fromtimestamp(ts, tz=UTC).isoformat(' ')
 
 
 def update_dict(old_dict: dict, new_dict: dict) -> dict:
@@ -442,7 +437,7 @@ def structure_torrent_data(target_dict: dict, hash_str: str, data: TorrentData):
     target_dict[hash_str] = data.to_dict()
 
 
-def get_torrent_from_url(url: Optional[str], last_updated: Optional[datetime] = None) -> Optional[TorrentData]:
+def get_torrent_from_url(url: str | None, last_updated: datetime | None = None) -> TorrentData | None:
     """Downloads torrent from a given URL and returns torrent data.
 
     :param url: URL to download torrent file from
@@ -451,10 +446,10 @@ def get_torrent_from_url(url: Optional[str], last_updated: Optional[datetime] = 
     """
     LOGGER.debug(f'Downloading torrent file from `{url}` ...')
 
-    tracker: 'GenericTracker' = TrackerObjectsRegistry.get_for_string(url)
+    tracker: GenericTracker = TrackerObjectsRegistry.get_for_string(url)
 
     if tracker:
-        torrent_info = tracker.get_torrent(url, last_updated)
+        torrent_info = tracker.get_torrent(url, last_updated=last_updated)
 
         if torrent_info is None:
             LOGGER.warning(f'Unable to get torrent from `{url}`')
@@ -469,7 +464,7 @@ def get_torrent_from_url(url: Optional[str], last_updated: Optional[datetime] = 
     return None
 
 
-def iter_rpc() -> Generator[Tuple[str, 'BaseRPC'], None, None]:
+def iter_rpc() -> Generator[tuple[str, 'BaseRPC'], None, None]:
     """Generator to iterate through available and enable RPC objects.
         tuple - rpc_alias, rpc_object
 
@@ -489,7 +484,7 @@ def iter_rpc() -> Generator[Tuple[str, 'BaseRPC'], None, None]:
         yield rpc_alias, rpc_object
 
 
-def iter_bots() -> Generator[Tuple[str, 'BaseBot'], None, None]:
+def iter_bots() -> Generator[tuple[str, 'BaseBot'], None, None]:
     """Generator to iterate through available bots objects.
         tuple - bot_alias, bot_object
 
@@ -500,11 +495,10 @@ def iter_bots() -> Generator[Tuple[str, 'BaseBot'], None, None]:
         LOGGER.error('No Bot objects registered, unable to proceed')
         return
 
-    for alias, object in bot_objects.items():
-        yield alias, object
+    yield from bot_objects.items()
 
 
-def iter_notifiers() -> Generator[Tuple[str, 'BaseNotifier'], None, None]:
+def iter_notifiers() -> Generator[tuple[str, 'BaseNotifier'], None, None]:
     """Generator to iterate through available notifier objects.
         tuple - notifier_alias, notifier_object
 
@@ -515,9 +509,7 @@ def iter_notifiers() -> Generator[Tuple[str, 'BaseNotifier'], None, None]:
         LOGGER.debug('No Notifier registered. Notification skipped')
         return
 
-    for notifier_alias, notifier_object in notifier_objects.items():
-
-        yield notifier_alias, notifier_object
+    yield from notifier_objects.items()
 
 
 class WithSettings:
@@ -531,7 +523,7 @@ class WithSettings:
     alias: str = None
 
     config_entry_name: str = None
-    settings: dict = {}
+    settings: ClassVar[dict[str, Any]] = {}
 
     def __init__(self, **kwargs):
         pass
@@ -611,7 +603,7 @@ class TorrtConfig:
     USER_DATA_PATH = Path('~').expanduser() / '.torrt'
     USER_SETTINGS_FILE = USER_DATA_PATH / 'config.json'
 
-    _basic_settings = {
+    _basic_settings: ClassVar[dict[str, Any]] = {
         'time_last_check': 0,
         'walk_interval_hours': 1,
         'rpc': {},
@@ -642,13 +634,13 @@ class TorrtConfig:
         """Initializes configuration file if needed."""
 
         if not cls.USER_DATA_PATH.exists():
-            os.makedirs(str(cls.USER_DATA_PATH))
+            cls.USER_DATA_PATH.mkdir(parents=True)
 
         if not cls.USER_SETTINGS_FILE.exists():
             cls.save(cls._basic_settings)
 
         # My precious.
-        os.chmod(str(cls.USER_SETTINGS_FILE), 0o600)
+        cls.USER_SETTINGS_FILE.chmod(0o600)
 
     @classmethod
     def update(cls, settings_dict: dict):
@@ -667,8 +659,8 @@ class TorrtConfig:
 
         cls.bootstrap()
 
-        with open(str(cls.USER_SETTINGS_FILE)) as f:
-            settings = json.load(f)
+        with cls.USER_SETTINGS_FILE.open() as f:
+            settings = load(f)
 
         # Pick up settings entries added in new version
         # and put them into old user config.
@@ -687,8 +679,8 @@ class TorrtConfig:
         """
         LOGGER.debug(f'Saving configuration file {cls.USER_SETTINGS_FILE} ...')
 
-        with open(str(cls.USER_SETTINGS_FILE), 'w') as f:
-            json.dump(settings_dict, f, indent=4)
+        with cls.USER_SETTINGS_FILE.open('w') as f:
+            dump(settings_dict, f, indent=4)
 
 
 config = TorrtConfig
@@ -709,13 +701,13 @@ class ObjectsRegistry:
         :param obj:
 
         """
-        name = getattr(obj, 'alias')
+        name = obj.alias
 
         LOGGER.debug(f'Registering `{name}` from {obj} ...')
 
         self._items[name] = obj
 
-    def get(self, obj_alias: str = None) -> Union[dict, Any]:
+    def get(self, obj_alias: str | None = None) -> dict | Any:
         """Returns registered objects or a definite object by its alias,
         or registry items if no alias provided.
 
@@ -727,7 +719,7 @@ class ObjectsRegistry:
 
         return self._items.get(obj_alias)
 
-    def get_for_string(self, string: str) -> Optional[Any]:
+    def get_for_string(self, string: str) -> Any | None:
         """Returns registered object which can handle a given string.
 
         :param string:

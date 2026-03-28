@@ -2,14 +2,23 @@ import re
 from datetime import datetime
 from http.cookiejar import CookieJar
 from itertools import chain
-from locale import getlocale, setlocale, LC_ALL
-from typing import List, Optional, Union
-from urllib.parse import urlparse, urljoin, parse_qs
+from locale import LC_ALL, getlocale, setlocale
+from typing import ClassVar
+from urllib.parse import parse_qs, urljoin, urlparse
 
 from .exceptions import TorrtTrackerException
 from .utils import (
-    parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, TorrentData,
-    PageData, TrackerClassesRegistry, HttpClient, Response, BeautifulSoup
+    BeautifulSoup,
+    HttpClient,
+    PageData,
+    Response,
+    TorrentData,
+    TrackerClassesRegistry,
+    TrackerObjectsRegistry,
+    WithSettings,
+    encode_value,
+    make_soup,
+    parse_torrent,
 )
 
 
@@ -24,13 +33,13 @@ class BaseTracker(WithSettings):
     alias: str = None
     """Tracker alias. Usually main tracker domain. See also `mirrors` attribute."""
 
-    mirrors: List[str] = []
+    mirrors: ClassVar[list[str]] = []
     """List of mirror domain names."""
 
-    encoding: Optional[str] = None
+    encoding: str | None = None
     """Tracker html page encoding (cp1251 or other)."""
 
-    test_urls: List[str] = []
+    test_urls: ClassVar[list[str]] = []
     """Page URLs for automatic tests of torrent extraction."""
 
     raise_on_error_response: bool = False
@@ -39,8 +48,8 @@ class BaseTracker(WithSettings):
     
     """
 
-    def __init__(self, cookies: dict = None, query_string: str = None):
-        self.mirror_picked: Optional[str] = None
+    def __init__(self, *, cookies: dict[str, str] | None = None, query_string: str = '', **kwargs):
+        self.mirror_picked: str | None = None
 
         if cookies is None:
             cookies = {}
@@ -50,7 +59,7 @@ class BaseTracker(WithSettings):
 
         # Cached data for currently processed torrent.
         self._torrent_page_url: str = ''
-        self._torrent_page: Optional[BeautifulSoup] = None
+        self._torrent_page: BeautifulSoup | None = None
 
         self.client = HttpClient(
             silence_exceptions=not self.raise_on_error_response,
@@ -66,13 +75,13 @@ class BaseTracker(WithSettings):
     def get_query_string(self) -> str:
         return self.query_string
 
-    def encode_value(self, value: str) -> Union[bytes, str]:
+    def encode_value(self, value: str) -> bytes | str:
         """Encodes a value.
 
         :param value:
 
         """
-        return encode_value(value, self.encoding)
+        return encode_value(value, encoding=self.encoding)
 
     def pick_mirror(self, url: str) -> str:
         """Probes mirrors (domains) one by one and chooses one whick is available to use.
@@ -159,14 +168,15 @@ class BaseTracker(WithSettings):
     def get_response(
             self,
             url: str,
-            form_data: dict = None,
+            *,
+            form_data: dict | None = None,
             allow_redirects: bool = True,
-            referer: str = None,
-            cookies: Union[dict, CookieJar] = None,
-            query_string: str = None,
+            referer: str = '',
+            cookies: dict | CookieJar | None = None,
+            query_string: str = '',
             as_soup: bool = False
 
-    ) -> Optional[Union[Response, BeautifulSoup]]:
+    ) -> Response | BeautifulSoup | None:
         """Returns an HTTP resource object from given URL.
 
         If a dictionary is passed in `form_data` POST HTTP method
@@ -223,7 +233,7 @@ class BaseTracker(WithSettings):
         return make_soup(html)
 
     @classmethod
-    def find_links(cls, url: str, page_soup: BeautifulSoup, definite: str = None) -> Union[Optional[str], List[str]]:
+    def find_links(cls, url: str, page_soup: BeautifulSoup, *, definite: str = '') -> str | None | list[str]:
         """Returns a list with hyperlinks found in supplied page_soup
         or a definite link.
 
@@ -235,7 +245,7 @@ class BaseTracker(WithSettings):
         if not page_soup:
             return None if definite else []
 
-        if definite is not None:
+        if definite:
             link = page_soup.find(href=re.compile(definite))
 
             if link:
@@ -271,7 +281,7 @@ class BaseTracker(WithSettings):
         """This should implement a configuration test, e.g. make test login and report success."""
         return True
 
-    def get_torrent(self, url: str, *, last_updated: Optional[datetime] = None) -> Optional[TorrentData]:
+    def get_torrent(self, url: str, *, last_updated: datetime | None = None) -> TorrentData | None:
         """This method should be implemented in torrent tracker handler class
         and must return .torrent file contents.
 
@@ -300,7 +310,7 @@ class BaseTracker(WithSettings):
     def extract_page_cover(self) -> str:
         return ''
 
-    def extract_page_date_updated(self) -> Optional[datetime]:
+    def extract_page_date_updated(self) -> datetime | None:
         return None
 
     def parse_datetime(self, dt_str: str, fmt: str, *, locale: str = ''):
@@ -311,7 +321,7 @@ class BaseTracker(WithSettings):
 
         try:
             try:
-                return datetime.strptime(dt_str, fmt)
+                return datetime.strptime(dt_str, fmt)  # noqa: DTZ007
 
             except ValueError:
                 return None
@@ -355,7 +365,7 @@ class GenericTracker(BaseTracker):
         """
         return url.split('=')[1]
 
-    def get_torrent(self, url: str, last_updated: Optional[datetime] = None) -> Optional[TorrentData]:
+    def get_torrent(self, url: str, *, last_updated: datetime | None = None) -> TorrentData | None:
         """This is the main method which returns torrent file contents
         of file located at URL.
 
@@ -404,7 +414,7 @@ class GenericTracker(BaseTracker):
         """
         raise NotImplementedError  # pragma: nocover
 
-    def download_torrent(self, url: str, referer: str = None) -> bytes:
+    def download_torrent(self, url: str, *, referer: str = '') -> bytes:
         """Returns .torrent file contents from the given URL.
 
         :param url: torrent file URL
@@ -422,7 +432,7 @@ class GenericPublicTracker(GenericTracker):
     def get_id_from_link(self, url: str) -> str:
         return url.split('/')[-1]
 
-    def download_torrent(self, url: str, referer: str = None) -> Optional[bytes]:
+    def download_torrent(self, url: str, *, referer: str = '') -> bytes | None:
         self.log_debug(f'Downloading torrent file from {url} ...')
         # That was a check that user himself visited torrent's page ;)
         response = self.get_response(url, referer=referer)
@@ -450,9 +460,17 @@ class GenericPrivateTracker(GenericPublicTracker):
     auth_qs_param_name: str = None
     """HTTP GET (query string) parameter name to verify that a log in was successful. Probably session ID."""
 
-    def __init__(self, username: str = None, password: str = None, cookies: dict = None, query_string: str = None):
+    def __init__(
+            self,
+            *,
+            username: str = '',
+            password: str = '',
+            cookies: dict[str, str] | None = None,
+            query_string: str = '',
+            **kwargs
+    ):
 
-        super(GenericPrivateTracker, self).__init__(
+        super().__init__(
             cookies=cookies,
             query_string=query_string,
         )
@@ -494,7 +512,7 @@ class GenericPrivateTracker(GenericPublicTracker):
         if self.logged_in:
             raise TorrtTrackerException(f'Consecutive login attempt detected at `{self.__class__.__name__}`')
 
-        if not self.username or self.password is None:
+        if not self.username or not self.password:
             return False
 
         self.login_counter += 1
@@ -512,7 +530,8 @@ class GenericPrivateTracker(GenericPublicTracker):
         form_data = self.get_encode_form_data(form_data)
 
         response = self.get_response(
-            login_url, form_data,
+            login_url,
+            form_data=form_data,
             allow_redirects=allow_redirects,
             cookies=self.cookies
         )
@@ -563,7 +582,7 @@ class GenericPrivateTracker(GenericPublicTracker):
 
         return query_string
 
-    def download_torrent(self, url: str, referer: str = None) -> Optional[bytes]:
+    def download_torrent(self, url: str, *, referer: str = '') -> bytes | None:
         self.log_debug(f'Downloading torrent file from {url} ...')
 
         self.before_download(url)

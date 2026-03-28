@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import ClassVar
 
 from ..base_tracker import GenericPrivateTracker
 
@@ -10,9 +10,9 @@ class NNMClubTracker(GenericPrivateTracker):
     alias: str = 'nnm-club.me'
     login_url: str = 'https://%(domain)s/forum/login.php'
     auth_qs_param_name: str = 'sid'
-    mirrors: List[str] = ['nnmclub.to', 'nnmclub.ro', 'nnm-club.name']
+    mirrors: ClassVar[list[str]] = ['nnmclub.to', 'nnmclub.ro', 'nnm-club.name']
 
-    test_urls: List[str] = [
+    test_urls: ClassVar[list[str]] = [
         'https://nnmclub.to/forum/viewtopic.php?t=889443',
     ]
 
@@ -31,7 +31,7 @@ class NNMClubTracker(GenericPrivateTracker):
 
         return link
 
-    def extract_page_date_updated(self) -> Optional[datetime]:
+    def extract_page_date_updated(self) -> datetime | None:
         dt_val = getattr(self._torrent_page.select_one('span.postdata'), 'text', '').strip()
         return self.parse_datetime(dt_val, '%d %b %Y %H:%M:%S', locale='ru')
 

@@ -1,5 +1,5 @@
 from .exceptions import TorrtBotException
-from .utils import WithSettings, BotObjectsRegistry, BotClassesRegistry
+from .utils import BotClassesRegistry, BotObjectsRegistry, WithSettings
 
 
 class BaseBot(WithSettings):

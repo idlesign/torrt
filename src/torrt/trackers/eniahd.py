@@ -1,5 +1,4 @@
-from datetime import datetime
-from typing import List, Optional
+from typing import ClassVar
 
 from ..base_tracker import GenericPrivateTracker
 
@@ -10,9 +9,9 @@ class EniaHDTracker(GenericPrivateTracker):
     alias: str = 'eniahd.com'
     login_url: str = 'https://%(domain)s/login.php'
     auth_cookie_name: str = 'bb_data'
-    mirrors: List[str] = ['eniahd.com', 'eniatv.com']
+    mirrors: ClassVar[list[str]] = ['eniahd.com', 'eniatv.com']
 
-    test_urls: List[str] = [
+    test_urls: ClassVar[list[str]] = [
         'https://eniatv.com/viewtopic.php?t=1558',
     ]
 
