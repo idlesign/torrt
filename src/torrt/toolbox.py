@@ -2,7 +2,7 @@ import logging
 import sys
 from datetime import datetime
 from time import time
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from .base_bot import BotRegistrationFailed
 from .base_tracker import GenericPrivateTracker
@@ -34,11 +34,11 @@ try:
 except ImportError:
     from os import environ
 
-if False:  # pragma: nocover
-    from .base_rpc import BaseRPC  # noqa
-    from .base_tracker import BaseTracker
-    from .base_notifier import BaseNotifier  # noqa
+if TYPE_CHECKING:
     from .base_bot import BaseBot
+    from .base_notifier import BaseNotifier
+    from .base_rpc import BaseRPC
+    from .base_tracker import BaseTracker
 
 LOGGER = logging.getLogger(__name__)
 

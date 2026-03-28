@@ -16,11 +16,11 @@ from requests import RequestException, Response, Session
 from torrentool.api import Torrent
 from torrentool.exceptions import BencodeDecodingError
 
-if TYPE_CHECKING:  # pragma: nocover
-    from .base_tracker import GenericTracker  # noqa
-    from .base_rpc import BaseRPC
+if TYPE_CHECKING:
     from .base_bot import BaseBot
     from .base_notifier import BaseNotifier
+    from .base_rpc import BaseRPC
+    from .base_tracker import GenericTracker
 
 
 LOGGER = logging.getLogger('torrt')
@@ -38,7 +38,7 @@ class HttpClient:
     timeout: int = 10
 
     user_agent: str = (
-        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36')
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36')
 
     def __init__(
             self,
