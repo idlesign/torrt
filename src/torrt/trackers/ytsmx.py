@@ -9,11 +9,16 @@ API_BASE = 'https://yts.bz/api/v2/'
 QualityLinks = dict[str, str]
 QualityLink = tuple[str, str]
 
+
 class YtsmxTrackerException(TorrtTrackerException):
     """Yts.mx specific exceptions"""
 
+
 class YtsmxTracker(GenericPublicTracker):
     """This class implements .torrent files downloads for https://yts.mx tracker."""
+
+    active: bool = False
+    """Having 403 with js in responses. Requires investigation."""
 
     alias: str = 'yts.mx'
     mirrors: ClassVar[list[str]] = ['yts.mx', 'yts.bz', 'yts.lt']
@@ -28,7 +33,7 @@ class YtsmxTracker(GenericPublicTracker):
         if quality_prefs is None:
             quality_prefs = ['1080P.WEB', '720P.WEB']
         else:
-            quality_prefs = [self._sanitize_quality(x) for x in quality_prefs]
+            quality_prefs = [self._sanitize_quality(pref) for pref in quality_prefs]
 
         self.quality_prefs = quality_prefs
 
@@ -53,7 +58,8 @@ class YtsmxTracker(GenericPublicTracker):
 
         return soup
 
-    def _extract_movie_id(self, root: BeautifulSoup) -> str:
+    @classmethod
+    def extract_movie_id(cls, root: BeautifulSoup) -> str:
         """returns movie id from tracker's info page"""
 
         movie_info_tag = root.find("div", {"id": "movie-info"})
@@ -69,7 +75,6 @@ class YtsmxTracker(GenericPublicTracker):
     def _get_movie_details(self, movie_id: str) -> dict:
         """returns dict with movie info by calling API"""
 
-        # todo api url needs to respect mirror domain
         response = self.get_response(f'{API_BASE}movie_details.json?movie_id={movie_id}')
         if not response:
             raise YtsmxTrackerException("API didn't respond")
@@ -78,12 +83,13 @@ class YtsmxTracker(GenericPublicTracker):
 
         return movie_info_json
 
-    def _get_quality_links(self, movie_details: dict) -> QualityLinks:
+    @classmethod
+    def get_quality_links(cls, movie_details: dict) -> QualityLinks:
         """extract quality and it's link from API response"""
 
         try:
             qualities = {
-                self._get_quality_from_torrent(torrent): torrent['url']
+                cls._get_quality_from_torrent(torrent): torrent['url']
                 for torrent in movie_details['data']['movie']['torrents']
             }
         except KeyError as e:
@@ -91,8 +97,8 @@ class YtsmxTracker(GenericPublicTracker):
 
         return qualities
 
-    def _get_preffered_link(self, links: QualityLinks) -> QualityLink | None:
-        """returns most preffered `QualityLink` of all `links` or `None`"""
+    def _get_preferred_link(self, links: QualityLinks) -> QualityLink | None:
+        """returns most preferred `QualityLink` of all `links` or `None`"""
 
         preferred_qualities = [q for q in self.quality_prefs if q in links]
         if preferred_qualities:
@@ -110,13 +116,13 @@ class YtsmxTracker(GenericPublicTracker):
             soup = self._get_torrent_page(url)
 
             # 2. find movie ID - (eg. 38698)
-            movie_id = self._extract_movie_id(soup)
+            movie_id = self.extract_movie_id(soup)
 
             # 3. ask the API for details
             movie_details = self._get_movie_details(movie_id)
 
             # 4. parse torrent details to find preffered quality
-            available_qualities = self._get_quality_links(movie_details)
+            available_qualities = self.get_quality_links(movie_details)
 
         except YtsmxTrackerException as e:
             self.log_error(str(e))
@@ -124,20 +130,16 @@ class YtsmxTracker(GenericPublicTracker):
 
         self.log_debug(f"Available in qualities: {', '.join(available_qualities)}")
 
-        pref_link = self._get_preffered_link(available_qualities)
-        if pref_link:
+        if pref_link := self._get_preferred_link(available_qualities):
             _, link = pref_link
             return link
 
-        else:
-            self.log_info(
-                'Torrent is not available in preferred qualities: '
-                f"{', '.join(self.quality_prefs)}" or '(empty)'
-            )
+        self.log_info(
+            'Torrent is not available in preferred qualities: '
+            f"{', '.join(self.quality_prefs)}" or '(empty)'
+        )
 
-            quality, link = next(iter(available_qualities.items()))
-            self.log_info(f'Fallback to `{quality}` quality ...')
+        quality, link = next(iter(available_qualities.items()))
+        self.log_info(f'Fallback to `{quality}` quality ...')
 
-            return link
-
-        return ''
+        return link

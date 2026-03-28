@@ -1,4 +1,3 @@
-
 import pytest
 from bs4 import BeautifulSoup
 
@@ -42,7 +41,7 @@ def test_extract_movie_id(tracker: YtsmxTracker):
     '''
     soup = BeautifulSoup(stub_html, features="lxml")
 
-    movie_id = tracker._extract_movie_id(soup)
+    movie_id = tracker.extract_movie_id(soup)
     assert movie_id == '123'
 
 
@@ -60,7 +59,7 @@ def test_quality_links(tracker: YtsmxTracker):
             }
         }
     }
-    links = tracker._get_quality_links(stub_details)
+    links = tracker.get_quality_links(stub_details)
     items = list(links.items())
     assert len(items) == 1
 
@@ -69,12 +68,12 @@ def test_quality_links(tracker: YtsmxTracker):
     assert link == 'http://example.com/torrent.file'
 
 
-@pytest.mark.parametrize('preffered, expected', [
+@pytest.mark.parametrize("preferred, expected", [
     (['1080P.WEB', '720P.WEB'], ('1080P.WEB', '1080p_torrent.link')),
     (['720P.WEB', '1080P.WEB'], ('720P.WEB', '720p_torrent.link')),
     (['8K.HDTV', '4K.WEB', '2K,HDTV'], None),
     ([], None),
 ])
-def test_preffered_quality(preffered, expected, stub_links):
-    tracker = YtsmxTracker(quality_prefs=preffered)
-    assert tracker._get_preffered_link(stub_links) == expected
+def test_preferred_quality(preferred, expected, stub_links):
+    tracker = YtsmxTracker(quality_prefs=preferred)
+    assert tracker._get_preferred_link(stub_links) == expected
