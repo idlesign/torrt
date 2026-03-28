@@ -2,7 +2,8 @@ import pytest
 
 from torrt.utils import TrackerObjectsRegistry, get_torrent_from_url
 
-NEED_SKIP = True
+NEED_SKIP = False
+
 
 @pytest.mark.skipif(NEED_SKIP, reason='Temporary skip')
 def test_trackers():
@@ -16,6 +17,7 @@ def test_trackers():
             continue
 
         urls = tracker_obj.test_urls
+        tracker_obj.request_timeout = 0.01
 
         for url in urls:
             torrent_data = get_torrent_from_url(url)

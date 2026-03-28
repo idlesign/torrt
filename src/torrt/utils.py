@@ -691,7 +691,7 @@ class ObjectsRegistry:
     __slots__ = ['_items']
 
     def __init__(self):
-        self._items = {}
+        self._items: dict[str, Any] = {}
 
     def add(self, obj: Any):
         """Add an object to registry.
@@ -707,7 +707,7 @@ class ObjectsRegistry:
 
         self._items[name] = obj
 
-    def get(self, obj_alias: str | None = None) -> dict | Any:
+    def get(self, obj_alias: str | None = None) -> dict[str, Any] | Any:
         """Returns registered objects or a definite object by its alias,
         or registry items if no alias provided.
 
@@ -732,7 +732,7 @@ class ObjectsRegistry:
                 return obj
 
             elif name in string:
-                return self._items[name]
+                return obj
 
         return None
 

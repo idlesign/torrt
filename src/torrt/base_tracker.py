@@ -48,6 +48,8 @@ class BaseTracker(WithSettings):
     
     """
 
+    request_timeout: float | int = 4
+
     def __init__(self, *, cookies: dict[str, str] | None = None, query_string: str = '', **kwargs):
         self.mirror_picked: str | None = None
 
@@ -104,14 +106,11 @@ class BaseTracker(WithSettings):
 
                 response = self.client.request(
                     mirror_url,
-                    timeout=4,
+                    timeout=self.request_timeout,
                     silence_exceptions=True,
                 )
 
-                if response is None:
-                    continue
-
-                if response.url.startswith(mirror_url):
+                if response and response.url.startswith(mirror_url):
                     mirror_picked = mirror_domain
                     break
 
@@ -521,7 +520,7 @@ class GenericPrivateTracker(GenericPublicTracker):
         if self.login_counter > 1:
             return False
 
-        allow_redirects = False  # Not to loose cookies on the redirect.
+        allow_redirects = False  # Not to lose cookies on the redirect.
 
         if self.auth_qs_param_name:
             allow_redirects = True  # To be able to get Session ID from query string.

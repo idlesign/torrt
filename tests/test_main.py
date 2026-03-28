@@ -115,6 +115,7 @@ def test_fullcycle(monkeypatch, datafix_dir):
         def __init__(self, url, data):
             self.url = url
             self.data = data
+            self.ok = True
 
         @property
         def content(self):
