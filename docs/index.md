@@ -49,7 +49,7 @@ Automatic updates are available for:
 
 ### Requirements
 
-1. Python 3.10+
+1. Python 3.11+
 2. `deluge-webapi` plugin (to work with Deluge)
 3. `python-telegram-bot` (to run Telegram bot)
 
