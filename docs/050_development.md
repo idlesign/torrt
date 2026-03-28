@@ -1,4 +1,4 @@
-## Development
+# Development
 
 For development we use [makeapp](https://pypi.org/project/makeapp/). Install:
 

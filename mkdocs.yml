@@ -1,7 +1,7 @@
 site_name: torrt
 site_url: !ENV READTHEDOCS_CANONICAL_URL
 
-copyright: Copyright &copy; 2014-2025, Igor `idle sign` Starikov
+copyright: Copyright &copy; 2014-2026, Igor `idle sign` Starikov
 
 repo_url: https://github.com/idlesign/torrt
 edit_uri: edit/master/docs/
