@@ -1,9 +1,10 @@
 # torrt changelog
 
 ### Unreleased
+* !! QA. Dropped QA for Py 3.7, 3.8, 3.9, 3.10.
+* ++ Add support to pass custom RPC parameters.
 * ++ QA. Added QA for Py 3.11.
 * ** Trackers. Anilibria support suspended.
-* !! QA. Dropped QA for Py 3.7, 3.8, 3.9, 3.10.
 
 ### v1.0.0 [2021-12-26]
 * ++ Release. Celebrating 1.0.0.

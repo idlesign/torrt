@@ -1,5 +1,6 @@
 import argparse
 import logging
+import sys
 from pathlib import Path
 
 from torrt import VERSION
@@ -32,13 +33,19 @@ from torrt.utils import (
 )
 
 
-def process_commands():
+def process_commands(arguments: list[str] | None = None) -> None:
 
-    def settings_dict_from_list(lst):
+    arguments = arguments or sys.argv[1:]
+
+    def settings_dict_from_list(value: list[str] | str):
         settings_dict = {}
-        for s in lst:
-            splitted = s.split('=')
-            settings_dict[splitted[0]] = splitted[1]
+
+        if isinstance(value, str):
+            value = value.split(' ')
+
+        for setting in value:
+            key, val = setting.split('=')
+            settings_dict[key] = val
         return settings_dict
 
     arg_parser = argparse.ArgumentParser('torrt', description='Automates torrent updates for you.')
@@ -130,6 +137,10 @@ def process_commands():
         help='Destination path to download torrent contents into (in filesystem where torrent client daemon works)',
         dest='download_to', default=None)
     parser_add_torrent.add_argument(
+        '--params',
+        help="Parameters to pass to torrent client. E.g. -p='param1=val1 param2=val2'",
+        dest='params', default=None)
+    parser_add_torrent.add_argument(
         '--dump', help='Dump web pages scraped by torrt into current or a given directory', dest='dump')
 
     parser_remove_torrent = subp_main.add_parser(
@@ -147,6 +158,10 @@ def process_commands():
         'hash', help='Torrent identifying hash')
     parser_register_torrent.add_argument(
         '-u', dest='url', default=None, help='URL to download torrent from')
+    parser_register_torrent.add_argument(
+        '--params',
+        help="Parameters to pass to a torrent client. E.g. -p='param1=val1 param2=val2'",
+        dest='params', default=None)
 
     parser_unregister_torrent = subp_main.add_parser(
         'unregister_torrent', help='Unregisters torrent from torrt by its hash')
@@ -160,7 +175,7 @@ def process_commands():
     for parser in subp_main.choices.values():
         parser.add_argument('--verbose', help='Switch to show debug messages', dest='verbose', action='store_true')
 
-    args = arg_parser.parse_args()
+    args = arg_parser.parse_args(arguments)
     args = vars(args)
 
     configure_logging(logging.DEBUG if args.get('verbose') else logging.INFO)
@@ -217,13 +232,21 @@ def process_commands():
         set_walk_interval(args['walk_interval'])
 
     elif args['command'] == 'add_torrent':
-        add_torrent_from_url(args['url'], args['download_to'])
+        add_torrent_from_url(
+            args['url'],
+            download_to=args['download_to'],
+            params=settings_dict_from_list(args['params']),
+        )
 
     elif args['command'] == 'remove_torrent':
-        remove_torrent(args['hash'], args['delete_data'])
+        remove_torrent(args['hash'], with_data=args['delete_data'])
 
     elif args['command'] == 'register_torrent':
-        register_torrent(args['hash'], url=args['url'])
+        register_torrent(
+            args['hash'],
+            url=args['url'],
+            params=settings_dict_from_list(args['params']),
+        )
 
     elif args['command'] == 'unregister_torrent':
         unregister_torrent(args['hash'])

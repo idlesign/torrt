@@ -389,6 +389,7 @@ class TorrentData:
         self.raw = raw
         self.parsed = parsed
         self.page = page
+        self.params = {}
 
         self._name = name
         self._hash = hash
@@ -408,6 +409,9 @@ class TorrentData:
     hash: str = property(_get_hash, _set_hash)
     name: str = property(_get_name, _set_name)
 
+    def set_params(self, params: dict | None = None) -> dict | None:
+        self.params = params or {}
+
     def to_dict(self) -> dict:
         page = self.page
 
@@ -417,6 +421,7 @@ class TorrentData:
             'url': self.url,
             'url_file': self.url_file,
             'page': page.to_dict() if page else {},
+            'params': self.params,
         }
         return result
 

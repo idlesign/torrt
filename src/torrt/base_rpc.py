@@ -60,7 +60,7 @@ class BaseRPC(WithSettings):
 
         :param torrent: torrent info
         :param download_to: path to download files from torrent into (in terms of torrent client filesystem)
-        :param params: optional information attached to torrent that should be saved
+        :param params: optional information attached to torrent that should be preserved
 
         """
         raise NotImplementedError

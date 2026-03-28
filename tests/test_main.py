@@ -47,12 +47,12 @@ class DummyRPC(BaseRPC):
 
     def __init__(self, *, enabled=False):
         self.enabled = enabled
-        self.torrents = {}
+        self.torrents: dict[str, tuple[Torrent, dict]] = {}
         super().__init__()
 
     def method_add_torrent(self, torrent: TorrentData, *, download_to: str = '', params: dict | None = None):
         parsed = Torrent.from_string(torrent.raw)
-        self.torrents[parsed.info_hash] = parsed
+        self.torrents[parsed.info_hash] = (parsed, {**torrent.params, **(params or {})})
 
     def method_remove_torrent(self, hash_str, *, with_data=False):
         self.torrents.pop(hash_str)
@@ -60,7 +60,7 @@ class DummyRPC(BaseRPC):
     def method_get_torrents(self, hashes: list[str] | None = None):
         results = []
 
-        for hash_str, parsed in self.torrents.items():
+        for hash_str, (parsed, params) in self.torrents.items():
 
             if hash_str not in hashes:
                 continue
@@ -71,6 +71,7 @@ class DummyRPC(BaseRPC):
                 'hash': parsed.info_hash,
                 'download_to': None,
                 'comment': 'http://dummy-a.local/id/one',
+                'params': params,
             })
 
         return results
@@ -140,11 +141,15 @@ def test_fullcycle(monkeypatch, datafix_dir):
         rpc_dummy = RPCObjectsRegistry.get('dummy')
 
         # Add new torrent.
-        add_torrent_from_url('http://dummy-a.local/id/one')
+        add_torrent_from_url('http://dummy-a.local/id/one', params={'custom': 1})
 
         assert len(rpc_dummy.torrents) == 1
+        registered_torrents = get_registered_torrents()
         assert torrent_one_hash in rpc_dummy.torrents
-        assert torrent_one_hash in get_registered_torrents()
+        assert torrent_one_hash in registered_torrents
+
+        assert registered_torrents[torrent_one_hash]['params'] == {'custom': 1}
+        assert rpc_dummy.torrents[torrent_one_hash][1] == {'custom': 1}
 
         # Walk and update.
         patch_requests(torrent_two_data)
@@ -157,8 +162,10 @@ def test_fullcycle(monkeypatch, datafix_dir):
         remove_torrent(torrent_two_hash)
 
         assert not rpc_dummy.torrents
-        assert torrent_one_hash not in get_registered_torrents()
-        assert torrent_two_hash not in get_registered_torrents()
+
+        registered_torrents = get_registered_torrents()
+        assert torrent_one_hash not in registered_torrents
+        assert torrent_two_hash not in registered_torrents
 
     finally:
         RPCObjectsRegistry._items = rpc_old

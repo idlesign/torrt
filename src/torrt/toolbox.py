@@ -213,13 +213,14 @@ def bootstrap():
     init_object_registries()
 
 
-def register_torrent(hash_str: str, *, torrent_data: TorrentData = None, url: str = ''):
+def register_torrent(hash_str: str, *, torrent_data: TorrentData = None, url: str = '', params: dict | None = None):
     """Registers torrent within torrt. Used to register torrents that already exists
     in torrent clients.
 
     :param hash_str: torrent identifying hash
     :param torrent_data:
     :param url: fallback url that will be used in case torrent comment doesn't contain url
+    :param params: optional parameters to pass to RPC
 
     """
     LOGGER.debug(f'Registering `{hash_str}` torrent ...')
@@ -229,6 +230,9 @@ def register_torrent(hash_str: str, *, torrent_data: TorrentData = None, url: st
 
     if url:
         torrent_data.url = url
+
+    if not torrent_data.params:
+        torrent_data.set_params(params)
 
     cfg = {'torrents': {}}
     structure_torrent_data(cfg['torrents'], hash_str, torrent_data)
@@ -247,11 +251,12 @@ def unregister_torrent(hash_str: str):
     config.drop_section('torrents', hash_str)
 
 
-def add_torrent_from_url(url: str, *, download_to: str = ''):
+def add_torrent_from_url(url: str, *, download_to: str = '', params: dict | None = None):
     """Adds torrent from a given URL to torrt and torrent clients,
 
     :param url: torrent URL
     :param download_to: path to download files from torrent into (in terms of torrent client filesystem)
+    :param params: optional parameters to pass to RPC
 
     """
     LOGGER.debug(f'Adding torrent from `{url}` ...')
@@ -262,9 +267,11 @@ def add_torrent_from_url(url: str, *, download_to: str = ''):
         LOGGER.error(f'Unable to add torrent from `{url}`')
         return
 
+    torrent_data.set_params(params)
+
     for rpc_alias, rpc_object in iter_rpc():
         rpc_object.method_add_torrent(torrent_data, download_to=download_to)
-        register_torrent(torrent_data.hash, torrent_data=torrent_data)
+        register_torrent(torrent_data.hash, torrent_data=torrent_data, params=params)
 
         LOGGER.info(f'Torrent from `{url}` is added within `{rpc_alias}`')
 
