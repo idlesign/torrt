@@ -5,7 +5,7 @@ from ..base_tracker import GenericPrivateTracker
 
 
 class KinozalTracker(GenericPrivateTracker):
-    """This class implements .torrent files downloads for http://kinozal.tv/ tracker."""
+    """This class implements .torrent files downloads for kinozal.tv tracker."""
 
     alias: str = 'kinozal.tv'
     login_url: str = 'https://%(domain)s/takelogin.php'

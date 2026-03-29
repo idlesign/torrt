@@ -5,7 +5,7 @@ from ..base_tracker import GenericPrivateTracker
 
 
 class NNMClubTracker(GenericPrivateTracker):
-    """This class implements .torrent files downloads for http://nnm-club.me tracker."""
+    """This class implements .torrent files downloads for nnm-club.to tracker."""
 
     alias: str = 'nnm-club.me'
     login_url: str = 'https://%(domain)s/forum/login.php'

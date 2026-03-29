@@ -4,7 +4,7 @@ from ..base_tracker import GenericPrivateTracker
 
 
 class EniaHDTracker(GenericPrivateTracker):
-    """This class implements .torrent files downloads for https://eniahd.com tracker."""
+    """This class implements .torrent files downloads for eniahd.com tracker."""
 
     alias: str = 'eniahd.com'
     login_url: str = 'https://%(domain)s/login.php'

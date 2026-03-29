@@ -4,7 +4,7 @@ from ..base_tracker import GenericPrivateTracker
 
 
 class CasstudioTracker(GenericPrivateTracker):
-    """This class implements .torrent files downloads for https://casstudio.tv/ tracker."""
+    """This class implements .torrent files downloads for casstudio.tv tracker."""
 
     alias: str = 'casstudio.tv'
     login_url: str = 'https://%(domain)s/ucp.php?mode=login'
@@ -41,7 +41,7 @@ class CasstudioTracker(GenericPrivateTracker):
         page_soup = self.get_torrent_page(url)
 
         domain = self.extract_domain(url)
-        is_anonymous = self.find_links(url, page_soup, r'\./ucp\.php\?mode=login') is not None
+        is_anonymous = self.find_links(url, page_soup, definite=r'\./ucp\.php\?mode=login') is not None
 
         if not self.logged_in or is_anonymous:
 

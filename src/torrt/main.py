@@ -44,8 +44,15 @@ def process_commands(arguments: list[str] | None = None) -> None:
             value = value.split(' ')
 
         for setting in value:
-            key, val = setting.split('=')
+            try:
+                key, val = setting.split('=')
+
+            except ValueError:
+                # no = delimiter founds
+                continue
+
             settings_dict[key] = val
+
         return settings_dict
 
     arg_parser = argparse.ArgumentParser('torrt', description='Automates torrent updates for you.')
@@ -139,7 +146,7 @@ def process_commands(arguments: list[str] | None = None) -> None:
     parser_add_torrent.add_argument(
         '--params',
         help="Parameters to pass to torrent client. E.g. -p='param1=val1 param2=val2'",
-        dest='params', default=None)
+        dest='params', default='')
     parser_add_torrent.add_argument(
         '--dump', help='Dump web pages scraped by torrt into current or a given directory', dest='dump')
 
@@ -161,7 +168,7 @@ def process_commands(arguments: list[str] | None = None) -> None:
     parser_register_torrent.add_argument(
         '--params',
         help="Parameters to pass to a torrent client. E.g. -p='param1=val1 param2=val2'",
-        dest='params', default=None)
+        dest='params', default='')
 
     parser_unregister_torrent = subp_main.add_parser(
         'unregister_torrent', help='Unregisters torrent from torrt by its hash')

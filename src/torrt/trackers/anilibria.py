@@ -14,7 +14,7 @@ API_URL: str = HOST + '/public/api/index.php'
 
 
 class AnilibriaTracker(GenericPublicTracker):
-    """This class implements .torrent files downloads for https://www.anilibria.tv tracker."""
+    """This class implements .torrent files downloads for anilibria.tv tracker."""
 
     active: bool = False
     """Seems to be moved for another domain, and changed here and there.

@@ -4,7 +4,7 @@ from ..base_tracker import BeautifulSoup, GenericPrivateTracker
 
 
 class RuTrackerTracker(GenericPrivateTracker):
-    """This class implements .torrent files downloads for http://rutracker.org tracker."""
+    """This class implements .torrent files downloads for rutracker.org tracker."""
 
     alias: str = 'rutracker.org'
     login_url: str = 'https://%(domain)s/forum/login.php'
@@ -35,14 +35,14 @@ class RuTrackerTracker(GenericPrivateTracker):
 
         domain = self.extract_domain(url)
 
-        is_anonymous = self.find_links(url, page_soup, 'register') is not None
+        is_anonymous = self.find_links(url, page_soup, definite='register') is not None
 
         if is_anonymous:
             self.login(domain)
 
             page_soup = self.get_torrent_page(url, drop_cache=True)
 
-        download_link = self.find_links(url, page_soup, r'dl\.php')
+        download_link = self.find_links(url, page_soup, definite=r'dl\.php')
 
         self.form_token = self.get_form_token(page_soup)
 

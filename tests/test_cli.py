@@ -18,9 +18,10 @@ from torrt.main import process_commands
     (['set_walk_interval', '1'], ['Saving configuration file']),
     (['enable_rpc', 'a'], ['RPC `a` class is not registered']),
     (['disable_rpc', 'a'], ['RPC `a` class is not registered']),
-    (['add_torrent', 'https://google.com/dummy', '--params="a=b d=c"'], ['Unable to add torrent from']),
+    (['add_torrent', 'https://google.com/dummy', '--params', 'a=b d=c'], ['Unable to add torrent from']),
+    (['add_torrent', 'https://google.com/dummy', '-d "/downloads/"'], ['Unable to add torrent from']),
     (['remove_torrent', '123', '-d'], ['Unregistering `123` torrent']),
-    (['register_torrent', '123', '--params="a=b d=c"'], ['Registering `123` torrent']),
+    (['register_torrent', '123', '--params', 'a=b d=c'], ['Registering `123` torrent']),
     (['unregister_torrent', '123'], ['Unregistering `123` torrent']),
     (['remove_notifier', 'else'], ['Removing `else` notifier']),
 ])

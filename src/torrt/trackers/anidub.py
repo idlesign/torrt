@@ -3,7 +3,7 @@ from ..base_tracker import GenericPrivateTracker
 
 
 class AniDUBTracker(GenericPrivateTracker):
-    """This class implements .torrent files downloads for http://tr.anidub.com tracker."""
+    """This class implements .torrent files downloads for anidub.com tracker."""
 
     alias: str = 'tr.anidub.com'
 

@@ -15,7 +15,7 @@ class YtsmxTrackerException(TorrtTrackerException):
 
 
 class YtsmxTracker(GenericPublicTracker):
-    """This class implements .torrent files downloads for https://yts.mx tracker."""
+    """This class implements .torrent files downloads for yts.mx tracker."""
 
     active: bool = False
     """Having 403 with js in responses. Requires investigation."""

@@ -4,7 +4,7 @@ from ..base_tracker import GenericPublicTracker
 
 
 class RutorTracker(GenericPublicTracker):
-    """This class implements .torrent files downloads for http://rutor.info tracker."""
+    """This class implements .torrent files downloads for rutor.info tracker."""
 
     alias: str = 'rutor.org'
     mirrors: ClassVar[list[str]] = ['rutor.is', 'rutor.info', 'new-rutor.org']
