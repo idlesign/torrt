@@ -52,7 +52,6 @@ docs = [
     "mkdocs-apidescribed-plugin",
 ]
 linters = [
-    "ruff==0.13.1",
 ]
 tests = [
     "pytest",
@@ -92,18 +91,4 @@ omit = [
 exclude_also = [
     "raise NotImplementedError",
     "if TYPE_CHECKING:",
-]
-
-[tool.tox]
-skip_missing_interpreters = true
-env_list = [
-    "py311",
-    "py312",
-    "py313",
-]
-
-[tool.tox.env_run_base]
-dependency_groups = ["tests"]
-commands = [
-    ["pytest", { replace = "posargs", default = ["tests"], extend = true }],
 ]
