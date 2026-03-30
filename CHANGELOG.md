@@ -4,7 +4,9 @@
 * !! QA. Dropped QA for Py 3.7, 3.8, 3.9, 3.10.
 * ++ Add support to pass custom RPC parameters.
 * ++ QA. Added QA for Py 3.11.
+* ++ RPC. Added support to pass torrent params for qBittorrent.
 * ** Trackers. Anilibria support suspended.
+* ** Trackers. Yts support suspended.
 
 ### v1.0.0 [2021-12-26]
 * ++ Release. Celebrating 1.0.0.
