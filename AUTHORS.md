@@ -13,6 +13,7 @@ Created by Igor `idle sign` Starikov.
 * Mikhail Tatyushev — https://github.com/tatyushev-ms
 * st7105 — https://github.com/st7105
 * Alexandr Kolosov — https://github.com/a8t3r
+* Aleksey Koksharov — https://github.com/AllikarDD
 
 ## deluge-updatorr project
 
