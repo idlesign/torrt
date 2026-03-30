@@ -1,6 +1,6 @@
 # torrt changelog
 
-### Unreleased
+### v1.1.0 [2026-03-30]
 * !! QA. Dropped QA for Py 3.7, 3.8, 3.9, 3.10.
 * ++ Add support to pass custom RPC parameters.
 * ++ QA. Added QA for Py 3.11.
