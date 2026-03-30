@@ -1,4 +1,3 @@
-import time
 from typing import Any, ClassVar
 from urllib.parse import urljoin
 
