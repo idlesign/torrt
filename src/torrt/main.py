@@ -145,7 +145,7 @@ def process_commands(arguments: list[str] | None = None) -> None:
         dest='download_to', default=None)
     parser_add_torrent.add_argument(
         '--params',
-        help="Parameters to pass to torrent client. E.g. -p='param1=val1 param2=val2'",
+        help="Parameters to pass to torrent client. E.g. --params 'param1=val1 param2=val2'",
         dest='params', default='')
     parser_add_torrent.add_argument(
         '--dump', help='Dump web pages scraped by torrt into current or a given directory', dest='dump')
@@ -167,7 +167,7 @@ def process_commands(arguments: list[str] | None = None) -> None:
         '-u', dest='url', default=None, help='URL to download torrent from')
     parser_register_torrent.add_argument(
         '--params',
-        help="Parameters to pass to a torrent client. E.g. -p='param1=val1 param2=val2'",
+        help="Parameters to pass to a torrent client. E.g. --params 'param1=val1 param2=val2'",
         dest='params', default='')
 
     parser_unregister_torrent = subp_main.add_parser(

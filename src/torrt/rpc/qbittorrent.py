@@ -1,3 +1,4 @@
+import time
 from typing import Any, ClassVar
 from urllib.parse import urljoin
 
@@ -171,12 +172,16 @@ class QBittorrentRPC(BaseRPC):
     def method_add_torrent(self, torrent: TorrentData, *, download_to: str = '', params: dict | None = None) -> Any:
 
         file_data = {'torrents': torrent.raw}
-        params = None
+
+        params_final = {'data':{}}
+
+        if params is not None:
+            params_final['data'] =  params
 
         if download_to is not None:
-            params = {'data': {'savepath': download_to or None}}
+            params_final['data']['savepath'] =  download_to or None
 
-        return self.auth_query(self.build_params(action='add_torrent', params=params), files=file_data)
+        return self.auth_query(self.build_params(action='add_torrent', params=params_final), files=file_data)
 
     def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:
 
