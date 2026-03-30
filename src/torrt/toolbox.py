@@ -270,7 +270,7 @@ def add_torrent_from_url(url: str, *, download_to: str = '', params: dict | None
     torrent_data.set_params(params)
 
     for rpc_alias, rpc_object in iter_rpc():
-        rpc_object.method_add_torrent(torrent_data, download_to=download_to)
+        rpc_object.method_add_torrent(torrent_data, download_to=download_to, params=params)
         register_torrent(torrent_data.hash, torrent_data=torrent_data, params=params)
 
         LOGGER.info(f'Torrent from `{url}` is added within `{rpc_alias}`')
