@@ -153,7 +153,6 @@ class QBittorrentRPC(BaseRPC):
             torrent_data_hash = torrent_data['hash']
 
             if hashes is None or torrent_data_hash in hashes:
-
                 addition_data = self.auth_query_json(
                     self.build_params('get_torrent', {'data': {'hash': torrent_data_hash}}),
                 )
@@ -163,7 +162,7 @@ class QBittorrentRPC(BaseRPC):
                     'hash': torrent_data_hash,
                     'name': torrent_data['name'],
                     'download_to': torrent_data['download_to'],
-                    'comment' : addition_data['comment']
+                    'comment': addition_data['comment']
                 })
 
         return torrents_info
@@ -172,15 +171,12 @@ class QBittorrentRPC(BaseRPC):
 
         file_data = {'torrents': torrent.raw}
 
-        params_final = {'data':{}}
-
-        if params is not None:
-            params_final['data'] =  params
+        params = {'data': {**(params or {}), **torrent.params}}
 
         if download_to is not None:
-            params_final['data']['savepath'] =  download_to or None
+            params['data']['savepath'] = download_to or None
 
-        return self.auth_query(self.build_params(action='add_torrent', params=params_final), files=file_data)
+        return self.auth_query(self.build_params(action='add_torrent', params=params), files=file_data)
 
     def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:
 
