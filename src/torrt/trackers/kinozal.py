@@ -1,5 +1,7 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime
 from typing import ClassVar
+
+import dateparser
 
 from ..base_tracker import GenericPrivateTracker
 
@@ -25,23 +27,8 @@ class KinozalTracker(GenericPrivateTracker):
         def refresh_in_text(tag):
             return tag.name == 'li' and tag.get_text().startswith('Обновлен')
 
-        def parse_date(date_val):
-            if date_val == 'сегодня':
-                return datetime.today()  # noqa: DTZ002
-
-            elif date_val == 'вчера':
-                return datetime.today() - timedelta(days=1)  # noqa: DTZ002
-
-            else:
-                return self.parse_datetime(date_val, '%d %B %Y', locale='ru')
-
         dt_val = getattr(self._torrent_page.find(refresh_in_text).find('span'), 'text', '').strip()
-        parts = dt_val.partition(' в ')
-        if len(parts) != 3:
-            return None
-        else:
-            time_val = time.fromisoformat(parts[2])
-            return parse_date(parts[0]).replace(hour=time_val.hour, minute=time_val.minute, second=0, microsecond=0)
+        return dateparser.parse(dt_val, languages=['ru'])
 
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link at forum thread page and return that one."""

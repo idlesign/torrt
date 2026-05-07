@@ -11,7 +11,7 @@ def test_get_torrent(response_mock, datafix_read, datafix_dir):
     test_torrent = (datafix_dir / 'test.torrent').read_bytes()
 
     with response_mock([
-        f"GET https://nnmclub.to/forum/viewtopic.php?t=889443&sid= -> 200: {datafix_read('nnmclub.html')}",
+        f"GET https://nnmclub.to/forum/viewtopic.php?t=889443&sid= -> 200: {datafix_read('nnmclub.html', encoding='utf-8')}",
         b"GET https://nnmclub.to/forum/download.php?id=762672&sid= -> 200:" + test_torrent,
 
     ]) as _:
