@@ -429,7 +429,7 @@ class GenericPublicTracker(GenericTracker):
     login_required: bool = False
 
     def get_id_from_link(self, url: str) -> str:
-        return url.split('/')[-1]
+        return url.rsplit('/', maxsplit=1)[-1]
 
     def download_torrent(self, url: str, *, referer: str = '') -> bytes | None:
         self.log_debug(f'Downloading torrent file from {url} ...')
