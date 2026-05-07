@@ -14,6 +14,7 @@ Created by Igor `idle sign` Starikov.
 * st7105 — https://github.com/st7105
 * Alexandr Kolosov — https://github.com/a8t3r
 * Aleksey Koksharov — https://github.com/AllikarDD
+* Maksim Efimov — https://github.com/mgefimov
 
 ## deluge-updatorr project
 
