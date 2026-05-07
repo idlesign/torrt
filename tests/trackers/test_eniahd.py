@@ -9,7 +9,7 @@ def test_get_torrent(response_mock, datafix_read, datafix_dir):
     test_torrent = (datafix_dir / 'test.torrent').read_bytes()
 
     with response_mock([
-        f"GET https://eniatv.com/viewtopic.php?t=1558 -> 200: {datafix_read('eniahd.html')}",
+        f"GET https://eniatv.com/viewtopic.php?t=1558 -> 200: {datafix_read('eniahd.html', encoding='utf-8')}",
         b"GET https://eniatv.com/dl.php?id=5669 -> 200:" + test_torrent,
 
     ]) as _:

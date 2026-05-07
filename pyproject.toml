@@ -26,6 +26,7 @@ dependencies = [
     "beautifulsoup4",
     "torrentool",
     "lxml",
+    "dateparser",
 ]
 
 [project.urls]
