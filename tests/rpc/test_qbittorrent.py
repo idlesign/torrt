@@ -13,7 +13,8 @@ def test_get_torrents(response_mock, qbit, torrent_params):
 
     with response_mock([
             f'POST {qbit.url}auth/login -> 200:Ok.',
-            f'GET {qbit.url}torrents/info -> 200:' + '[{"hash": "xxxxx", "name": "mytorr", "save_path": "/home/idle"}]',
+            f'GET {qbit.url}torrents/info -> 200:'
+            '[{"hash": "xxxxx", "name": "mytorr", "save_path": "/home/idle", "category": "tv"}]',
             f'POST {qbit.url}torrents/properties -> 200:' + '{"comment": "somecomment"}',
         ],
         bypass=False
@@ -24,6 +25,27 @@ def test_get_torrents(response_mock, qbit, torrent_params):
             'name': 'mytorr',
             'hash': 'xxxxx',
             'download_to': '/home/idle',
+            'params': {'category': 'tv'},
+        }]
+
+
+def test_get_torrents_no_category(response_mock, qbit, torrent_params):
+
+    with response_mock([
+            f'POST {qbit.url}auth/login -> 200:Ok.',
+            f'GET {qbit.url}torrents/info -> 200:'
+            '[{"hash": "xxxxx", "name": "mytorr", "save_path": "/home/idle", "category": ""}]',
+            f'POST {qbit.url}torrents/properties -> 200:' + '{"comment": "somecomment"}',
+        ],
+        bypass=False
+    ):
+        response = qbit.method_get_torrents(hashes=['xxxxx'])
+        assert response == [{
+            'comment': 'somecomment',
+            'name': 'mytorr',
+            'hash': 'xxxxx',
+            'download_to': '/home/idle',
+            'params': {},
         }]
 
 
