@@ -158,11 +158,18 @@ class QBittorrentRPC(BaseRPC):
                 )
                 self.normalize_field_names(addition_data)
 
+                torrent_params: dict = {}
+
+                category = torrent_data.get('category')
+                if category:
+                    torrent_params['category'] = category
+
                 torrents_info.append({
                     'hash': torrent_data_hash,
                     'name': torrent_data['name'],
                     'download_to': torrent_data['download_to'],
-                    'comment': addition_data['comment']
+                    'comment': addition_data['comment'],
+                    'params': torrent_params,
                 })
 
         return torrents_info
