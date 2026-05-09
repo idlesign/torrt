@@ -1,8 +1,8 @@
 # torrt changelog
 
-### Unreleased
-* ** Fix save settings regression.
+### v1.2.0 [2026-05-09]
 * ++ qBittorrent: preserve torrent category on update.
+* ** Fix save settings regression.
 
 ### v1.1.0 [2026-03-30]
 * !! QA. Dropped QA for Py 3.7, 3.8, 3.9, 3.10.
