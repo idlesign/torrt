@@ -589,9 +589,8 @@ class WithSettings:
         settings = {}
 
         try:
-            settings_names = getfullargspec(self.__init__)[0]
-
-            del settings_names[0]  # do not need `self`
+            spec = getfullargspec(self.__init__)
+            settings_names = spec.args[1:] + spec.kwonlyargs  # skip 'self', add kw-only
 
             for name in settings_names:
                 settings[name] = getattr(self, name)
