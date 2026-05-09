@@ -1,6 +1,7 @@
 # torrt changelog
 
 ### Unreleased
+* ** fix save settings.
 * ** qBittorrent: preserve torrent category on update.
 
 ### v1.1.0 [2026-03-30]

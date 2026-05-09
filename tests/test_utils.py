@@ -1,4 +1,5 @@
 import torrt.utils as utils
+from torrt.trackers.rutracker import RuTrackerTracker
 
 
 def test_base64encode_str():
@@ -15,3 +16,14 @@ def test_base64encode_bytes():
 
     assert isinstance(encoded_bytes, bytes)
     assert encoded_bytes == b'dGhpcyBpcyBieXRlcyB0byBlbmNvZGU=\n'
+
+
+def test_save_settings(mock_config):
+    RuTrackerTracker(username='user', password='pass', query_string='qs').save_settings()
+
+    assert mock_config['trackers']['rutracker.org'] == {
+        'username': 'user',
+        'password': 'pass',
+        'cookies': {},
+        'query_string': 'qs',
+    }
