@@ -49,7 +49,10 @@ class RuTrackerTracker(GenericPrivateTracker):
 
         return download_link or ''
 
-    def get_form_token(self, page_soup: BeautifulSoup) -> Optional[str]:
+    def get_form_token(self, page_soup: Optional[BeautifulSoup]) -> Optional[str]:
+
+        if not page_soup:
+            return None
 
         form_token_lines = [line for line in page_soup.text.split('\n\t') if line.startswith('form_token')]
 
@@ -57,7 +60,7 @@ class RuTrackerTracker(GenericPrivateTracker):
             return form_token_lines[0].split(':')[1][2:-2]
 
         except IndexError:
-            return
+            return None
 
     def download_torrent(self, url: str, referer: str = None) -> Optional[bytes]:
 
