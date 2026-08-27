@@ -1,5 +1,8 @@
 # torrt changelog
 
+### Unreleased
+* ** qBittorrent: fix login failure against qBittorrent 5.x (204 empty-body reply).
+
 ### v1.2.0 [2026-05-09]
 * ++ qBittorrent: preserve torrent category on update.
 * ** Fix save settings regression.
