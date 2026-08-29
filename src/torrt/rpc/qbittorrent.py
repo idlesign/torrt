@@ -55,7 +55,8 @@ class QBittorrentRPC(BaseRPC):
 
             result = self.query(self.build_params('login', {'data': data}))
 
-            if result.text != 'Ok.' or result.cookies is None:
+            # qBittorrent < 5 replies `Ok.`; qBittorrent 5.x replies 204 with an empty body.
+            if (result.text.strip() not in ('Ok.', '')) or result.cookies is None:
                 raise QBittorrentRPCException('Unable to auth credentials incorrect.')
 
             self.logged_in = True
@@ -110,7 +111,7 @@ class QBittorrentRPC(BaseRPC):
                     **request_kwargs
                 )
 
-                if response.status_code != 200:
+                if not (200 <= response.status_code < 300):
                     raise QBittorrentRPCException(response.text.strip() or response.reason)
 
             except Exception as e:

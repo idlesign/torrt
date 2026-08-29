@@ -1,6 +1,6 @@
 import pytest
 
-from torrt.rpc.qbittorrent import QBittorrentRPC
+from torrt.rpc.qbittorrent import QBittorrentRPC, QBittorrentRPCException
 
 
 @pytest.fixture
@@ -78,6 +78,33 @@ def test_remove_torrent(response_mock, qbit, torrent_params, torrent_data):
             with_data=True,
         )
         assert response.ok
+
+
+def test_login_qbittorrent_5(response_mock, qbit, torrent_params):
+    """qBittorrent 5.x replies to a successful login with 204 and an empty body."""
+
+    with response_mock([
+            f'POST {qbit.url}auth/login -> 204:',
+            f'GET {qbit.url}app/webapiVersion -> 200:2.11',
+        ],
+        bypass=False
+    ):
+        assert qbit.method_get_version() == '2.11'
+        assert qbit.logged_in
+
+
+def test_login_failed(response_mock, qbit, torrent_params):
+    """Wrong credentials are still reported as a failure."""
+
+    with response_mock([
+            f'POST {qbit.url}auth/login -> 200:Fails.',
+        ],
+        bypass=False
+    ):
+        with pytest.raises(QBittorrentRPCException):
+            qbit.login()
+
+        assert not qbit.logged_in
 
 
 def test_get_version(response_mock, qbit, torrent_params, torrent_data):
