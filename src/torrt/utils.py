@@ -55,7 +55,7 @@ class HttpClient:
         })
 
         self.session = session
-        self.silence_exceptions = silence_exceptions,
+        self.silence_exceptions = silence_exceptions
         self.dump_fname_tpl = dump_fname_tpl
         self.json = json
         self.last_error: str = ''
