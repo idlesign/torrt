@@ -382,7 +382,9 @@ class GenericTracker(BaseTracker):
 
         self.log_debug(f'Torrent download link found: {download_link}')
 
-        if last_updated and last_updated >= page_data.date_updated:
+        date_updated = page_data.date_updated
+
+        if last_updated and date_updated and last_updated >= date_updated:
             self.log_debug('Skipped as up to date')
             return None
         else:
