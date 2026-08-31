@@ -1,13 +1,15 @@
 import pytest
 
 from torrt.toolbox import bootstrap
-from torrt.utils import TorrtConfig
+from torrt.utils import GlobalParam, TorrtConfig
 
 
 @pytest.fixture(autouse=True)
 def tmp_config(tmp_path, monkeypatch):
     # Ensure fresh config for every test.
     monkeypatch.setattr('torrt.utils.TorrtConfig.USER_SETTINGS_FILE', tmp_path / 'torrt_conf.json')
+    # `dump_into` is thread local and would leak from a test using `--dump` into all the subsequent ones.
+    GlobalParam.set('dump_into', None)
     bootstrap()
 
 
