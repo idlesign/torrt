@@ -2,10 +2,8 @@ import pytest
 
 from torrt.utils import TrackerObjectsRegistry, get_torrent_from_url
 
-NEED_SKIP = False
 
-
-@pytest.mark.skipif(NEED_SKIP, reason='Temporary skip')
+@pytest.mark.live_trackers
 def test_trackers():
     tracker_objects = TrackerObjectsRegistry.get()
 

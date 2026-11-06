@@ -39,7 +39,7 @@ class DelugeRPC(BaseRPC):
 
         self.log_debug('Logging in ...')
 
-        data = self.build_request_payload('auth.login', [self.password])
+        data = self.build_request_payload("auth.login", params=[self.password])
 
         response = self.query_(data)
 
@@ -103,7 +103,7 @@ class DelugeRPC(BaseRPC):
         fields = ['name', 'comment', 'hash', 'save_path']
 
         result = self.query(self.build_request_payload(
-            'webapi.get_torrents',  [hashes, fields]))
+            "webapi.get_torrents", params=[hashes, fields]))
 
         for torrent_info in result['torrents']:
             self.normalize_field_names(torrent_info)
@@ -116,12 +116,12 @@ class DelugeRPC(BaseRPC):
 
         return self.query(
             self.build_request_payload(
-                'webapi.add_torrent', [torrent_dump, {'download_location': download_to or None}]
+                "webapi.add_torrent", params=[torrent_dump, {"download_location": download_to or None}]
             )
         )
 
     def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:
-        return self.query(self.build_request_payload('webapi.remove_torrent', [hash_str, with_data]))
+        return self.query(self.build_request_payload("webapi.remove_torrent", params=[hash_str, with_data]))
 
     def method_get_version(self) -> str:
         return self.query(self.build_request_payload('webapi.get_api_version'))

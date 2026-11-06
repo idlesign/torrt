@@ -19,7 +19,7 @@ $ ma up --tool
 Now you are ready to develop. Run tests with
 
 ```shell
-$ma tests
+$ ma tests
 ```
 
 Check code style before pull request:

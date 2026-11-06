@@ -1,5 +1,5 @@
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import urlencode, urljoin
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
@@ -68,23 +68,11 @@ class UTorrentRPC(BaseRPC):
         return document
 
     def get_request_url(self, params: dict) -> str:
+        """Build a request URL with encoded query values and the current CSRF token."""
+        query_params = [("token", self.csrf_token)]
+        query_params.extend((name, value) for name, value in params.items() if value is not None)
 
-        rest = []
-        def join(chunk): '&'.join(chunk)
-
-        for param_name, param_val in params.items():
-
-            if param_val is None:
-                continue
-
-            val = param_val
-
-            if isinstance(param_val, list):
-                val = join(param_val)
-
-            rest.append(f'{param_name}={val}')
-
-        return f'{self.url}?token={self.csrf_token}&{join(rest)}'
+        return f"{self.url}?{urlencode(query_params, doseq=True)}"
 
     def query(self, data: dict, *, files: dict | None = None) -> dict:
 

@@ -141,9 +141,31 @@ class BaseTracker(WithSettings):
         :param string: String, describing torrent. E.g. URL from torrent comment.
 
         """
+
+        if not isinstance(string, str) or not string:
+            return False
+
+        try:
+            parsed_url = urlparse(string)
+            hostname = parsed_url.hostname
+
+            if (
+                parsed_url.scheme not in ("http", "https")
+                or not hostname
+                or parsed_url.username is not None
+                or parsed_url.port == 0
+            ):
+                # maybe forgery
+                return False
+
+        except ValueError:
+            return False
+
         for domain in chain([cls.alias], cls.mirrors):
-            if domain in string:
+
+            if domain and hostname in (domain.lower(), f"www.{domain.lower()}"):
                 return True
+
         return False
 
     @classmethod
@@ -372,6 +394,11 @@ class GenericTracker(BaseTracker):
         :param last_updated: torrent last updated datetime
 
         """
+
+        if not self.can_handle(url):
+            self.log_warning("Unsupported tracker page URL")
+            return None
+
         download_link = self.get_download_link(url)
 
         if not download_link:
@@ -506,6 +533,12 @@ class GenericPrivateTracker(GenericPublicTracker):
     def login(self, domain: str) -> bool:
         """Implements tracker login procedure. Returns success bool."""
 
+        domain_url = f"https://{domain}/"
+
+        if not self.can_handle(domain_url) or urlparse(domain_url).netloc != domain:
+            self.log_warning("Unsupported tracker login domain")
+            return False
+
         login_url = self.login_url % {'domain': domain}
 
         self.log_debug(f'Trying to login at {login_url} ...')
@@ -551,6 +584,8 @@ class GenericPrivateTracker(GenericPublicTracker):
                 self.query_string = parsed_qs[self.auth_qs_param_name][0]
 
             self.cookies = response.cookies
+            self._torrent_page = None
+            self._torrent_page_url = ""
 
             # Save auth info to config.
             self.save_settings()

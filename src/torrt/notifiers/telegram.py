@@ -20,6 +20,7 @@ class TelegramNotifier(BaseNotifier):
             silence_exceptions=True,
             dump_fname_tpl=f'%(ts)s_{self.__class__.__name__}.json',
             json=True,
+            sensitive_values=(token,),
         )
         super().__init__()
 

@@ -74,6 +74,10 @@ packages = ["src/torrt"]
 packages = ["src/"]
 
 [tool.pytest.ini_options]
+addopts = "-m 'not live_trackers'"
+markers = [
+    "live_trackers: explicit checks against real torrent tracker websites",
+]
 testpaths = [
     "tests",
 ]

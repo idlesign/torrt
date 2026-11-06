@@ -27,14 +27,18 @@ class TelegramBot(BaseBot):
     alias: str = 'telegram'
     url: str = 'https://api.telegram.org/bot'
 
-    def __init__(self, token: str, *, allowed_users: str = ''):
+    def __init__(self, token: str, *, allowed_users: str = "") -> None:
         """
         :param token: str Telegram's bot token
-        :param allowed_users: comma-joined list of users allowed to add new torrents.
+        :param allowed_users: comma-joined list of users allowed to manage torrents.
 
         """
         self.token = token
         self.allowed_users = allowed_users or ''
+        self._allowed_usernames = frozenset(
+            name.strip().removeprefix("@").lower()
+            for name in self.allowed_users.split(",") if name.strip()
+        )
 
         if not telegram:
             raise BotRegistrationFailed('You have not installed python-telegram-bot library.')
@@ -44,9 +48,18 @@ class TelegramBot(BaseBot):
         self.dispatcher = self.updater.dispatcher
 
         if self.allowed_users:
-            self.handler_kwargs = {'filters': Filters.user(username=self.allowed_users.split(','))}
+            self.handler_kwargs = {"filters": Filters.user(username=list(self._allowed_usernames))}
 
         super().__init__()
+
+    def is_allowed_user(self, update: "Update") -> bool:
+        """Check the actual sender, including users clicking shared group buttons."""
+
+        if not self.allowed_users:
+            return True
+
+        user = update.effective_user
+        return bool(user and user.username and user.username.lower() in self._allowed_usernames)
 
     def test_configuration(self) -> bool:
         return telegram and bool(self.updater)
@@ -91,8 +104,20 @@ class TelegramBot(BaseBot):
         add_handler(CommandHandler('remove', self.command_remove_torrents, **kwargs))
         add_handler(CommandHandler('help', self.command_help, **kwargs))
 
-    def handle_callbacks(self, update: 'Update', context: 'CallbackContext'):
+    def handle_callbacks(self, update: "Update", context: "CallbackContext") -> None:
         """Handler to process all callbacks from buttons"""
+
+        query = update.callback_query
+
+        if not self.is_allowed_user(update):
+
+            if query:
+                query.answer("Access denied.", show_alert=True)
+
+            return
+
+        if not query or not isinstance(query.data, str):
+            return
 
         handlers = {
             'add_torrent': self.handle_ask_url,
@@ -107,7 +132,10 @@ class TelegramBot(BaseBot):
         elif update.callback_query.data.startswith('hash:'):
             self.handle_remove_torrents(update, context)
 
-    def handle_ask_url(self, update: 'Update', context: 'CallbackContext'):
+    def handle_ask_url(self, update: "Update", context: "CallbackContext") -> int:
+
+        if not self.is_allowed_user(update):
+            return ConversationHandler.END
 
         message = update.callback_query.message
         message.reply_text(
@@ -116,7 +144,10 @@ class TelegramBot(BaseBot):
         )
         return self.URL
 
-    def handle_process_url(self, update: 'Update', context: 'CallbackContext'):
+    def handle_process_url(self, update: "Update", context: "CallbackContext") -> int:
+
+        if not self.is_allowed_user(update):
+            return ConversationHandler.END
 
         torrent_url = update.message.text
         torrent_data = get_torrent_from_url(torrent_url)
@@ -158,7 +189,10 @@ class TelegramBot(BaseBot):
 
         return self.PATH
 
-    def handle_ask_download_path(self, update: 'Update', context: 'CallbackContext'):
+    def handle_ask_download_path(self, update: "Update", context: "CallbackContext") -> int:
+
+        if not self.is_allowed_user(update):
+            return ConversationHandler.END
 
         torrent_url = context.user_data.get('url')
 
@@ -204,7 +238,7 @@ class TelegramBot(BaseBot):
 
         return ConversationHandler.END
 
-    def handle_remove_torrents(self, update: 'Update', context: 'CallbackContext'):
+    def handle_remove_torrents(self, update: "Update", context: "CallbackContext") -> None:
         """
         Handler for torrent remove action.
         data is colon-joined string which is contains:
@@ -213,6 +247,10 @@ class TelegramBot(BaseBot):
         3. 0|1 - optional attribute (with_data) responsible for data removal from RPC
         For example 'hash:1234567890' or 'hash:1234567890:0'
         """
+
+        if not self.is_allowed_user(update):
+            return
+
         message = update.callback_query.message
         data = update.callback_query.data
         split_data = data.split(':')[1:]
@@ -256,8 +294,11 @@ class TelegramBot(BaseBot):
 
         return self.URL
 
-    def command_add_torrent(self, update: 'Update', context: 'CallbackContext'):
+    def command_add_torrent(self, update: "Update", context: "CallbackContext") -> None:
         """Stand-alone handler to add torrent"""
+
+        if not self.is_allowed_user(update):
+            return
 
         torrent_url = update.message.text.removeprefix('/add ')
 
@@ -286,8 +327,16 @@ class TelegramBot(BaseBot):
         else:
             context.bot.send_message(chat_id, text='Unable to register the torrent.')
 
-    def command_list_torrents(self, update: 'Update', context: 'CallbackContext'):
+    def command_list_torrents(self, update: "Update", context: "CallbackContext") -> None:
         """Command to list all monitored torrents"""
+
+        if not self.is_allowed_user(update):
+            return
+
+        message = update.effective_message
+
+        if message is None:
+            return
 
         torrents = []
 
@@ -298,15 +347,22 @@ class TelegramBot(BaseBot):
             else:
                 torrents.append(f"{idx}. {torrent['name']}")
 
-        message = update.callback_query.message
         if torrents:
             message.reply_text('\n\n'.join(torrents))
 
         else:
             message.reply_text('No torrents yet.')
 
-    def command_remove_torrents(self, update: 'Update', context: 'CallbackContext'):
+    def command_remove_torrents(self, update: "Update", context: "CallbackContext") -> None:
         """Command to remove torrent"""
+
+        if not self.is_allowed_user(update):
+            return
+
+        message = update.effective_message
+
+        if message is None:
+            return
 
         buttons = [
             [
@@ -318,7 +374,6 @@ class TelegramBot(BaseBot):
             for torrent in get_registered_torrents().values()
         ]
 
-        message = update.callback_query.message
         if not buttons:
             message.reply_text('No torrents yet.')
             return

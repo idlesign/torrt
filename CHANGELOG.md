@@ -1,7 +1,16 @@
 # torrt changelog
 
 ### Unreleased
+
 * ** qBittorrent: fix login failure against qBittorrent 5.x (204 empty-body reply).
+* ** Trackers: reject foreign page and login domains before using tracker credentials.
+* ** Telegram bot: enforce allowed users for buttons and conversation handlers.
+* ** Core: save updated torrent registrations before sending notifications.
+* ** Deluge: pass RPC parameters by name to restore login and torrent operations.
+* ** uTorrent: correctly encode request parameters, repeated values and download paths.
+* ** Private trackers: reload torrent pages after successful login.
+* ** Telegram bot: fix /list and /remove commands for messages and buttons.
+* ** Telegram notifier: redact the bot token from HTTP diagnostics and notification errors.
 
 ### v1.2.0 [2026-05-09]
 * ++ qBittorrent: preserve torrent category on update.

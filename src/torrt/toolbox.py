@@ -367,11 +367,13 @@ def walk(*, forced: bool = False, silent: bool = False, remove_outdated: bool = 
 
             new_cfg['torrents'] = cfg['torrents']
 
-            for _, notifier in iter_notifiers():
-                notifier.send(updated)
-
         # Save updated torrents data into config.
         config.update(new_cfg)
+
+        if updated:
+
+            for _, notifier in iter_notifiers():
+                notifier.send(updated)
 
         LOGGER.info('Torrent walk is finished')
 

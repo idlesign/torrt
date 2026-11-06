@@ -10,6 +10,7 @@ from pathlib import Path
 from pkgutil import iter_modules
 from time import time
 from typing import TYPE_CHECKING, Any, ClassVar, Optional
+from urllib.parse import quote, quote_plus
 
 from bs4 import BeautifulSoup
 from requests import RequestException, Response, Session
@@ -47,7 +48,8 @@ class HttpClient:
             dump_fname_tpl: str = '%(ts)s.txt',
             json: bool = False,
             tunnel: bool = True,
-    ):
+            sensitive_values: tuple[str, ...] = (),
+    ) -> None:
         session = Session()
 
         session.headers.update({
@@ -61,6 +63,20 @@ class HttpClient:
         self.last_error: str = ''
         self.last_response: Response | None = None
         self.tunnel = tunnel
+        self.sensitive_values = tuple(value for value in sensitive_values if value)
+
+    def redact_sensitive_data(self, text: str) -> str:
+        """Remove configured secrets and their URL-encoded forms from diagnostics."""
+        variants = {
+            variant
+            for value in self.sensitive_values
+            for variant in (value, quote(value, safe=""), quote_plus(value))
+        }
+
+        for value in sorted(variants, key=len, reverse=True):
+            text = text.replace(value, "[REDACTED]")
+
+        return text
 
     def request(
             self,
@@ -74,7 +90,7 @@ class HttpClient:
             json: bool | None = None,
             silence_exceptions: bool | None = None,
             timeout: int = 0,
-            **kwargs
+            **kwargs: Any,
     ) -> Response | dict | None:
         """
 
@@ -90,7 +106,7 @@ class HttpClient:
         :param kwargs:
 
         """
-        LOGGER.debug(f'Fetching {url} ...')
+        LOGGER.debug("Fetching %s ...", self.redact_sensitive_data(url))
 
         headers = {**(headers or {})}
 
@@ -130,10 +146,10 @@ class HttpClient:
 
             self.last_response = response
 
-        except RequestException as e:
+        except RequestException as error:
 
-            self.last_error = f'{e}'
-            LOGGER.warning(f"Failed to get response from `{url}`: {e}")
+            self.last_error = self.redact_sensitive_data(f"{error}")
+            LOGGER.warning("Failed to get response from `%s`: %s", self.redact_sensitive_data(url), self.last_error)
 
             if silence_exceptions is None:
                 silence_exceptions = self.silence_exceptions
@@ -729,11 +745,17 @@ class ObjectsRegistry:
         :param string:
 
         """
+
+        if not isinstance(string, str):
+            return None
+
         for name, obj in self._items.items():
             can_handle_method = getattr(obj, 'can_handle', None)
 
-            if can_handle_method and can_handle_method(string):
-                return obj
+            if callable(can_handle_method):
+
+                if can_handle_method(string):
+                    return obj
 
             elif name in string:
                 return obj
