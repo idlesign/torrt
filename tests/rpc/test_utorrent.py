@@ -6,6 +6,7 @@ import pytest
 from requests import ConnectionError
 from responses import RequestsMock
 
+from torrt.base_rpc import TorrentFile, TorrentStatus
 from torrt.rpc.utorrent import UTorrentRPC, UTorrentRPCException
 from torrt.utils import TorrentData
 
@@ -117,3 +118,99 @@ def test_login_without_token(response_mock: Callable, utorrent: UTorrentRPC) -> 
             utorrent.method_get_version()
 
         assert not utorrent.logged_in
+
+
+def test_add_magnet(response_mock: Callable, utorrent: UTorrentRPC, magnet_torrent: TorrentData) -> None:
+    download_to = "/Загрузки/review & files"
+
+    with response_mock([], bypass=False) as mocked:
+        add_utorrent_responses(mocked, utorrent, {"build": 1})
+
+        assert utorrent.method_add_torrent(magnet_torrent, download_to=download_to) == {"build": 1}
+        request = mocked.calls[-1].request
+        assert request.method == "GET"
+        assert request.body is None
+        assert parse_qs(urlparse(request.url).query) == {
+            "token": ["review_csrf"], "action": ["add-url"], "s": [magnet_torrent.magnet], "path": [download_to],
+        }
+
+
+@pytest.mark.parametrize("present_hash, files, expected", [
+    pytest.param(None, [], None, id="absent"),
+    pytest.param("another_hash", [], None, id="wrong-hash"),
+    pytest.param(
+        "REVIEW_HASH", [], TorrentStatus(hash="review_hash", metadata_ready=False),
+        id="metadata-pending",
+    ),
+    pytest.param(
+        "REVIEW_HASH", [["Review/one.avi", 10, 0, 1]],
+        TorrentStatus(hash="review_hash", metadata_ready=True, files=(TorrentFile(index=0, name="Review/one.avi"),)),
+        id="metadata-ready",
+    ),
+])
+def test_get_torrent_status(
+    response_mock: Callable, utorrent: UTorrentRPC, present_hash: str | None, files: list[list],
+    expected: TorrentStatus | None,
+) -> None:
+    torrent_row = [None] * 27
+    torrent_row[0] = present_hash
+    torrent_row[2] = "Review"
+    torrent_row[26] = "/downloads"
+
+    with response_mock([], bypass=False) as mocked:
+        add_utorrent_responses(mocked, utorrent, {"torrents": [torrent_row] if present_hash else []})
+
+        if expected:
+            mocked.add("GET", utorrent.url, json={"files": ["REVIEW_HASH", files]})
+
+        status = utorrent.method_get_torrent_status("REVIEW_HASH")
+        assert type(status) is type(expected)
+        assert status == expected
+        assert len(mocked.calls) == (3 if expected else 2)
+
+        if expected:
+            assert parse_qs(urlparse(mocked.calls[-1].request.url).query) == {
+                "token": ["review_csrf"], "action": ["getfiles"], "hash": ["review_hash"],
+            }
+
+
+@pytest.mark.parametrize("files", [[], ["another_hash", []]])
+def test_get_torrent_status_rejects_unexpected_files(
+    response_mock: Callable, utorrent: UTorrentRPC, files: list,
+) -> None:
+    torrent_row = [None] * 27
+    torrent_row[0] = "review_hash"
+    torrent_row[2] = "Review"
+    torrent_row[26] = "/downloads"
+
+    with response_mock([], bypass=False) as mocked:
+        add_utorrent_responses(mocked, utorrent, {"torrents": [torrent_row]})
+        mocked.add("GET", utorrent.url, json={"files": files})
+
+        with pytest.raises(UTorrentRPCException, match="Unexpected torrent file response"):
+            utorrent.method_get_torrent_status("review_hash")
+
+
+@pytest.mark.parametrize("failure", ["rpc", "http", "network"])
+def test_add_magnet_errors(
+    response_mock: Callable, utorrent: UTorrentRPC, magnet_torrent: TorrentData, failure: str,
+) -> None:
+    error_message = "Review add failure"
+    utorrent.logged_in = True
+    utorrent.csrf_token = "review_csrf"
+
+    with response_mock([], bypass=False) as mocked:
+
+        if failure == "rpc":
+            mocked.add("GET", utorrent.url, json={"error": error_message})
+
+        elif failure == "http":
+            mocked.add("GET", utorrent.url, body=error_message, status=400)
+
+        else:
+            mocked.add("GET", utorrent.url, body=ConnectionError(error_message))
+
+        with pytest.raises(UTorrentRPCException, match=error_message):
+            utorrent.method_add_torrent(magnet_torrent)
+
+        assert len(mocked.calls) == 1

@@ -28,8 +28,11 @@ Those are **torrt** console application commands:
 
 ## Update procedure
 
-* `walk` — Walks through registered torrents and performs automatic updates
+* `walk` — Continues pending magnet operations and checks registered torrents for updates
 * `set_walk_interval` — Sets an interval *in hours* between consecutive torrent updates checks
+* `set_prefer_magnet true|false` — Prefers magnet links extracted from tracker pages (disabled by default)
+
+See [Magnet links](025_magnets.md) for recovery and file selection details.
 
 ## Bots configuration and run
 

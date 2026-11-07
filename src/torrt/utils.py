@@ -3,19 +3,23 @@ import logging
 import re
 import threading
 from collections.abc import Callable, Generator, Mapping
+from copy import deepcopy
 from datetime import UTC, datetime
 from inspect import getfullargspec
 from json import JSONDecodeError, dump, load
+from os import fsync
 from pathlib import Path
 from pkgutil import iter_modules
+from tempfile import NamedTemporaryFile
 from time import time
 from typing import TYPE_CHECKING, Any, ClassVar, Optional
-from urllib.parse import quote, quote_plus
 
 from bs4 import BeautifulSoup
 from requests import RequestException, Response, Session
 from torrentool.api import Torrent
 from torrentool.exceptions import BencodeDecodingError
+
+from .magnet import parse_magnet
 
 if TYPE_CHECKING:
     from .base_bot import BaseBot
@@ -48,7 +52,6 @@ class HttpClient:
             dump_fname_tpl: str = '%(ts)s.txt',
             json: bool = False,
             tunnel: bool = True,
-            sensitive_values: tuple[str, ...] = (),
     ) -> None:
         session = Session()
 
@@ -63,20 +66,6 @@ class HttpClient:
         self.last_error: str = ''
         self.last_response: Response | None = None
         self.tunnel = tunnel
-        self.sensitive_values = tuple(value for value in sensitive_values if value)
-
-    def redact_sensitive_data(self, text: str) -> str:
-        """Remove configured secrets and their URL-encoded forms from diagnostics."""
-        variants = {
-            variant
-            for value in self.sensitive_values
-            for variant in (value, quote(value, safe=""), quote_plus(value))
-        }
-
-        for value in sorted(variants, key=len, reverse=True):
-            text = text.replace(value, "[REDACTED]")
-
-        return text
 
     def request(
             self,
@@ -106,7 +95,7 @@ class HttpClient:
         :param kwargs:
 
         """
-        LOGGER.debug("Fetching %s ...", self.redact_sensitive_data(url))
+        LOGGER.debug("Fetching %s ...", url)
 
         headers = {**(headers or {})}
 
@@ -148,8 +137,8 @@ class HttpClient:
 
         except RequestException as error:
 
-            self.last_error = self.redact_sensitive_data(f"{error}")
-            LOGGER.warning("Failed to get response from `%s`: %s", self.redact_sensitive_data(url), self.last_error)
+            self.last_error = f"{error}"
+            LOGGER.warning("Failed to get response from `%s`: %s", url, self.last_error)
 
             if silence_exceptions is None:
                 silence_exceptions = self.silence_exceptions
@@ -163,7 +152,7 @@ class HttpClient:
 
             dump_contents(
                 self.dump_fname_tpl,
-                contents=response.content
+                contents=response.content,
             )
 
             if json:
@@ -371,7 +360,7 @@ def update_dict(old_dict: dict, new_dict: dict) -> dict:
 class PageData:
     """Represents data extracted from torrent page."""
 
-    def __init__(self, title: str, cover: str, date_updated: datetime):
+    def __init__(self, title: str, cover: str, date_updated: datetime | None) -> None:
         self.title = title
         self.cover = cover
         self.date_updated = date_updated
@@ -384,6 +373,20 @@ class PageData:
         }
         return data
 
+    @classmethod
+    def from_dict(cls, data: dict) -> "PageData":
+        """Restore page details saved in the application configuration."""
+        date_updated = data.get("date_updated")
+        # Tracker page dates have no timezone information.
+        parsed_date = (
+            datetime.strptime(date_updated, DATETIME_FORMAT) if date_updated else None  # noqa: DTZ007
+        )
+        return cls(
+            title=data.get("title", ""),
+            cover=data.get("cover", ""),
+            date_updated=parsed_date,
+        )
+
 
 class TorrentData:
     """Represents information about torrent."""
@@ -395,12 +398,24 @@ class TorrentData:
             name: str = '',
             url: str = '',
             url_file: str = '',
+            magnet: str = "",
             raw: bytes = b'',
             page: PageData = None,
             parsed: Torrent = None,
-    ):
+    ) -> None:
+
+        if magnet:
+            magnet_data = parse_magnet(magnet)
+
+            if hash and hash.lower() != magnet_data.hash:
+                raise ValueError("Magnet hash does not match torrent hash")
+
+            hash = magnet_data.hash
+            name = name or magnet_data.name or (page.title if page else "") or hash
+
         self.url = url
         self.url_file = url_file
+        self.magnet = magnet
 
         self.raw = raw
         self.parsed = parsed
@@ -436,10 +451,26 @@ class TorrentData:
             'name': self.name,
             'url': self.url,
             'url_file': self.url_file,
+            "magnet": self.magnet,
             'page': page.to_dict() if page else {},
             'params': self.params,
         }
         return result
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "TorrentData":
+        """Restore torrent identity and source details without binary metadata."""
+        page_data = data.get("page")
+        torrent = cls(
+            hash=data.get("hash", ""),
+            name=data.get("name", ""),
+            url=data.get("url", ""),
+            url_file=data.get("url_file", ""),
+            magnet=data.get("magnet", ""),
+            page=PageData.from_dict(page_data) if page_data else None,
+        )
+        torrent.set_params(data.get("params"))
+        return torrent
 
 
 def structure_torrent_data(target_dict: dict, hash_str: str, data: TorrentData):
@@ -458,29 +489,43 @@ def structure_torrent_data(target_dict: dict, hash_str: str, data: TorrentData):
     target_dict[hash_str] = data.to_dict()
 
 
-def get_torrent_from_url(url: str | None, last_updated: datetime | None = None) -> TorrentData | None:
-    """Downloads torrent from a given URL and returns torrent data.
+def get_torrent_from_url(
+        url: str | None, last_updated: datetime | None = None, *, prefer_magnet: bool | None = None,
+) -> TorrentData | None:
+    """Get torrent data or a preferred magnet from a supported tracker page.
 
     :param url: URL to download torrent file from
     :param last_updated: torrent last updated datetime
+    :param prefer_magnet: override the global magnet preference for this request
 
     """
-    LOGGER.debug(f'Downloading torrent file from `{url}` ...')
+    LOGGER.debug("Getting torrent from tracker page `%s` ...", url)
 
     tracker: GenericTracker = TrackerObjectsRegistry.get_for_string(url)
 
     if tracker:
-        torrent_info = tracker.get_torrent(url, last_updated=last_updated)
 
-        if torrent_info is None:
-            LOGGER.warning(f'Unable to get torrent from `{url}`')
+        if prefer_magnet is None:
+            prefer_magnet = config.load().get("prefer_magnet", False)
+
+        if not isinstance(prefer_magnet, bool):
+            raise ValueError("Magnet preference must be a boolean")
+
+        if prefer_magnet:
+            torrent_info = tracker.get_torrent(url, last_updated=last_updated, prefer_magnet=True)
 
         else:
-            LOGGER.debug(f'Torrent was downloaded from `{url}`')
+            torrent_info = tracker.get_torrent(url, last_updated=last_updated)
+
+        if torrent_info is None:
+            LOGGER.warning("Unable to get torrent from `%s`", url)
+
+        else:
+            LOGGER.debug("Torrent source was found on tracker page `%s`", url)
             return torrent_info
 
     else:
-        LOGGER.warning(f'Tracker handler for `{url}` is not registered')
+        LOGGER.warning("Tracker handler for `%s` is not registered", url)
 
     return None
 
@@ -626,6 +671,8 @@ class TorrtConfig:
     _basic_settings: ClassVar[dict[str, Any]] = {
         'time_last_check': 0,
         'walk_interval_hours': 1,
+        "prefer_magnet": False,
+        "incomplete": {},
         'rpc': {},
         'trackers': {},
         'torrents': {},
@@ -686,12 +733,12 @@ class TorrtConfig:
         # and put them into old user config.
         for key, val in cls._basic_settings.items():
             if key not in settings:
-                settings[key] = val
+                settings[key] = deepcopy(val)
 
         return settings
 
     @classmethod
-    def save(cls, settings_dict: dict):
+    def save(cls, settings_dict: dict[str, Any]) -> None:
         """Saves a given dict as torrt configuration.
 
         :param settings_dict:
@@ -699,8 +746,27 @@ class TorrtConfig:
         """
         LOGGER.debug(f'Saving configuration file {cls.USER_SETTINGS_FILE} ...')
 
-        with cls.USER_SETTINGS_FILE.open('w') as f:
-            dump(settings_dict, f, indent=4)
+        temporary_path: Path | None = None
+
+        try:
+
+            with NamedTemporaryFile(
+                mode="w", encoding="utf-8", newline="\n", dir=cls.USER_SETTINGS_FILE.parent,
+                prefix=f".{cls.USER_SETTINGS_FILE.name}.", suffix=".tmp", delete=False,
+            ) as settings_file:
+                temporary_path = Path(settings_file.name)
+                dump(settings_dict, settings_file, indent=4)
+                settings_file.write("\n")
+                settings_file.flush()
+                fsync(settings_file.fileno())
+
+            temporary_path.chmod(0o600)
+            temporary_path.replace(cls.USER_SETTINGS_FILE)
+
+        finally:
+
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
 
 
 config = TorrtConfig

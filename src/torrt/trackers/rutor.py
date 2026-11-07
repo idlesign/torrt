@@ -39,3 +39,7 @@ class RutorTracker(GenericPublicTracker):
         download_link = self.find_links(url, page_soup, definite=expected_link)
 
         return download_link or ''
+
+    def get_magnet_link(self, url: str) -> str:
+        """Find the magnet on the torrent details page."""
+        return self._find_magnet_link(url)

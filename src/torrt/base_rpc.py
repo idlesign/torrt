@@ -1,7 +1,21 @@
-from typing import Any, ClassVar
+from typing import Any, ClassVar, NamedTuple
 
+from .exceptions import TorrtRPCException
 from .utils import HttpClient, RPCClassesRegistry, RPCObjectsRegistry, TorrentData, WithSettings
 
+
+class TorrentFile(NamedTuple):
+    """Identify a file in the client's current torrent metadata."""
+
+    index: int
+    name: str
+
+class TorrentStatus(NamedTuple):
+    """Describe a client's torrent without requiring a local torrent file."""
+
+    hash: str
+    metadata_ready: bool
+    files: tuple[TorrentFile, ...] = ()
 
 class BaseRPC(WithSettings):
     """Base RPC class. All RPC classes should inherit from this."""
@@ -64,6 +78,19 @@ class BaseRPC(WithSettings):
 
         """
         raise NotImplementedError
+
+    def method_get_torrent_status(self, hash_str: str) -> TorrentStatus | None:
+        """Return metadata status, or None only when absence is confirmed.
+
+        Failed status queries must raise TorrtRPCException rather than report absence.
+        """
+        raise TorrtRPCException("Magnet readiness checks are not supported by this RPC")
+
+    def method_apply_file_exclusions(self, status: TorrentStatus, excluded_names: list[str]) -> None:
+        """Apply saved file exclusions using the supplied torrent metadata."""
+
+        if excluded_names:
+            raise TorrtRPCException("File exclusions are not supported by this RPC")
 
     def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:  # pragma: nocover
         """Removes torrent from torrent client using RPC.

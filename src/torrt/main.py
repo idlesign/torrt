@@ -3,8 +3,8 @@ import logging
 import sys
 from pathlib import Path
 
-from torrt import VERSION
-from torrt.toolbox import (
+from . import VERSION
+from .toolbox import (
     add_torrent_from_url,
     bootstrap,
     configure_bot,
@@ -17,12 +17,13 @@ from torrt.toolbox import (
     remove_notifier,
     remove_torrent,
     run_bots,
+    set_prefer_magnet,
     set_walk_interval,
     toggle_rpc,
     unregister_torrent,
     walk,
 )
-from torrt.utils import (
+from .utils import (
     LOGGER,
     GlobalParam,
     NotifierClassesRegistry,
@@ -129,6 +130,11 @@ def process_commands(arguments: list[str] | None = None) -> None:
     parser_set_interval.add_argument(
         'walk_interval', help='Interval *in hours* between consecutive torrent updates checks')
 
+    parser_prefer_magnet = subp_main.add_parser(
+        "set_prefer_magnet", help="Prefer extracted magnet links instead of downloading .torrent files",
+    )
+    parser_prefer_magnet.add_argument("enabled", choices=("true", "false"))
+
     parser_enable_rpc = subp_main.add_parser('enable_rpc', help='Enables RPC by its alias')
     parser_enable_rpc.add_argument('alias', help='Alias of RPC to enable')
 
@@ -232,11 +238,14 @@ def process_commands(arguments: list[str] | None = None) -> None:
         for notifier_alias, notifier_status in notifiers.items():
             LOGGER.info(f"{notifier_alias}\t status={notifier_status}")
 
-    elif args['command'] == 'walk':
-        walk(forced=args['forced'], silent=True)
+    elif args["command"] == "walk":
+        walk(forced=args["forced"], silent=True)
 
     elif args['command'] == 'set_walk_interval':
         set_walk_interval(args['walk_interval'])
+
+    elif args["command"] == "set_prefer_magnet":
+        set_prefer_magnet(enabled=args["enabled"] == "true")
 
     elif args['command'] == 'add_torrent':
         add_torrent_from_url(

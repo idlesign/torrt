@@ -201,8 +201,9 @@ def test_walk_does_not_notify_when_save_fails(
         walk(forced=True)
 
     assert len(failed_saves) == 1
-    assert set(failed_saves[0]["torrents"]) == {"new_0", "new_1"}
+    assert set(failed_saves[0]["torrents"]) == {"old_0", "old_1", "new_0"}
     environment.first.send.assert_not_called()
     environment.second.send.assert_not_called()
-    assert environment.rpc.method_add_torrent.call_count == 2
-    assert environment.rpc.method_remove_torrent.call_args_list == [call("old_0"), call("old_1")]
+    environment.rpc.method_add_torrent.assert_called_once()
+    environment.rpc.method_remove_torrent.assert_not_called()
+    assert TorrtConfig.load()["torrents"] == environment.initial["torrents"]

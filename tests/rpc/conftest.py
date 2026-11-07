@@ -31,3 +31,12 @@ def torrent_params():
             'mytorr/three.avi': {'name': 'mytorr/three.avi', 'exclude': True, 'priority': 0}
         }
     }
+
+
+@pytest.fixture
+def magnet_torrent() -> TorrentData:
+    return TorrentData(magnet=(
+        "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=Review%20%26%20Files"
+        "&tr=https%3A%2F%2Ftracker.example%2Fsecret_passkey%2Fannounce"
+        "&tr=udp%3A%2F%2Ftracker.example%3A80%2Fannounce"
+    ))

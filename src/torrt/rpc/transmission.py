@@ -1,6 +1,6 @@
 from typing import Any, ClassVar
 
-from ..base_rpc import BaseRPC
+from ..base_rpc import BaseRPC, TorrentFile, TorrentStatus
 from ..exceptions import TorrtRPCException
 from ..utils import TorrentData, base64encode
 
@@ -73,7 +73,7 @@ class TransmissionRPC(BaseRPC):
         json_data = self.query_(data)
 
         if json_data.get('result', '') != 'success':
-            raise TransmissionRPCException(json_data)
+            raise TransmissionRPCException(f"{json_data}")
 
         return json_data['arguments']
 
@@ -126,14 +126,15 @@ class TransmissionRPC(BaseRPC):
         return result['torrents']
 
     def method_add_torrent(self, torrent: TorrentData, *, download_to: str = '', params: dict | None = None) -> Any:
+        params_files = (params or {}).get("files")
 
-        args = {
-            'metainfo': base64encode(torrent.raw).decode(),
-        }
+        if torrent.magnet:
+            args = {"filename": torrent.magnet}
 
-        params_files = (params or {}).get('files')
+        else:
+            args = {"metainfo": base64encode(torrent.raw).decode()}
 
-        if params_files:
+        if params_files and not torrent.magnet:
             # Handle download exclusions.
             excluded_indices = []
             for idx, (filename, _) in enumerate(torrent.parsed.files):
@@ -147,7 +148,44 @@ class TransmissionRPC(BaseRPC):
         if download_to:
             args['download-dir'] = download_to
 
-        return self.query(self.build_request_payload('torrent-add', arguments=args))
+        return self.query(self.build_request_payload("torrent-add", arguments=args))
+
+    def method_get_torrent_status(self, hash_str: str) -> TorrentStatus | None:
+        """Check metadata readiness without waiting for peers or downloading metadata locally."""
+        normalized_hash = hash_str.lower()
+        arguments = {"ids": [normalized_hash], "fields": ["hashString", "metadataPercentComplete", "files"]}
+        result = self.query(self.build_request_payload("torrent-get", arguments=arguments))
+
+        for torrent_info in result["torrents"]:
+
+            if torrent_info["hashString"].lower() == normalized_hash:
+                files = tuple(
+                    TorrentFile(index=idx, name=file_info["name"])
+                    for idx, file_info in enumerate(torrent_info.get("files", []))
+                )
+                return TorrentStatus(
+                    hash=normalized_hash,
+                    metadata_ready=torrent_info.get("metadataPercentComplete", 0) >= 1,
+                    files=files,
+                )
+
+        return None
+
+    def method_apply_file_exclusions(self, status: TorrentStatus, excluded_names: list[str]) -> None:
+        """Resolve exclusions against already fetched metadata without another query."""
+
+        if not excluded_names:
+            return
+
+        if not status.metadata_ready:
+            raise TransmissionRPCException("Torrent metadata is not available for file exclusions")
+
+        excluded = set(excluded_names)
+        indices = [file_info.index for file_info in status.files if file_info.name in excluded]
+
+        if indices:
+            arguments = {"ids": [status.hash], "files-unwanted": indices}
+            self.query(self.build_request_payload("torrent-set", arguments=arguments))
 
     def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:
 

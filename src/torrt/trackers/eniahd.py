@@ -44,3 +44,7 @@ class EniaHDTracker(GenericPrivateTracker):
                 download_link = self.get_download_link(url)
 
         return download_link or ''
+
+    def get_magnet_link(self, url: str) -> str:
+        """Find the release magnet, authorizing when it is hidden from guests."""
+        return self._find_magnet_link(url)

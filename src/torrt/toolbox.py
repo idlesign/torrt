@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Optional
 from .base_bot import BotRegistrationFailed
 from .base_tracker import GenericPrivateTracker
 from .exceptions import TorrtException, TorrtRPCException
+from .incomplete import IncompleteOps
 from .utils import (
     DATETIME_FORMAT,
     BotClassesRegistry,
@@ -14,6 +15,7 @@ from .utils import (
     RPCClassesRegistry,
     TorrentData,
     TrackerClassesRegistry,
+    TrackerObjectsRegistry,
     config,
     configure_entity,
     get_iso_from_timestamp,
@@ -248,7 +250,7 @@ def unregister_torrent(hash_str: str):
     """
     LOGGER.debug(f'Unregistering `{hash_str}` torrent ...')
 
-    config.drop_section('torrents', hash_str)
+    IncompleteOps(config).cancel(hash_str)
 
 
 def add_torrent_from_url(url: str, *, download_to: str = '', params: dict | None = None):
@@ -259,15 +261,27 @@ def add_torrent_from_url(url: str, *, download_to: str = '', params: dict | None
     :param params: optional parameters to pass to RPC
 
     """
-    LOGGER.debug(f'Adding torrent from `{url}` ...')
+    LOGGER.debug("Adding torrent from `%s` ...", url)
 
     torrent_data = get_torrent_from_url(url)
 
     if torrent_data is None:
-        LOGGER.error(f'Unable to add torrent from `{url}`')
+        LOGGER.error("Unable to add torrent from `%s`", url)
         return
 
     torrent_data.set_params(params)
+
+    if torrent_data.magnet:
+        clients = {
+            alias: {"download_to": download_to, "params": params}
+            for alias, _ in iter_rpc()
+        }
+
+        if clients:
+            IncompleteOps(config).queue(torrent_data, clients)
+            check_incomplete_ops()
+
+        return
 
     for rpc_alias, rpc_object in iter_rpc():
         rpc_object.method_add_torrent(torrent_data, download_to=download_to, params=params)
@@ -284,6 +298,11 @@ def remove_torrent(hash_str: str, *, with_data: bool = False):
 
     """
     LOGGER.info(f'Removing torrent `{hash_str}` (with data = {with_data}) ...')
+    pending = IncompleteOps(config)
+
+    if pending.request_removal(hash_str, with_data=with_data):
+        pending.process(dict(iter_rpc()))
+        return
 
     for _, rpc_object in iter_rpc():
         LOGGER.info(f'Removing torrent using `{rpc_object.alias}` RPC ...')
@@ -299,6 +318,30 @@ def set_walk_interval(interval_hours: int):
 
     """
     config.update({'walk_interval_hours': int(interval_hours)})
+
+def set_prefer_magnet(*, enabled: bool) -> None:
+    """Prefer extracted magnet links for the CLI, bots and automatic updates."""
+
+    if not isinstance(enabled, bool):
+        raise ValueError("Magnet preference must be a boolean")
+
+    config.update({"prefer_magnet": enabled})
+
+def check_incomplete_ops(*, notify: bool = True) -> dict[str, dict]:
+    """Check unfinished magnet operations without scraping pages or waiting for peers."""
+
+    if not config.load()["incomplete"]:
+        return {}
+
+    clients = dict(iter_rpc())
+    updated = IncompleteOps(config).process(clients)
+
+    if notify and updated:
+
+        for _, notifier in iter_notifiers():
+            notifier.send(updated)
+
+    return updated
 
 
 def toggle_rpc(alias: str, *, enabled: bool = True):
@@ -319,7 +362,7 @@ def toggle_rpc(alias: str, *, enabled: bool = True):
         LOGGER.info(f'RPC `{alias}` class is not registered')
 
 
-def walk(*, forced: bool = False, silent: bool = False, remove_outdated: bool = True):
+def walk(*, forced: bool = False, silent: bool = False, remove_outdated: bool = True) -> None:
     """Performs updates check for the registered torrents.
 
     :param forced: flag not to count walk interval setting
@@ -330,6 +373,18 @@ def walk(*, forced: bool = False, silent: bool = False, remove_outdated: bool = 
     LOGGER.info('Torrent walk is triggered')
 
     now = int(time())
+    updated = {}
+
+    try:
+        updated = check_incomplete_ops(notify=False)
+
+    except TorrtException as error:
+
+        if not silent:
+            raise
+
+        LOGGER.error("Incomplete operations check failed: %s", error)
+
     cfg = config.load()
 
     next_time = cfg['time_last_check'] + (cfg['walk_interval_hours'] * 3600)
@@ -337,10 +392,12 @@ def walk(*, forced: bool = False, silent: bool = False, remove_outdated: bool = 
     if forced or now >= next_time:
         LOGGER.info('Torrent walk is started')
 
-        updated = {}
+        for tracker in TrackerObjectsRegistry.get().values():
+            tracker._torrent_page = None
+            tracker._torrent_page_url = ""
 
         try:
-            updated = update_torrents(cfg['torrents'], remove_outdated=remove_outdated)
+            updated.update(update_torrents(cfg['torrents'], remove_outdated=remove_outdated))
 
         except TorrtException as e:
             if not silent:
@@ -348,32 +405,7 @@ def walk(*, forced: bool = False, silent: bool = False, remove_outdated: bool = 
 
             LOGGER.error(f'Walk failed. Reason: {e}')
 
-        new_cfg = {
-            'time_last_check': now
-        }
-
-        if updated:
-
-            for old_hash, new_data in updated.items():
-
-                try:
-                    cfg['torrents'].pop(old_hash)
-
-                except KeyError:
-                    # May be already deleted by `update_torrents` if `remove_outdated` is used.
-                    pass
-
-                cfg['torrents'][new_data['hash']] = new_data
-
-            new_cfg['torrents'] = cfg['torrents']
-
-        # Save updated torrents data into config.
-        config.update(new_cfg)
-
-        if updated:
-
-            for _, notifier in iter_notifiers():
-                notifier.send(updated)
+        config.update({"time_last_check": now})
 
         LOGGER.info('Torrent walk is finished')
 
@@ -383,6 +415,11 @@ def walk(*, forced: bool = False, silent: bool = False, remove_outdated: bool = 
             f'till {get_iso_from_timestamp(next_time)} '
             f'(now {get_iso_from_timestamp(now)})'
         )
+
+    if updated:
+
+        for _, notifier in iter_notifiers():
+            notifier.send(updated)
 
 
 def update_torrents(torrents: dict[str, dict], *, remove_outdated: bool = True) -> dict[str, dict]:
@@ -394,10 +431,16 @@ def update_torrents(torrents: dict[str, dict], *, remove_outdated: bool = True) 
 
     """
     updated_by_hashes = {}
-    download_cache: dict[str, TorrentData] = {}
+    download_cache: dict[str, TorrentData | None] = {}
     hashes = list(torrents)
+    pending = IncompleteOps(config)
+    pending_hashes = pending.get_hashes()
+    clients = dict(iter_rpc())
+    torrents_by_hash: dict[str, dict[str, dict]] = {}
+    queued_keys: set[str] = set()
 
-    for _, rpc_object in iter_rpc():
+    # Discover every target before saving an operation spanning multiple clients.
+    for alias, rpc_object in clients.items():
 
         LOGGER.info(f'Getting torrents from `{rpc_object.alias}` ...')
         rpc_torrents = rpc_object.method_get_torrents(hashes)
@@ -406,59 +449,85 @@ def update_torrents(torrents: dict[str, dict], *, remove_outdated: bool = True) 
             LOGGER.info('  No relevant torrents found')
 
         for rpc_torrent in rpc_torrents:
-            LOGGER.info(f"  Processing `{rpc_torrent['name']}`...")
 
-            page_url = get_url_from_string(rpc_torrent['comment'])
-            if not page_url:
-                page_url = torrents[rpc_torrent['hash']].get('url', None) if torrents else None
+            if rpc_torrent["hash"] in torrents and rpc_torrent["hash"] not in pending_hashes:
+                torrents_by_hash.setdefault(rpc_torrent["hash"], {})[alias] = rpc_torrent
 
-            if not page_url:
-                LOGGER.warning(f"    Torrent `{rpc_torrent['name']}` has no link in comment. Skipped")
-                continue
+    for old_hash, targets in torrents_by_hash.items():
+        source_torrent = next(iter(targets.values()))
+        LOGGER.info("  Processing `%s`...", source_torrent["name"])
 
-            if page_url in download_cache:
-                tracker_torrent = download_cache[page_url]
+        page_url = get_url_from_string(source_torrent["comment"])
 
-            else:
-                raw_last_updated = torrents[rpc_torrent['hash']]['page'].get('date_updated')
-                last_updated = (
-                    datetime.strptime(raw_last_updated, DATETIME_FORMAT)  # noqa: DTZ007
-                    if raw_last_updated
-                    else None
-                )
-                tracker_torrent = get_torrent_from_url(page_url, last_updated)
-                download_cache[page_url] = tracker_torrent
+        if not page_url:
+            page_url = torrents[old_hash].get("url")
 
-            if tracker_torrent is None:
-                LOGGER.error(f'    Unable to get torrent from `{page_url}`')
-                continue
+        if not page_url:
+            LOGGER.warning("    Torrent %s has no tracker page URL. Skipped", old_hash)
+            continue
 
-            if rpc_torrent['hash'] == tracker_torrent.hash:
-                LOGGER.info('    No updates')
-                continue
+        if page_url in download_cache:
+            tracker_torrent = download_cache[page_url]
 
-            LOGGER.debug('    Update is available')
+        else:
+            raw_last_updated = torrents[old_hash].get("page", {}).get("date_updated")
+            # Keep stored tracker dates naive, just like dates extracted from pages.
+            last_updated = (
+                datetime.strptime(raw_last_updated, DATETIME_FORMAT) if raw_last_updated else None  # noqa: DTZ007
+            )
+            tracker_torrent = get_torrent_from_url(page_url, last_updated)
+            download_cache[page_url] = tracker_torrent
+
+        if tracker_torrent is None:
+            LOGGER.error("    Unable to get torrent from `%s`", page_url)
+            continue
+
+        if old_hash == tracker_torrent.hash:
+            LOGGER.info("    No updates")
+            continue
+
+        tracker_torrent.url = page_url
+
+        if tracker_torrent.magnet:
+            key = pending.queue(
+                tracker_torrent,
+                {
+                    alias: {"download_to": target["download_to"], "params": target.get("params")}
+                    for alias, target in targets.items()
+                },
+                old_hash=old_hash, remove_outdated=remove_outdated,
+            )
+            queued_keys.add(key)
+            continue
+
+        complete = True
+
+        for alias, target in targets.items():
+            rpc_object = clients[alias]
 
             try:
                 rpc_object.method_add_torrent(
                     tracker_torrent,
-                    download_to=rpc_torrent['download_to'],
-                    params=rpc_torrent.get('params', None)
+                    download_to=target["download_to"],
+                    params=target.get("params"),
                 )
-                tracker_torrent.url = page_url
-
-                LOGGER.info('    Torrent is updated')
-
-                structure_torrent_data(updated_by_hashes, rpc_torrent['hash'], tracker_torrent)
-
-            except TorrtRPCException as e:
-                LOGGER.error(f'    Unable to replace torrent: {e}')
-
-            else:
-                unregister_torrent(rpc_torrent['hash'])
+                register_torrent(tracker_torrent.hash, torrent_data=tracker_torrent)
 
                 if remove_outdated:
-                    rpc_object.method_remove_torrent(rpc_torrent['hash'])
+                    rpc_object.method_remove_torrent(old_hash)
+
+            except TorrtRPCException as e:
+                complete = False
+                LOGGER.error(f'    Unable to replace torrent: {e}')
+
+        if complete:
+            settings = config.load()
+            settings["torrents"].pop(old_hash, None)
+            config.save(settings)
+            structure_torrent_data(updated_by_hashes, old_hash, tracker_torrent)
+
+    # Existing operations were already checked at the start of the walk.
+    updated_by_hashes.update(pending.process(clients, keys=queued_keys))
 
     return updated_by_hashes
 

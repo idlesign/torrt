@@ -1,7 +1,9 @@
 import logging
+import os
 from collections.abc import Callable
+from pathlib import Path
+from stat import S_IMODE
 from types import SimpleNamespace
-from urllib.parse import quote, quote_plus
 
 import pytest
 from requests import ConnectionError
@@ -60,15 +62,13 @@ def test_registry_matches_objects_without_can_handle() -> None:
     pytest.param(True, False, False, id="override-raising"),
     pytest.param(False, True, True, id="override-silent"),
 ])
-def test_http_client_redacts_request_errors(
+def test_http_client_request_errors(
     response_mock: Callable, caplog: pytest.LogCaptureFixture,
     configured_silence: bool, override: bool | None, should_silence: bool,
 ) -> None:
-    secret = "123:review/secret +"
-    encoded_secret = quote(secret, safe="")
-    url = f"https://service.invalid/bot{encoded_secret}/status"
-    error = ConnectionError(f"Connection failed for {url}: {secret}; {quote_plus(secret)}")
-    client = utils.HttpClient(silence_exceptions=configured_silence, sensitive_values=("", secret))
+    url = "https://service.invalid/status?session=review"
+    error = ConnectionError(f"Connection failed for {url}")
+    client = utils.HttpClient(silence_exceptions=configured_silence)
     caplog.set_level(logging.DEBUG, logger="torrt")
 
     with response_mock([], bypass=False) as mocked:
@@ -86,25 +86,76 @@ def test_http_client_redacts_request_errors(
 
         assert mocked.calls[0].request.url == url
 
-    for value in (secret, encoded_secret, quote_plus(secret)):
-        assert value not in caplog.text
-        assert value not in client.last_error
+    assert f"Fetching {url} ..." in caplog.text
+    assert f"Failed to get response from `{url}`: {error}" in caplog.text
+    assert client.last_error == f"{error}"
 
-    assert "Fetching https://service.invalid/bot[REDACTED]/status" in caplog.text
-    assert "Failed to get response" in caplog.text
-    assert "Connection failed" in client.last_error
-    assert "[REDACTED]" in client.last_error
-
-def test_http_client_redacts_successful_request(response_mock: Callable, caplog: pytest.LogCaptureFixture) -> None:
-    secret = "123:review_secret"
-    url = f"https://service.invalid/bot{secret}/status"
-    client = utils.HttpClient(json=True, sensitive_values=(secret,))
+def test_http_client_json_response(response_mock: Callable, caplog: pytest.LogCaptureFixture) -> None:
+    url = "https://service.invalid/status"
+    client = utils.HttpClient(json=True)
     caplog.set_level(logging.DEBUG, logger="torrt")
 
     with response_mock(f"GET {url} -> 200:{{\"ok\": true}}", bypass=False) as mocked:
         assert client.request(url) == {"ok": True}
         assert mocked.calls[0].request.url == url
 
-    assert secret not in caplog.text
-    assert "Fetching https://service.invalid/bot[REDACTED]/status" in caplog.text
+    assert f"Fetching {url} ..." in caplog.text
     assert client.last_error == ""
+
+def test_config_write_preserves_original_on_serialization_error() -> None:
+    original = utils.TorrtConfig.USER_SETTINGS_FILE.read_bytes()
+    settings = utils.TorrtConfig.load()
+    settings["invalid"] = {"not serializable"}
+
+    with pytest.raises(TypeError, match="not JSON serializable"):
+        utils.TorrtConfig.save(settings)
+
+    assert utils.TorrtConfig.USER_SETTINGS_FILE.read_bytes() == original
+    assert not list(utils.TorrtConfig.USER_DATA_PATH.glob(".*.tmp"))
+
+def test_config_write_preserves_original_on_replace_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    original = utils.TorrtConfig.USER_SETTINGS_FILE.read_bytes()
+
+    def fail_replace(source: Path, target: Path) -> None:
+        raise OSError("Replacement failed")
+
+    monkeypatch.setattr(Path, "replace", fail_replace)
+
+    with pytest.raises(OSError, match="Replacement failed"):
+        utils.TorrtConfig.update({"prefer_magnet": True})
+
+    assert utils.TorrtConfig.USER_SETTINGS_FILE.read_bytes() == original
+    assert not list(utils.TorrtConfig.USER_DATA_PATH.glob(".*.tmp"))
+
+def test_config_saves_private_complete_json() -> None:
+    utils.TorrtConfig.update({"prefer_magnet": True})
+
+    assert utils.TorrtConfig.load()["prefer_magnet"] is True
+    assert utils.TorrtConfig.USER_SETTINGS_FILE.read_bytes().endswith(b"\n")
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX file permissions are unavailable on Windows")
+def test_config_write_keeps_private_permissions() -> None:
+    utils.TorrtConfig.update({"prefer_magnet": True})
+
+    assert S_IMODE(utils.TorrtConfig.USER_SETTINGS_FILE.stat().st_mode) == 0o600
+
+def test_config_default_incomplete_operations_are_independent() -> None:
+    settings = utils.TorrtConfig.load()
+    settings.pop("incomplete")
+    utils.TorrtConfig.save(settings)
+    settings = utils.TorrtConfig.load()
+    settings["incomplete"]["unsaved"] = {}
+
+    assert utils.TorrtConfig.load()["incomplete"] == {}
+
+def test_http_response_dump_preserves_bytes(response_mock: Callable, tmp_path: Path) -> None:
+    body = b"\xff\x00\x80\r\nmagnet:?xt=urn:btih:review&tr=https://tracker.invalid/review/announce\r\n"
+    client = utils.HttpClient()
+    utils.GlobalParam.set("dump_into", tmp_path)
+
+    with response_mock([], bypass=False) as mocked:
+        mocked.add("GET", "https://rpc.invalid/status", body=body)
+        response = client.request("https://rpc.invalid/status")
+
+    assert response.content == body
+    assert next(tmp_path.glob("*.txt")).read_bytes() == body

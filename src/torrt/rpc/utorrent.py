@@ -1,7 +1,7 @@
 from typing import Any
 from urllib.parse import urlencode, urljoin
 
-from ..base_rpc import BaseRPC
+from ..base_rpc import BaseRPC, TorrentFile, TorrentStatus
 from ..exceptions import TorrtRPCException
 from ..utils import TorrentData, make_soup
 
@@ -53,10 +53,10 @@ class UTorrentRPC(BaseRPC):
 
             self.logged_in = True
 
-        except Exception as e:
+        except Exception as error:
 
-            self.log_error(f'Failed to login using `{self.url}` RPC: {e}')
-            raise UTorrentRPCException(f'{e}') from e
+            self.log_error(f"Failed to login using `{self.url}` RPC: {error}")
+            raise UTorrentRPCException(f"{error}") from error
 
     def build_params(self, *, action: str = '', params: dict | None = None) -> dict:
 
@@ -93,13 +93,21 @@ class UTorrentRPC(BaseRPC):
             response = self.client.request(
                 url=url, auth=(self.user, self.password), **request_kwargs)
 
-            if self.client.last_response.status_code != 200:
-                raise UTorrentRPCException(response.text.strip())
+            if response is None:
+                raise UTorrentRPCException(self.client.last_error or "No response from uTorrent RPC")
 
-        except Exception as e:
+            http_response = self.client.last_response
 
-            self.log_error(f'Failed to query RPC `{url}`: {e}')
-            raise UTorrentRPCException(f'{e}') from e
+            if http_response.status_code != 200:
+                raise UTorrentRPCException(http_response.text.strip() or http_response.reason)
+
+            if error := response.get("error"):
+                raise UTorrentRPCException(f"{error}")
+
+        except Exception as error:
+
+            self.log_error(f"Failed to query RPC `{url}`: {error}")
+            raise UTorrentRPCException(f"{error}") from error
 
         return response
 
@@ -125,10 +133,32 @@ class UTorrentRPC(BaseRPC):
 
     def method_add_torrent(self, torrent: TorrentData, *, download_to: str = '', params: dict | None = None) -> Any:
 
+        if torrent.magnet:
+            parameters = {"s": torrent.magnet, "path": download_to or None}
+
+            return self.query(self.build_params(action="add-url", params=parameters))
+
         # NB: `download_to` is ignored, as existing API approach to it is crippled.
         file_data = {'torrent_file': ('from_torrt.torrent', torrent.raw)}
 
         return self.query(self.build_params(action='add-file', params={'path': download_to or None}), files=file_data)
+
+    def method_get_torrent_status(self, hash_str: str) -> TorrentStatus | None:
+        """Inspect the file list only after confirming the torrent exists in the client."""
+        normalized_hash = hash_str.lower()
+        torrents = self.method_get_torrents([normalized_hash])
+
+        if not torrents:
+            return None
+
+        result = self.query(self.build_params(action="getfiles", params={"hash": normalized_hash}))
+        response_files = result.get("files", [])
+
+        if len(response_files) != 2 or response_files[0].lower() != normalized_hash:
+            raise UTorrentRPCException("Unexpected torrent file response")
+
+        files = tuple(TorrentFile(index=idx, name=file_info[0]) for idx, file_info in enumerate(response_files[1]))
+        return TorrentStatus(hash=normalized_hash, metadata_ready=bool(files), files=files)
 
     def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:
 

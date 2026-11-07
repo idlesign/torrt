@@ -1,7 +1,7 @@
 from typing import Any, ClassVar
 from urllib.parse import urljoin
 
-from ..base_rpc import BaseRPC
+from ..base_rpc import BaseRPC, TorrentFile, TorrentStatus
 from ..exceptions import TorrtRPCException
 from ..utils import Response, TorrentData
 
@@ -19,6 +19,7 @@ class QBittorrentRPC(BaseRPC):
         'add_torrent': 'torrents/add',
         'rem_torrent': 'torrents/delete',
         'get_torrent': 'torrents/properties',
+        "get_files": "torrents/files",
         'get_torrents': 'torrents/info'
     }
 
@@ -61,10 +62,10 @@ class QBittorrentRPC(BaseRPC):
 
             self.logged_in = True
 
-        except Exception as e:
+        except Exception as error:
 
-            self.log_error(f'Failed to login using `{self.url}` RPC: {e}')
-            raise QBittorrentRPCException(f'{e}') from e
+            self.log_error(f"Failed to login using `{self.url}` RPC: {error}")
+            raise QBittorrentRPCException(f"{error}") from error
 
     @staticmethod
     def build_params(action: str = '', params: dict | None = None) -> dict:
@@ -100,6 +101,9 @@ class QBittorrentRPC(BaseRPC):
             if 'data' in data:
                 request_kwargs['data'] = data['data']
 
+            if "params" in data:
+                request_kwargs["params"] = data["params"]
+
             if files is not None:
                 request_kwargs['files'] = files
 
@@ -114,15 +118,15 @@ class QBittorrentRPC(BaseRPC):
                 if not (200 <= response.status_code < 300):
                     raise QBittorrentRPCException(response.text.strip() or response.reason)
 
-            except Exception as e:
+            except Exception as error:
 
-                self.log_error(f'Failed to query RPC `{url}`: {e}')
-                raise QBittorrentRPCException(f'{e}') from e
+                self.log_error(f"Failed to query RPC `{url}`: {error}")
+                raise QBittorrentRPCException(f"{error}") from error
 
-        except Exception as e:
+        except Exception as error:
 
-            self.log_error(f'Failed to query RPC `{action}`: {e}')
-            raise QBittorrentRPCException(f'{e}') from e
+            self.log_error(f"Failed to query RPC `{action}`: {error}")
+            raise QBittorrentRPCException(f"{error}") from error
 
         return response
 
@@ -176,15 +180,41 @@ class QBittorrentRPC(BaseRPC):
         return torrents_info
 
     def method_add_torrent(self, torrent: TorrentData, *, download_to: str = '', params: dict | None = None) -> Any:
+        params = {"data": {**(params or {}), **torrent.params}}
 
-        file_data = {'torrents': torrent.raw}
+        if torrent.magnet:
+            params["data"]["urls"] = torrent.magnet
+            file_data = None
 
-        params = {'data': {**(params or {}), **torrent.params}}
+        else:
+            file_data = {"torrents": torrent.raw}
 
         if download_to is not None:
             params['data']['savepath'] = download_to or None
 
-        return self.auth_query(self.build_params(action='add_torrent', params=params), files=file_data)
+        response = self.auth_query(self.build_params(action="add_torrent", params=params), files=file_data)
+
+        if torrent.magnet and response.text.strip() == "Fails.":
+            raise QBittorrentRPCException("qBittorrent did not accept the magnet link")
+
+        return response
+
+    def method_get_torrent_status(self, hash_str: str) -> TorrentStatus | None:
+        """Use the client's file list to distinguish a magnet from a loaded torrent."""
+        normalized_hash = hash_str.lower()
+        torrents = self.auth_query_json(self.build_params("get_torrents", {"params": {"hashes": normalized_hash}}))
+
+        for torrent_info in torrents:
+
+            if torrent_info["hash"].lower() == normalized_hash:
+                result = self.auth_query_json(self.build_params("get_files", {"data": {"hash": normalized_hash}}))
+                files = tuple(
+                    TorrentFile(index=file_info.get("index", idx), name=file_info["name"])
+                    for idx, file_info in enumerate(result)
+                )
+                return TorrentStatus(hash=normalized_hash, metadata_ready=bool(files), files=files)
+
+        return None
 
     def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:
 

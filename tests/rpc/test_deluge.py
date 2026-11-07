@@ -7,6 +7,7 @@ import pytest
 from requests import ConnectionError
 from responses import RequestsMock
 
+from torrt.base_rpc import TorrentFile, TorrentStatus
 from torrt.rpc.deluge import DelugeRPC, DelugeRPCException
 from torrt.utils import TorrentData
 
@@ -111,3 +112,56 @@ def test_rpc_error(response_mock: Callable, deluge: DelugeRPC) -> None:
 
         with pytest.raises(DelugeRPCException, match="Review RPC error"):
             deluge.method_get_version()
+
+
+def test_add_magnet(response_mock: Callable, deluge: DelugeRPC, magnet_torrent: TorrentData) -> None:
+
+    with response_mock([], bypass=False) as mocked:
+        add_deluge_responses(mocked, deluge, magnet_torrent.hash)
+
+        assert deluge.method_add_torrent(magnet_torrent, download_to="/downloads") == magnet_torrent.hash
+        assert json.loads(mocked.calls[-1].request.body) == {
+            "id": 1, "method": "webapi.add_torrent",
+            "params": [magnet_torrent.magnet, {"download_location": "/downloads"}],
+        }
+
+
+@pytest.mark.parametrize("result", [None, False])
+def test_add_magnet_rejected(
+    response_mock: Callable, deluge: DelugeRPC, magnet_torrent: TorrentData, result: Any,
+) -> None:
+
+    with response_mock([], bypass=False) as mocked:
+        add_deluge_responses(mocked, deluge, result)
+
+        with pytest.raises(DelugeRPCException, match="did not accept the magnet"):
+            deluge.method_add_torrent(magnet_torrent)
+
+
+
+@pytest.mark.parametrize("torrents, expected", [
+    pytest.param([], None, id="absent"),
+    pytest.param([{"hash": "another_hash"}], None, id="wrong-hash"),
+    pytest.param(
+        [{"hash": "REVIEW_HASH", "files": []}],
+        TorrentStatus(hash="review_hash", metadata_ready=False), id="metadata-pending",
+    ),
+    pytest.param(
+        [{"hash": "REVIEW_HASH", "files": [{"index": 3, "path": "Review/one.avi"}]}],
+        TorrentStatus(hash="review_hash", metadata_ready=True, files=(TorrentFile(index=3, name="Review/one.avi"),)),
+        id="metadata-ready",
+    ),
+])
+def test_get_torrent_status(
+    response_mock: Callable, deluge: DelugeRPC, torrents: list[dict], expected: TorrentStatus | None,
+) -> None:
+
+    with response_mock([], bypass=False) as mocked:
+        add_deluge_responses(mocked, deluge, {"torrents": torrents})
+
+        status = deluge.method_get_torrent_status("REVIEW_HASH")
+        assert type(status) is type(expected)
+        assert status == expected
+        assert json.loads(mocked.calls[-1].request.body) == {
+            "id": 1, "method": "webapi.get_torrents", "params": [["review_hash"], ["hash", "files"]],
+        }

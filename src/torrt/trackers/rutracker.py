@@ -58,6 +58,10 @@ class RuTrackerTracker(GenericPrivateTracker):
         except IndexError:
             return
 
+    def get_magnet_link(self, url: str) -> str:
+        """Find the topic magnet without requiring its torrent download form."""
+        return self._find_magnet_link(url)
+
     def download_torrent(self, url: str, *, referer: str = '') -> bytes | None:
 
         self.log_debug(f'Downloading torrent file from {url} ...')

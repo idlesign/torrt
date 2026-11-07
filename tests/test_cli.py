@@ -1,8 +1,10 @@
 import logging
+from unittest.mock import Mock
 
 import pytest
 
 from torrt.main import process_commands
+from torrt.utils import TorrtConfig
 
 
 @pytest.mark.parametrize('command,expected', [
@@ -32,3 +34,33 @@ def test_smoke(caplog, command, expected):
     messages = caplog.text
     for expected_chunk in expected:
         assert expected_chunk in messages, f'NOT FOUND {expected_chunk} in {messages}'
+
+@pytest.mark.parametrize("enabled", [True, False])
+def test_set_prefer_magnet(enabled: bool) -> None:
+    TorrtConfig.update({"prefer_magnet": not enabled})
+
+    process_commands(["set_prefer_magnet", "true" if enabled else "false"])
+
+    assert TorrtConfig.load()["prefer_magnet"] is enabled
+
+def test_walk_dispatch(monkeypatch: pytest.MonkeyPatch) -> None:
+    walk = Mock()
+    monkeypatch.setattr("torrt.main.walk", walk)
+
+    process_commands(["walk"])
+
+    walk.assert_called_once_with(forced=False, silent=True)
+
+def test_removed_pending_command_is_rejected(capsys: pytest.CaptureFixture[str]) -> None:
+
+    with pytest.raises(SystemExit, match="2"):
+        process_commands(["check_pending_updates"])
+
+    assert "invalid choice: 'check_pending_updates'" in capsys.readouterr().err
+
+def test_removed_retry_option_is_rejected(capsys: pytest.CaptureFixture[str]) -> None:
+
+    with pytest.raises(SystemExit, match="2"):
+        process_commands(["walk", "--retry-pending"])
+
+    assert "unrecognized arguments: --retry-pending" in capsys.readouterr().err

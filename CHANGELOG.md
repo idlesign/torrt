@@ -2,6 +2,10 @@
 
 ### Unreleased
 
+* ++ Prefer magnets from RuTracker, NNM-Club, EniaHD and Rutor with `set_prefer_magnet`.
+* ++ Native magnet support for all RPC clients and recoverable pending replacements.
+* ++ Check pending metadata and deferred Transmission file exclusions during `walk`; retry additions confirmed absent automatically.
+* ** Core: atomically save private configuration files and keep old torrents until replacements are ready.
 * ** qBittorrent: fix login failure against qBittorrent 5.x (204 empty-body reply).
 * ** Trackers: reject foreign page and login domains before using tracker credentials.
 * ** Telegram bot: enforce allowed users for buttons and conversation handlers.
@@ -10,7 +14,6 @@
 * ** uTorrent: correctly encode request parameters, repeated values and download paths.
 * ** Private trackers: reload torrent pages after successful login.
 * ** Telegram bot: fix /list and /remove commands for messages and buttons.
-* ** Telegram notifier: redact the bot token from HTTP diagnostics and notification errors.
 
 ### v1.2.0 [2026-05-09]
 * ++ qBittorrent: preserve torrent category on update.

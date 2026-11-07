@@ -1,6 +1,6 @@
 from typing import Any, ClassVar
 
-from ..base_rpc import BaseRPC
+from ..base_rpc import BaseRPC, TorrentFile, TorrentStatus
 from ..exceptions import TorrtRPCException
 from ..utils import TorrentData, base64encode
 
@@ -77,9 +77,10 @@ class DelugeRPC(BaseRPC):
         self.log_debug(f"RPC method `{data['method']}` ...")
 
         response = self.query_(data)
+        error = response["error"]
 
-        if response['error'] is not None:
-            raise DelugeRPCException(response['error'])
+        if error is not None:
+            raise DelugeRPCException(f"{error}")
 
         return response['result']
 
@@ -111,14 +112,35 @@ class DelugeRPC(BaseRPC):
         return result['torrents']
 
     def method_add_torrent(self, torrent: TorrentData, *, download_to: str = '', params: dict | None = None) -> Any:
+        torrent_dump = torrent.magnet or base64encode(torrent.raw).decode()
 
-        torrent_dump = base64encode(torrent.raw).decode()
-
-        return self.query(
+        result = self.query(
             self.build_request_payload(
                 "webapi.add_torrent", params=[torrent_dump, {"download_location": download_to or None}]
             )
         )
+
+        if torrent.magnet and not result:
+            raise DelugeRPCException("Deluge did not accept the magnet link")
+
+        return result
+
+    def method_get_torrent_status(self, hash_str: str) -> TorrentStatus | None:
+        """Use the exported file list, which stays empty until metadata is available."""
+        normalized_hash = hash_str.lower()
+        fields = ["hash", "files"]
+        result = self.query(self.build_request_payload("webapi.get_torrents", params=[[normalized_hash], fields]))
+
+        for torrent_info in result["torrents"]:
+
+            if torrent_info["hash"].lower() == normalized_hash:
+                files = tuple(
+                    TorrentFile(index=file_info["index"], name=file_info["path"])
+                    for file_info in torrent_info.get("files", [])
+                )
+                return TorrentStatus(hash=normalized_hash, metadata_ready=bool(files), files=files)
+
+        return None
 
     def method_remove_torrent(self, hash_str: str, *, with_data: bool = False) -> Any:
         return self.query(self.build_request_payload("webapi.remove_torrent", params=[hash_str, with_data]))

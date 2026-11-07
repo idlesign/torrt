@@ -7,6 +7,7 @@ from typing import ClassVar
 from urllib.parse import parse_qs, urljoin, urlparse
 
 from .exceptions import TorrtTrackerException
+from .magnet import parse_magnet
 from .utils import (
     BeautifulSoup,
     HttpClient,
@@ -302,15 +303,30 @@ class BaseTracker(WithSettings):
         """This should implement a configuration test, e.g. make test login and report success."""
         return True
 
-    def get_torrent(self, url: str, *, last_updated: datetime | None = None) -> TorrentData | None:
-        """This method should be implemented in torrent tracker handler class
-        and must return .torrent file contents.
+    def get_torrent(
+            self, url: str, *, last_updated: datetime | None = None, prefer_magnet: bool = False,
+    ) -> TorrentData | None:
+        """Return torrent file contents or a preferred magnet extracted by this tracker.
 
         :param url: URL to download torrent file from
         :param last_updated: torrent last updated datetime
+        :param prefer_magnet: use a valid magnet instead of downloading a torrent file
 
         """
         raise NotImplementedError  # pragma: nocover
+
+    def get_magnet_link(self, url: str) -> str:
+        """Return a magnet only when the tracker explicitly implements extraction."""
+        return ""
+
+    def _find_magnet_link(self, url: str) -> str:
+        """Find a magnet href on a supported tracker page using the page cache."""
+
+        if not self.can_handle(url):
+            return ""
+
+        page = self.get_torrent_page(url)
+        return self.find_links(url, page, definite=r"(?i)^magnet:\?") or ""
 
     def extract_page_data(self) -> PageData:
         data = PageData(
@@ -386,18 +402,31 @@ class GenericTracker(BaseTracker):
         """
         return url.split('=')[1]
 
-    def get_torrent(self, url: str, *, last_updated: datetime | None = None) -> TorrentData | None:
-        """This is the main method which returns torrent file contents
-        of file located at URL.
+    def get_torrent(
+            self, url: str, *, last_updated: datetime | None = None, prefer_magnet: bool = False,
+    ) -> TorrentData | None:
+        """Get torrent data from a tracker page, preferring a magnet when requested.
 
         :param url: URL to find and get torrent from
         :param last_updated: torrent last updated datetime
+        :param prefer_magnet: use a valid magnet instead of downloading a torrent file
 
         """
 
         if not self.can_handle(url):
             self.log_warning("Unsupported tracker page URL")
             return None
+
+        if prefer_magnet and (magnet := self.get_magnet_link(url)):
+
+            try:
+                parse_magnet(magnet)
+
+            except ValueError:
+                self.log_warning("Invalid magnet link on tracker page; using torrent file instead")
+
+            else:
+                return TorrentData(url=url, magnet=magnet, page=self.extract_page_data())
 
         download_link = self.get_download_link(url)
 
@@ -529,6 +558,15 @@ class GenericPrivateTracker(GenericPublicTracker):
 
     def test_configuration(self) -> bool:
         return self.login(self.alias)
+
+    def _find_magnet_link(self, url: str) -> str:
+        """Find a visible magnet, signing in once if the page requires a session."""
+        magnet = super()._find_magnet_link(url)
+
+        if not magnet and not self.logged_in and self.login(self.extract_domain(url)):
+            magnet = super()._find_magnet_link(url)
+
+        return magnet
 
     def login(self, domain: str) -> bool:
         """Implements tracker login procedure. Returns success bool."""
