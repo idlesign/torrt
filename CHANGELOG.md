@@ -2,6 +2,7 @@
 
 ### Unreleased
 * ** Anilibria tracker is rewritten for the Aniliberty API v1 and is active again; magnet links are now available for it (close #89).
+* ** Mirror picking now skips mirrors responding with error status codes (e.g. 403) (close #82).
 
 * ++ Prefer magnets from RuTracker, NNM-Club, EniaHD and Rutor with `set_prefer_magnet`.
 * ++ Native magnet support for all RPC clients and recoverable pending replacements.
