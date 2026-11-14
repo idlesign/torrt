@@ -1,33 +1,25 @@
 import re
 from collections import defaultdict
+from datetime import datetime
 from typing import ClassVar
 
 from ..base_tracker import GenericPublicTracker
 
-REGEX_QUALITY = re.compile(r".+\[(.+)\]")
-# This regex is used to remove every non-word character or underscore from quality string.
 REGEX_NON_WORD = re.compile(r'[\W_]')
-REGEX_RANGE = re.compile(r'\d+-\d+')
+REGEX_RANGE = re.compile(r"\[(\d+-\d+)]")
 
-HOST: str = 'https://www.anilibria.tv'
-API_URL: str = HOST + '/public/api/index.php'
+HOST: str = 'https://anilibria.top'
+API_URL: str = f'{HOST}/api/v1/anime'
 
 
 class AnilibriaTracker(GenericPublicTracker):
-    """This class implements .torrent files downloads for anilibria.tv tracker."""
+    """This class implements .torrent files downloads for anilibria.top tracker (Aniliberty API v1)."""
 
-    active: bool = False
-    """Seems to be moved for another domain, and changed here and there.
-    See:
-        * https://anilibria.top/api/docs/v1
-        * https://anilibria.top/anime/releases/release/sword-art-online-alicization
-        * https://anilibria.top/anime/releases/release/kabukichou-sherlock/episodes
-    """
-
-    alias: str = 'anilibria.tv'
+    alias: str = 'anilibria.top'
+    mirrors: ClassVar[list[str]] = ['anilibria.tv', 'www.anilibria.tv', 'www.anilibria.top']
 
     test_urls: ClassVar[list[str]] = [
-        'https://www.anilibria.tv/release/sword-art-online-alicization.html',
+        'https://anilibria.top/anime/releases/release/sword-art-online-alicization',
     ]
 
     def __init__(self, *, quality_prefs: list[str] | None = None):
@@ -38,97 +30,145 @@ class AnilibriaTracker(GenericPublicTracker):
             quality_prefs = ['HDTVRip 1080p', 'HDTVRip 720p', 'WEBRip 720p']
 
         self.quality_prefs = quality_prefs
+        self._release: dict = {}
 
     def get_download_link(self, url: str) -> str:
-        """Tries to find .torrent file download link at forum thread page and return that one."""
+        """Tries to find .torrent file download link at a release page and return that one."""
 
-        available_qualities = self.find_available_qualities(url)
+        torrent = self._pick_torrent(url)
 
-        self.log_debug(f"Available in qualities: {', '.join(available_qualities)}")
+        if torrent is None:
+            return ''
 
-        if available_qualities:
+        return f"{API_URL}/torrents/{torrent['hash']}/file"
 
-            quality_prefs = []
+    def get_magnet_link(self, url: str) -> str:
+        """Returns a magnet link for the picked torrent."""
 
-            for pref in self.quality_prefs:
-                pref = self.sanitize_quality(pref)
+        torrent = self._pick_torrent(url)
 
-                if pref not in quality_prefs:
-                    quality_prefs.append(pref)
+        if torrent is None:
+            return ''
 
-            preferred_qualities = [quality for quality in quality_prefs if quality in available_qualities]
+        return torrent.get('magnet', '')
 
-            if not preferred_qualities:
-                self.log_info(
-                    'Torrent is not available in preferred qualities: '
-                    f"{', '.join(quality_prefs)}")
+    def extract_page_date_updated(self) -> datetime | None:
+        """Returns the most recent torrent update date from the fetched release data."""
 
-                quality, link = next(iter(available_qualities.items()))
+        dates = []
 
-                self.log_info(f'Fallback to `{quality}` quality ...')
+        for torrent in (self._release.get('torrents') or []):
 
-                return link
+            updated_at = torrent.get('updated_at')
 
-            else:
-                target_quality = preferred_qualities[0]
-                self.log_debug(f'Trying to get torrent in `{target_quality}` quality ...')
+            if updated_at:
+                # Stored dates are kept naive.
+                dates.append(datetime.fromisoformat(updated_at).replace(tzinfo=None))
 
-                return available_qualities[target_quality]
+        return max(dates) if dates else None
 
-        return ''
+    def _pick_torrent(self, url: str) -> dict | None:
+        """Returns a torrent dict for the most preferred available quality."""
 
-    def find_available_qualities(self, url: str) -> dict[str, str]:
-        """Tries to find .torrent download links in `Release` model
-        Returns a dict where key is quality and value is .torrent download link.
+        available_torrents = self._find_available_torrents(url)
 
-        :param url: url to forum thread page
+        self.log_debug(f"Available in qualities: {', '.join(available_torrents)}")
+
+        if not available_torrents:
+            return None
+
+        quality_prefs = []
+
+        for pref in self.quality_prefs:
+            pref = self.sanitize_quality(pref)
+
+            if pref not in quality_prefs:
+                quality_prefs.append(pref)
+
+        preferred_qualities = [quality for quality in quality_prefs if quality in available_torrents]
+
+        if not preferred_qualities:
+            self.log_info(f"Torrent is not available in preferred qualities: {', '.join(quality_prefs)}")
+
+            quality, torrent = next(iter(available_torrents.items()))
+            self.log_info(f'Fallback to `{quality}` quality ...')
+
+            return torrent
+
+        target_quality = preferred_qualities[0]
+        self.log_debug(f'Trying to get torrent in `{target_quality}` quality ...')
+
+        return available_torrents[target_quality]
+
+    def _find_available_torrents(self, url: str) -> dict[str, dict]:
+        """Returns available torrents indexed by sanitized quality string.
+
+        :param url: url to a release page
 
         """
         code = self.extract_release_code(url)
 
-        json = self.api_get_release_by_code(code)
+        release = self.api_get_release_by_code(code)
 
-        if not json.get('status', False):
+        if not release:
             self.log_error(f'Failed to get release `{code}` from API')
             return {}
 
-        available_qualities = {}
-        torrents = json['data']['torrents']
+        self._release = release
+
+        torrents = release.get('torrents') or []
+
         series2torrents = defaultdict(list)
-        # a release can consist of several torrents:
-        #   1. episode ranges (different qualities),
-        #   2. single episodes (different qualities) - a release is just aired,
-        #   3. trailers,
-        #   4. OVAs
-        # we are trying to recognize `1` and `2`.
+
+        # A release can consist of several torrents: episode ranges (in different qualities),
+        # recaps, trailers. We take episode ranges only.
         for torrent in torrents:
-            if REGEX_RANGE.match(torrent['series']) or torrent['series'] == json['data']['series']:
-                series2torrents[torrent['series']].append(torrent)
 
-        # some releases can be broken into several .torrent files, e.g. 1-20 and 21-41 - take the last one
-        sorted_series = sorted(series2torrents.keys(), key=self.to_tuple, reverse=True)
+            matched = REGEX_RANGE.search(torrent.get('label') or '')
 
-        if not sorted_series:
+            if matched:
+                series2torrents[matched.group(1)].append(torrent)
+
+        if not series2torrents:
             return {}
 
-        for torrent in series2torrents[sorted_series[0]]:
-            quality = self.sanitize_quality(torrent['quality'])
-            available_qualities[quality] = HOST + torrent['url']
+        # Some releases are broken into several .torrent files, e.g. 1-20 and 21-41 — take the last one.
+        latest_series = sorted(series2torrents, key=self.to_tuple, reverse=True)[0]
 
-        return available_qualities
+        available_torrents = {}
+
+        for torrent in series2torrents[latest_series]:
+            quality = self.sanitize_quality(f"{torrent['type']['value']} {torrent['quality']['value']}")
+            available_torrents[quality] = torrent
+
+        return available_torrents
+
+    def find_available_qualities(self, url: str) -> dict[str, str]:
+        """Returns available .torrent download links indexed by quality string.
+
+        :param url: url to a release page
+
+        """
+        available_torrents = self._find_available_torrents(url)
+        return {
+            quality: f"{API_URL}/torrents/{torrent['hash']}/file"
+            for quality, torrent in available_torrents.items()
+        }
 
     @staticmethod
     def extract_release_code(url: str) -> str:
-        """Extracts anilibria release code from forum thread page.
+        """Extracts a release code (alias) from a release page URL.
 
-        Example:
+        Handles both current and legacy URL formats:
 
-        `extract_release_code('https://www.anilibria.tv/release/kabukichou-sherlock.html')` -> 'kabukichou-sherlock'
+            `https://anilibria.top/anime/releases/release/kabukichou-sherlock` -> 'kabukichou-sherlock'
+            `https://www.anilibria.tv/release/kabukichou-sherlock.html` -> 'kabukichou-sherlock'
 
-        :param url: url to forum thread page
+        :param url: url to a release page
 
         """
-        return url.replace(HOST + '/release/', '').replace('.html', '')
+        code = url.rstrip('/').rsplit('/', 1)[-1]
+        return code.removesuffix('.html')
 
     @staticmethod
     def sanitize_quality(quality_str: str | None) -> str:
@@ -152,7 +192,7 @@ class AnilibriaTracker(GenericPublicTracker):
 
     @staticmethod
     def to_tuple(range_str: str) -> tuple[int, ...]:
-        """ Turn passed range_str into tuple of integers.
+        """Turn passed range_str into tuple of integers.
 
         Examples:
 
@@ -164,13 +204,12 @@ class AnilibriaTracker(GenericPublicTracker):
         return tuple(map(int, range_str.split('-')))
 
     def api_get_release_by_code(self, code: str) -> dict:
-        """
-        Get release json by passed `code` from Anilibria API.
+        """Gets release data by its code from the API.
 
         :param code: release code
 
         """
-        response = self.get_response(API_URL, form_data={'query': 'release', 'code': code}, as_soup=False)
+        response = self.get_response(f'{API_URL}/releases/{code}', as_soup=False)
 
         if not response:
             return {}

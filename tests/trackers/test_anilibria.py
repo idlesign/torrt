@@ -2,12 +2,10 @@ import pytest
 
 from torrt.trackers.anilibria import AnilibriaTracker
 
-pytest.skip("Inactive", allow_module_level=True)
-
 
 @pytest.mark.parametrize("test_input,expected", [
     ('https://www.anilibria.tv/release/kabukichou-sherlock.html', 'kabukichou-sherlock'),
-    ('https://www.anilibria.tv/release/mairimashita-iruma-kun.html', 'mairimashita-iruma-kun'),
+    ('https://anilibria.top/anime/releases/release/mairimashita-iruma-kun', 'mairimashita-iruma-kun'),
 ])
 def test_extract_release_code(test_input, expected):
     assert AnilibriaTracker.extract_release_code(test_input) == expected
@@ -20,7 +18,7 @@ def test_extract_release_code(test_input, expected):
     ('', ''),
     (None, ''),
 ])
-def test_sanitize_quantity(test_input, expected):
+def test_sanitize_quality(test_input, expected):
     assert AnilibriaTracker.sanitize_quality(test_input) == expected
 
 
@@ -33,63 +31,76 @@ def test_to_tuple(test_input, expected):
     assert AnilibriaTracker.to_tuple(test_input) == expected
 
 
+def make_torrent(hash_, type_, quality, label, magnet=None, updated_at="2024-01-01T00:00:00+00:00"):
+    return {
+        "hash": hash_,
+        "type": {"value": type_},
+        "quality": {"value": quality},
+        "label": label,
+        "magnet": magnet or f"magnet:?xt=urn:btih:{hash_}",
+        "updated_at": updated_at,
+    }
+
+
 def test_get_download_link_preserve_priorities(monkeypatch):
-    """
-    Test that `get_download_link` returns link according user-defined quality priorities
-    """
+    """Test that `get_download_link` returns link according user-defined quality priorities."""
 
-    # given
     testable = AnilibriaTracker(quality_prefs=['webrip720p', 'webrip1080p'])
-    expected = 'https://www.anilibria.tv/upload/torrents/webrip720p.torrent'
+    expected_hash = 'cb88332e8a1bb5bd0eb8e831b93e72fa0edb8b7a'
 
-    def mockreturn(url):
-        return {
-            'webrip1080p': 'https://www.anilibria.tv/upload/torrents/webrip1080p.torrent',
-            'webrip720p': expected,
-        }
+    monkeypatch.setattr(testable, "_find_available_torrents", lambda url: {
+        "webrip1080p": make_torrent('a' * 40, 'WEBRip', '1080p', 'R [WEBRip 1080p][1-10]'),
+        "webrip720p": make_torrent(expected_hash, 'WEBRip', '720p', 'R [WEBRip 720p][1-10]'),
+    })
 
-    monkeypatch.setattr(testable, "find_available_qualities", mockreturn)
-    # when
-    actual = testable.get_download_link('https://anilibria.tv/release/dummy_release.html')
-    # then
-    assert actual == expected
+    actual = testable.get_download_link('https://anilibria.top/anime/releases/release/dummy_release')
+
+    assert actual.endswith(f'/torrents/{expected_hash}/file')
 
 
-def test_find_available_qualities_handle_first_episode_available(monkeypatch):
-    """
-    Test that `find_available_qualities` returns single-episode torrent if only the first episode is available.
-    """
+def test_find_available_qualities(monkeypatch):
+    """Test that `find_available_qualities` picks the latest episode range and skips recaps."""
 
-    # given
     testable = AnilibriaTracker()
 
-    def mockreturn(url):
-        return {
-            "status": True,
-            "data": {
-                "id": 1000,
-                "code": "dummy_release",
-                "series": "1",
-                "torrents": [
-                    {
-                        "id": 10001,
-                        "hash": "cb88332e8a1bb5bd0eb8e831b93e72fa0edb8b7a",
-                        "leechers": 1,
-                        "seeders": 86,
-                        "completed": 612,
-                        "quality": "WEBRip 1080p",
-                        "series": "1",
-                        "size": 1537651272,
-                        "url": "/upload/torrents/11113.torrent",
-                        "ctime": 1594909216
-                    }
-                ]
-            },
-            "error": None
-        }
+    monkeypatch.setattr(testable, "api_get_release_by_code", lambda code: {
+        "torrents": [
+            make_torrent('a' * 40, 'HDTVRip', '1080p', 'R [HDTVRip 1080p][1-12]'),
+            make_torrent('b' * 40, 'HDTVRip', '1080p', 'R [HDTVRip 1080p][13-24]'),
+            make_torrent('c' * 40, 'HDTVRip', '720p', 'R [HDTVRip 720p][13-24]'),
+            make_torrent('d' * 40, 'HDTVRip', '1080p', 'R [HDTVRip 1080p][Рекап]'),
+        ]
+    })
 
-    monkeypatch.setattr(testable, "api_get_release_by_code", mockreturn)
-    # when
-    actual = testable.find_available_qualities('https://anilibria.tv/release/dummy_release.html')
-    # then
-    assert actual == {"webrip1080p": "https://www.anilibria.tv/upload/torrents/11113.torrent"}
+    actual = testable.find_available_qualities('https://anilibria.top/anime/releases/release/dummy_release')
+
+    assert set(actual) == {'hdtvrip1080p', 'hdtvrip720p'}
+    assert actual['hdtvrip1080p'].endswith(f"/torrents/{'b' * 40}/file")
+
+
+def test_get_magnet_link(monkeypatch):
+
+    testable = AnilibriaTracker()
+    expected = f"magnet:?xt=urn:btih:{'e' * 40}"
+
+    monkeypatch.setattr(testable, "_find_available_torrents", lambda url: {
+        "hdtvrip1080p": make_torrent('e' * 40, 'HDTVRip', '1080p', 'R [HDTVRip 1080p][1-10]', magnet=expected),
+    })
+
+    assert testable.get_magnet_link('https://anilibria.top/anime/releases/release/dummy_release') == expected
+
+
+def test_extract_page_date_updated(monkeypatch):
+
+    testable = AnilibriaTracker()
+
+    monkeypatch.setattr(testable, "api_get_release_by_code", lambda code: {
+        "torrents": [
+            make_torrent('a' * 40, 'HDTVRip', '1080p', 'R [HDTVRip 1080p][1-10]', updated_at="2024-01-01T00:00:00+00:00"),
+            make_torrent('b' * 40, 'HDTVRip', '720p', 'R [HDTVRip 720p][1-10]', updated_at="2024-02-02T00:00:00+00:00"),
+        ]
+    })
+
+    testable.find_available_qualities('https://anilibria.top/anime/releases/release/dummy_release')
+
+    assert testable.extract_page_date_updated().isoformat() == '2024-02-02T00:00:00'
