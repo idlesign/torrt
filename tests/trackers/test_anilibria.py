@@ -96,7 +96,8 @@ def test_extract_page_date_updated(monkeypatch):
 
     monkeypatch.setattr(testable, "api_get_release_by_code", lambda code: {
         "torrents": [
-            make_torrent('a' * 40, 'HDTVRip', '1080p', 'R [HDTVRip 1080p][1-10]', updated_at="2024-01-01T00:00:00+00:00"),
+            make_torrent(
+                'a' * 40, 'HDTVRip', '1080p', 'R [HDTVRip 1080p][1-10]', updated_at="2024-01-01T00:00:00+00:00"),
             make_torrent('b' * 40, 'HDTVRip', '720p', 'R [HDTVRip 720p][1-10]', updated_at="2024-02-02T00:00:00+00:00"),
         ]
     })
