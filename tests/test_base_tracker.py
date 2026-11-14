@@ -176,3 +176,27 @@ def test_get_torrent_with_existing_session(response_mock: Callable, tracker_case
         assert tracker.login_counter == 0
         assert all(request.request.method == "GET" for request in mocked.calls)
         assert len(mocked.calls) == len(tracker.mirrors) + 2
+
+
+def test_pick_mirror_skips_unavailable(response_mock: Callable) -> None:
+    tracker = RuTrackerTracker(username="review_user", password="review_password")
+
+    with response_mock([], bypass=False) as mocked:
+        mocked.add("GET", "https://rutracker.org/", status=503, body="Unavailable")
+        mocked.add("GET", "https://rutracker.net/", status=200, body="OK")
+
+        picked = tracker.pick_mirror("https://rutracker.org/forum/viewtopic.php?t=1")
+
+    assert picked == "rutracker.net"
+
+
+def test_pick_mirror_all_unavailable(response_mock: Callable) -> None:
+    tracker = RuTrackerTracker(username="review_user", password="review_password")
+
+    with response_mock([], bypass=False) as mocked:
+        for domain in tracker.mirrors:
+            mocked.add("GET", f"https://{domain}/", status=503, body="Unavailable")
+
+        picked = tracker.pick_mirror("https://rutracker.org/forum/viewtopic.php?t=1")
+
+    assert picked == "rutracker.org"
