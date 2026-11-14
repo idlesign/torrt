@@ -1,6 +1,6 @@
 # torrt changelog
 
-### Unreleased
+### v1.2.1 [2026-11-14]
 * ** Anilibria tracker is rewritten for the Aniliberty API v1 and is active again; magnet links are now available for it (close #89).
 * ** Mirror picking now skips mirrors responding with error status codes (e.g. 403) (close #82).
 
